@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
   Home,
@@ -49,12 +50,14 @@ import {
   Sun,
 } from 'lucide-react';
 
+const API_BASE_URL = 'http://localhost:8000/api/rooms'; 
+
 const RoomInventory = () => {
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [viewMode, setViewMode] = useState('grid'); 
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
@@ -101,78 +104,19 @@ const RoomInventory = () => {
     { id: 'work_desk', name: 'Work Desk', icon: Shield, category: 'business' },
   ];
 
-  // Sample room data
+  // Fetch rooms 
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get(API_BASE_URL);
+      setRooms(response.data);
+      setFilteredRooms(response.data);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
   useEffect(() => {
-    const sampleRooms = [
-      {
-        id: 'R001',
-        roomNumber: '101',
-        type: 'single',
-        name: 'Deluxe Single Room',
-        capacity: 1,
-        maxCapacity: 2,
-        basePrice: 120,
-        weekendPrice: 150,
-        floor: 1,
-        size: 250,
-        description: 'A comfortable single room with modern amenities and city view.',
-        amenities: ['wifi', 'tv', 'ac', 'minibar', 'phone'],
-        images: [
-          'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&h=300&fit=crop',
-          'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2024-01-15T10:00:00Z',
-        maintenanceNotes: '',
-        bookingHistory: 45,
-        rating: 4.2,
-      },
-      {
-        id: 'R002',
-        roomNumber: '201',
-        type: 'double',
-        name: 'Premium Double Room',
-        capacity: 2,
-        maxCapacity: 3,
-        basePrice: 180,
-        weekendPrice: 220,
-        floor: 2,
-        size: 350,
-        description: 'Spacious double room with king-size bed and ocean view.',
-        amenities: ['wifi', 'tv', 'ac', 'minibar', 'balcony', 'oceanview', 'bathtub'],
-        images: [
-          'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500&h=300&fit=crop',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2024-01-14T14:00:00Z',
-        maintenanceNotes: '',
-        bookingHistory: 78,
-        rating: 4.7,
-      },
-      {
-        id: 'R003',
-        roomNumber: '301',
-        type: 'suite',
-        name: 'Executive Suite',
-        capacity: 4,
-        maxCapacity: 6,
-        basePrice: 350,
-        weekendPrice: 420,
-        floor: 3,
-        size: 600,
-        description: 'Luxurious suite with separate living area and premium amenities.',
-        amenities: ['wifi', 'tv', 'ac', 'kitchen', 'balcony', 'oceanview', 'bathtub', 'sofa', 'work_desk'],
-        images: [
-          'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=500&h=300&fit=crop',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2024-01-13T09:00:00Z',
-        maintenanceNotes: 'AC unit needs servicing',
-        bookingHistory: 32,
-        rating: 4.9,
-      },
-    ];
-    setRooms(sampleRooms);
-    setFilteredRooms(sampleRooms);
+    fetchRooms();
   }, []);
 
   // Filter rooms
@@ -200,27 +144,41 @@ const RoomInventory = () => {
     return roomType ? roomType.name : 'Unknown';
   };
 
-  const handleAddRoom = (roomData) => {
-    const newRoom = {
-      ...roomData,
-      id: `R${String(rooms.length + 1).padStart(3, '0')}`,
-      lastCleaned: new Date().toISOString(),
-      bookingHistory: 0,
-      rating: 0,
-    };
-    setRooms([...rooms, newRoom]);
-    setShowRoomForm(false);
+  const handleAddRoom = async (roomData) => {
+    try {
+      const response = await axios.post(API_BASE_URL, roomData);
+      if (response.status === 201) {
+        fetchRooms(); 
+        setShowRoomForm(false);
+      }
+    } catch (error) {
+      console.error('Error adding room:', error);
+    }
   };
 
-  const handleEditRoom = (roomData) => {
-    setRooms(rooms.map((room) => (room.id === roomData.id ? roomData : room)));
-    setEditingRoom(null);
-    setShowRoomForm(false);
+  const handleEditRoom = async (roomData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/${roomData.id}`, roomData);
+      if (response.status === 200) {
+        fetchRooms(); 
+        setEditingRoom(null);
+        setShowRoomForm(false);
+      }
+    } catch (error) {
+      console.error('Error editing room:', error);
+    }
   };
 
-  const handleDeleteRoom = (roomId) => {
+  const handleDeleteRoom = async (roomId) => {
     if (window.confirm('Are you sure you want to delete this room?')) {
-      setRooms(rooms.filter((room) => room.id !== roomId));
+      try {
+        const response = await axios.delete(`${API_BASE_URL}/${roomId}`);
+        if (response.status === 200) {
+          fetchRooms();   
+        }
+      } catch (error) {
+        console.error('Error deleting room:', error);
+      }
     }
   };
 
@@ -254,17 +212,26 @@ const RoomInventory = () => {
       setFormData({ ...formData, amenities: updated });
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
       const files = Array.from(e.target.files);
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const newUrl = event.target.result;
-          setImageUrls((prev) => [...prev, newUrl]);
-          setFormData((prev) => ({ ...prev, images: [...prev.images, newUrl] }));
-        };
-        reader.readAsDataURL(file);
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+          const response = await axios.post(
+            'https://api.imgbb.com/1/upload?key=4e08e03047ee0d48610586ad270e2b39',
+            formData
+          );
+          return response.data.data.url; 
+        } catch (error) {
+          console.error('Error uploading image to ImgBB:', error);
+          return null;
+        }
       });
+
+      const urls = (await Promise.all(uploadPromises)).filter((url) => url !== null);
+      setImageUrls((prev) => [...prev, ...urls]);
+      setFormData((prev) => ({ ...prev, images: [...prev.images, ...urls] }));
     };
 
     const removeImage = (index) => {
@@ -287,30 +254,30 @@ const RoomInventory = () => {
     }, {});
 
     const modalContent = (
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 className="text-xl font-semibold text-gray-900">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
+        <div className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               {room ? 'Edit Room' : 'Add New Room'}
             </h2>
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
             {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Room Number</label>
                 <input
                   type="text"
                   value={formData.roomNumber}
                   onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               </div>
@@ -319,7 +286,7 @@ const RoomInventory = () => {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                 >
                   {roomTypes.map((type) => (
                     <option key={type.id} value={type.id}>
@@ -334,7 +301,7 @@ const RoomInventory = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               </div>
@@ -345,15 +312,15 @@ const RoomInventory = () => {
                   min="1"
                   value={formData.floor}
                   onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
             </div>
 
             {/* Capacity & Pricing */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Capacity & Pricing</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-5">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Capacity & Pricing</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Standard Capacity
@@ -363,7 +330,7 @@ const RoomInventory = () => {
                     min="1"
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -373,7 +340,7 @@ const RoomInventory = () => {
                     min="1"
                     value={formData.maxCapacity}
                     onChange={(e) => setFormData({ ...formData, maxCapacity: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -383,7 +350,7 @@ const RoomInventory = () => {
                     min="0"
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -400,7 +367,7 @@ const RoomInventory = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, basePrice: parseFloat(e.target.value) })
                       }
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -418,7 +385,7 @@ const RoomInventory = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, weekendPrice: parseFloat(e.target.value) })
                       }
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -426,8 +393,8 @@ const RoomInventory = () => {
             </div>
 
             {/* Images */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-5">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
               <div className="space-y-4">
                 <div>
                   <input
@@ -441,27 +408,27 @@ const RoomInventory = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
                   >
-                    <Upload className="h-4 w-4" />
-                    <span>Upload Images</span>
+                    <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-sm sm:text-base">Upload Images</span>
                   </button>
                 </div>
                 {imageUrls.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                     {imageUrls.map((url, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={url}
                           alt={`Room ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full h-24 sm:h-32 object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-red-500 text-white rounded-full p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     ))}
@@ -471,19 +438,19 @@ const RoomInventory = () => {
             </div>
 
             {/* Amenities */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-5">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
               <div className="space-y-4">
                 {Object.entries(groupedAmenities).map(([category, amenities]) => (
                   <div key={category}>
                     <h4 className="text-sm font-medium text-gray-700 mb-2 capitalize">{category}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                       {amenities.map((amenity) => {
                         const IconComponent = amenity.icon;
                         return (
                           <label
                             key={amenity.id}
-                            className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                            className={`flex items-center space-x-2 p-2 sm:p-3 rounded-lg border cursor-pointer transition-colors ${
                               selectedAmenities.includes(amenity.id)
                                 ? 'bg-blue-100 border-blue-300 text-blue-900'
                                 : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -495,8 +462,8 @@ const RoomInventory = () => {
                               onChange={() => handleAmenityToggle(amenity.id)}
                               className="sr-only"
                             />
-                            <IconComponent className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">{amenity.name}</span>
+                            <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                            <span className="text-sm sm:text-base">{amenity.name}</span>
                           </label>
                         );
                       })}
@@ -507,8 +474,8 @@ const RoomInventory = () => {
             </div>
 
             {/* Description & Notes */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Description & Notes</h3>
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-5">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Description & Notes</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -518,7 +485,7 @@ const RoomInventory = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Describe the room features, view, and special characteristics..."
                   />
                 </div>
@@ -526,17 +493,17 @@ const RoomInventory = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto"
               >
                 {room ? 'Update Room' : 'Add Room'}
               </button>
@@ -551,15 +518,15 @@ const RoomInventory = () => {
 
   const RoomDetails = ({ room, onClose, onEdit, onDelete }) => {
     const modalContent = (
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
+        <div className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Bed className="h-6 w-6 text-blue-600" />
+                <Bed className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{room.name}</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{room.name}</h2>
                 <p className="text-sm text-gray-600">
                   Room {room.roomNumber} • {getRoomTypeName(room.type)}
                 </p>
@@ -567,24 +534,24 @@ const RoomInventory = () => {
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             {/* Images */}
             {room.images && room.images.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                   {room.images.map((image, index) => (
                     <img
                       key={index}
                       src={image}
                       alt={`${room.name} ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="w-full h-40 sm:h-48 object-cover rounded-lg"
                     />
                   ))}
                 </div>
@@ -592,46 +559,46 @@ const RoomInventory = () => {
             )}
 
             {/* Room Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <Home className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Floor:</span>
-                    <span className="text-sm font-medium">{room.floor}</span>
+                    <Home className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Floor:</span>
+                    <span className="text-sm sm:text-base font-medium">{room.floor}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Capacity:</span>
-                    <span className="text-sm font-medium">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Capacity:</span>
+                    <span className="text-sm sm:text-base font-medium">
                       {room.capacity} guests (Max: {room.maxCapacity})
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Size:</span>
-                    <span className="text-sm font-medium">{room.size} sq ft</span>
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Size:</span>
+                    <span className="text-sm sm:text-base font-medium">{room.size} sq ft</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Bookings:</span>
-                    <span className="text-sm font-medium">{room.bookingHistory} total</span>
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Bookings:</span>
+                    <span className="text-sm sm:text-base font-medium">{room.bookingHistory || 0} total</span>
                   </div>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Pricing</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Pricing</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Base Price:</span>
-                    <span className="text-sm font-medium">${room.basePrice}/night</span>
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Base Price:</span>
+                    <span className="text-sm sm:text-base font-medium">${room.basePrice}/night</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Weekend Price:</span>
-                    <span className="text-sm font-medium">${room.weekendPrice}/night</span>
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <span className="text-sm sm:text-base text-gray-600">Weekend Price:</span>
+                    <span className="text-sm sm:text-base font-medium">${room.weekendPrice}/night</span>
                   </div>
                 </div>
               </div>
@@ -640,16 +607,16 @@ const RoomInventory = () => {
             {/* Description */}
             {room.description && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{room.description}</p>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-4 rounded-lg">{room.description}</p>
               </div>
             )}
 
             {/* Amenities */}
             {room.amenities && room.amenities.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                   {room.amenities.map((amenityId) => {
                     const amenity = availableAmenities.find((a) => a.id === amenityId);
                     if (!amenity) return null;
@@ -657,10 +624,10 @@ const RoomInventory = () => {
                     return (
                       <div
                         key={amenityId}
-                        className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
+                        className="flex items-center space-x-2 p-2 sm:p-3 bg-gray-50 rounded-lg"
                       >
-                        <IconComponent className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm">{amenity.name}</span>
+                        <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <span className="text-sm sm:text-base">{amenity.name}</span>
                       </div>
                     );
                   })}
@@ -669,20 +636,20 @@ const RoomInventory = () => {
             )}
 
             {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
               <button
                 onClick={() => onEdit(room)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
               >
-                <Edit className="h-4 w-4" />
-                <span>Edit Room</span>
+                <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Edit Room</span>
               </button>
               <button
                 onClick={() => onDelete(room.id)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2 w-full sm:w-auto"
               >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete Room</span>
+                <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Delete Room</span>
               </button>
             </div>
           </div>
@@ -694,7 +661,6 @@ const RoomInventory = () => {
   };
 
   const RoomCard = ({ room, onView, onEdit, onDelete }) => {
-    // Get amenities count and first two amenities
     const amenitiesCount = room.amenities ? room.amenities.length : 0;
     const firstAmenities = (room.amenities || [])
       .slice(0, 2)
@@ -702,7 +668,7 @@ const RoomInventory = () => {
       .filter(Boolean);
 
     return (
-      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+      <div className="border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow">
         <div className="aspect-video bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
           {room.images && room.images.length > 0 ? (
             <img
@@ -711,54 +677,54 @@ const RoomInventory = () => {
               className="w-full h-full object-cover rounded-lg"
             />
           ) : (
-            <Camera className="h-8 w-8 text-gray-400" />
+            <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
           )}
         </div>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 text-base">{room.name}</h3>
+          <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">{room.name}</h3>
           {room.rating > 0 && (
             <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-              <span className="text-sm font-medium">{room.rating}</span>
+              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
+              <span className="text-sm sm:text-base font-medium">{room.rating}</span>
             </div>
           )}
         </div>
-        <div className="text-sm text-gray-600 mb-1">
+        <div className="text-sm sm:text-base text-gray-600 mb-1">
           Room {room.roomNumber} • Floor {room.floor}
         </div>
-        <div className="flex flex-wrap gap-2 text-sm text-gray-700 mb-1">
+        <div className="flex flex-wrap gap-2 text-sm sm:text-base text-gray-700 mb-1">
           <span>{room.capacity} guests</span>
           <span>Max {room.maxCapacity}</span>
           <span>{room.size} sq ft</span>
           <span className="font-semibold text-blue-600">${room.basePrice}/night</span>
         </div>
-        <div className="text-sm text-gray-500 mb-2">
+        <div className="text-sm sm:text-base text-gray-500 mb-2 truncate">
           {firstAmenities.join(' • ')}
           {amenitiesCount > 2 && (
-            <span className="ml-2 text-xs text-gray-400">+{amenitiesCount - 2} more</span>
+            <span className="ml-2 text-xs sm:text-sm text-gray-400">+{amenitiesCount - 2} more</span>
           )}
         </div>
         <div className="flex justify-end items-center mt-2 space-x-2">
           <button
             onClick={() => onView(room)}
-            className="p-1 text-gray-400 hover:text-blue-600"
+            className="p-2 sm:p-3 text-gray-400 hover:text-blue-600"
             title="View Details"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
           <button
             onClick={() => onEdit(room)}
-            className="p-1 text-gray-400 hover:text-blue-600"
+            className="p-2 sm:p-3 text-gray-400 hover:text-blue-600"
             title="Edit Room"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
           <button
             onClick={() => onDelete(room.id)}
-            className="p-1 text-gray-400 hover:text-red-600"
+            className="p-2 sm:p-3 text-gray-400 hover:text-red-600"
             title="Delete Room"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
       </div>
@@ -767,72 +733,71 @@ const RoomInventory = () => {
 
   const RoomListItem = ({ room, onView, onEdit, onDelete }) => {
     return (
-          <tr className="border-b border-gray-100 hover:bg-gray-50">
-        <td className="py-4 px-4">
+      <tr className="border-b border-gray-100 hover:bg-gray-50">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <div className="flex items-center space-x-3">
             {room.images && room.images.length > 0 ? (
               <img
                 src={room.images[0]}
                 alt={room.name}
-                className="w-12 h-12 object-cover rounded-lg"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
               />
             ) : (
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <ImageIcon className="h-6 w-6 text-gray-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
               </div>
             )}
-          </div>
             <div>
-              <p className="font-medium text-gray-900">{room.name}</p>
-              <p className="text-sm text-gray-600">Room {room.roomNumber}</p>
+              <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{room.name}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Room {room.roomNumber}</p>
             </div>
-          </td>
-     
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{getRoomTypeName(room.type)}</span>
+          </div>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{room.capacity}/{room.maxCapacity}</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm sm:text-base text-gray-900">{getRoomTypeName(room.type)}</span>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">${room.basePrice}</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm sm:text-base text-gray-900">{room.capacity}/{room.maxCapacity}</span>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">Floor {room.floor}</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm sm:text-base text-gray-900">${room.basePrice}</span>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{room.size} sq ft</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm sm:text-base text-gray-900">Floor {room.floor}</span>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm sm:text-base text-gray-900">{room.size} sq ft</span>
+        </td>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           {room.rating > 0 && (
             <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-              <span className="text-sm font-medium">{room.rating}</span>
+              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
+              <span className="text-sm sm:text-base font-medium">{room.rating}</span>
             </div>
           )}
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onView(room)}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+              className="p-2 sm:p-3 text-blue-600 hover:bg-blue-50 rounded"
               title="View Details"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               onClick={() => onEdit(room)}
-              className="p-1 text-gray-600 hover:bg-gray-50 rounded"
+              className="p-2 sm:p-3 text-gray-600 hover:bg-gray-50 rounded"
               title="Edit"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               onClick={() => onDelete(room.id)}
-              className="p-1 text-red-600 hover:bg-red-50 rounded"
+              className="p-2 sm:p-3 text-red-600 hover:bg-red-50 rounded"
               title="Delete"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </td>
@@ -843,25 +808,25 @@ const RoomInventory = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Filters and Controls */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
+        <div className="flex flex-col items-start justify-between space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               >
                 <option value="all">All Types</option>
                 {roomTypes.map((type) => (
@@ -873,10 +838,10 @@ const RoomInventory = () => {
             </div>
             <button
               onClick={() => setShowRoomForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
             >
-              <Plus className="h-4 w-4" />
-              <span>Add New Room</span>
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-sm sm:text-base">Add New Room</span>
             </button>
           </div>
           <div className="flex items-center space-x-4">
@@ -885,47 +850,47 @@ const RoomInventory = () => {
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
               >
-                <Grid className="h-4 w-4" />
+                <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
               >
-                <List className="h-4 w-4" />
+                <List className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
             <button
-              onClick={() => window.location.reload()}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              onClick={fetchRooms}
+              className="p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Room Display */}
-      <div className="p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="p-4 sm:p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           {filteredRooms.length === 0 ? (
-            <div className="text-center py-12">
-              <Home className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="text-center py-8 sm:py-12">
+              <Home className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-6">
                 {searchQuery || filterType !== 'all'
                   ? 'No rooms match your current filters.'
                   : 'Get started by adding your first room.'}
               </p>
               <button
                 onClick={() => setShowRoomForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto w-full sm:w-auto"
               >
-                <Plus className="h-4 w-4" />
-                <span>Add New Room</span>
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Add New Room</span>
               </button>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredRooms.map((room) => (
                 <RoomCard
                   key={room.id}
@@ -944,17 +909,17 @@ const RoomInventory = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Room</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Type</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Capacity</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Price</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Floor</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Size</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Rating</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Room</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Type</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Capacity</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Price</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Floor</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Size</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Rating</th>
+                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

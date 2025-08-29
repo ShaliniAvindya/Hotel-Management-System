@@ -4,7 +4,11 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-const tablereservationRoutes = require('./routes/tablereservationRoutes');
+const roomRoutes = require('./routes/roomRoutes'); 
+const roomRateRoutes = require('./routes/roomRateRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const roomAvailabilityRoutes = require('./routes/roomAvailabilityRoutes');
+const staffMember = require('./routes/staffMemberRoutess');
 
 const app = express();
 
@@ -18,7 +22,11 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
-app.use('/api/table-reservations', tablereservationRoutes);
+app.use('/api/rooms', roomRoutes); 
+app.use('/api/room-rates', roomRateRoutes);
+app.use('/api/roomMaintenance', maintenanceRoutes);
+app.use('/api/roomAvailability', roomAvailabilityRoutes);
+app.use('/api/staffMembers', staffMember);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -29,7 +37,7 @@ app.use((err, req, res, next) => {
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
-    dbName: 'HotelManagementSystem',
+    dbName: 'hotel-management',
   })
   .then(() => console.log('DB connect successful'))
   .catch((err) => {

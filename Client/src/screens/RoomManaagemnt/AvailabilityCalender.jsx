@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 
 const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 7, 1)); // August 1, 2025
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 7, 1)); 
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
@@ -55,7 +55,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Room data from RoomInventory.jsx
   const [rooms, setRooms] = useState([
     {
       id: 'R001',
@@ -125,7 +124,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     },
   ]);
 
-  // Available amenities from RoomInventory.jsx
   const availableAmenities = [
     { id: 'wifi', name: 'Free WiFi', icon: Wifi, category: 'technology' },
     { id: 'tv', name: 'Flat Screen TV', icon: Tv, category: 'technology' },
@@ -166,7 +164,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
 
         const generateAvailability = () => {
           const data = {};
-          const today = new Date(2025, 7, 1); // Start from August 1, 2025
+          const today = new Date(2025, 7, 1); 
 
           rooms.forEach(room => {
             data[room.id] = {};
@@ -682,8 +680,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     return createPortal(modalContent, document.body);
   };
 
-  // Calculate left offset based on sidebar state
-  const sidebarWidth = sidebarMinimized ? 4 : 16; // rem
+  const sidebarWidth = sidebarMinimized ? 4 : 16; 
   const sidebarOffset = sidebarOpen ? sidebarWidth : 0;
 
   // Calendar layout
@@ -702,7 +699,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => sidebarOpen(false)} // Assumes sidebarOpen is a setter function
+          onClick={() => sidebarOpen(false)} 
         ></div>
       )}
 

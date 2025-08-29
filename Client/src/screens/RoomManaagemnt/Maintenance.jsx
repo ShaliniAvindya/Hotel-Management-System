@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import {
   Home,
   Plus,
@@ -34,9 +35,14 @@ import {
   Users,
 } from 'lucide-react';
 
+const ROOMS_API_URL = 'http://localhost:8000/api/rooms';
+const TICKETS_API_URL = 'http://localhost:8000/api/roomMaintenance';
+const CATEGORIES_API_URL = 'http://localhost:8000/api/roomMaintenance/categories';
+const STAFF_API_URL = 'http://localhost:8000/api/staffMembers';
+
 const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const [rooms, setRooms] = useState([]);
-  const [maintenanceTickets, setMaintenanceTickets] = useState([]);
+  const [roomMaintenance, setRoomMaintenance] = useState([]);
   const [filteredTickets, setFilteredTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -48,215 +54,96 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
   const [showTicketDetails, setShowTicketDetails] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showUnavailableRooms, setShowUnavailableRooms] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Synchronized room data with RoomRate.jsx
+  const categoryStyles = {
+    hvac: { color: 'blue', icon: Wind },
+    plumbing: { color: 'cyan', icon: Droplets },
+    electrical: { color: 'yellow', icon: Zap },
+    electronics: { color: 'purple', icon: Tv },
+    'doors & windows': { color: 'green', icon: Home },
+    furniture: { color: 'orange', icon: Bed },
+    cleaning: { color: 'pink', icon: Bath },
+    'safety & security': { color: 'red', icon: AlertTriangle },
+    other: { color: 'gray', icon: Wrench },
+  };
+
   useEffect(() => {
-    const sampleRooms = [
-      {
-        id: 'R101',
-        roomNumber: '101',
-        type: 'Deluxe',
-        name: 'Deluxe King Room',
-        capacity: 2,
-        maxCapacity: 3,
-        basePrice: 150,
-        weekendPrice: 180,
-        status: 'available',
-        floor: 1,
-        size: 300,
-        description: 'A spacious room with a king-size bed and modern amenities.',
-        amenities: ['wifi', 'tv', 'ac', 'minibar', 'safe'],
-        images: [
-          'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2025-08-05T10:00:00Z',
-        maintenanceNotes: '',
-        bookingHistory: 50,
-        rating: 4.5,
-      },
-      {
-        id: 'R102',
-        roomNumber: '102',
-        type: 'Suite',
-        name: 'Executive Suite',
-        capacity: 4,
-        maxCapacity: 6,
-        basePrice: 300,
-        weekendPrice: 350,
-        status: 'maintenance',
-        floor: 1,
-        size: 500,
-        description: 'Luxurious suite with separate living area and premium amenities.',
-        amenities: ['wifi', 'tv', 'ac', 'kitchen', 'safe', 'balcony'],
-        images: [
-          'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2025-08-04T09:00:00Z',
-        maintenanceNotes: 'Plumbing issue reported',
-        bookingHistory: 30,
-        rating: 4.8,
-      },
-      {
-        id: 'R201',
-        roomNumber: '201',
-        type: 'Standard',
-        name: 'Standard Double Room',
-        capacity: 2,
-        maxCapacity: 2,
-        basePrice: 100,
-        weekendPrice: 120,
-        status: 'occupied',
-        floor: 2,
-        size: 250,
-        description: 'Cozy double room with essential amenities.',
-        amenities: ['wifi', 'tv', 'ac'],
-        images: [
-          'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2025-08-05T14:00:00Z',
-        maintenanceNotes: '',
-        bookingHistory: 60,
-        rating: 4.0,
-      },
-      {
-        id: 'R202',
-        roomNumber: '202',
-        type: 'Deluxe',
-        name: 'Deluxe Twin Room',
-        capacity: 2,
-        maxCapacity: 3,
-        basePrice: 160,
-        weekendPrice: 190,
-        status: 'maintenance',
-        floor: 2,
-        size: 320,
-        description: 'Twin room with modern amenities and city view.',
-        amenities: ['wifi', 'tv', 'ac', 'minibar', 'safe'],
-        images: [
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500&h=300&fit=crop',
-        ],
-        lastCleaned: '2025-08-03T11:00:00Z',
-        maintenanceNotes: 'AC unit needs servicing',
-        bookingHistory: 45,
-        rating: 4.3,
-      },
-    ];
-    setRooms(sampleRooms);
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(ROOMS_API_URL);
+        setRooms(response.data);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+        setError('Failed to fetch rooms. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRooms();
   }, []);
 
-  // Sample maintenance tickets (updated to reference synchronized room IDs)
+  // Fetch maintenance tickets
   useEffect(() => {
-    const sampleTickets = [
-      {
-        id: 'MT001',
-        roomId: 'R102',
-        title: 'Plumbing Leak in Bathroom',
-        description: 'Water leak under bathroom sink causing floor damage.',
-        category: 'plumbing',
-        priority: 'high',
-        status: 'in_progress',
-        reportedBy: 'Housekeeping',
-        reportedByType: 'staff',
-        reporterContact: 'housekeeping@hotel.com',
-        assignedTo: 'Mike Davis',
-        assignedToContact: 'mike.davis@maintenance.com',
-        createdAt: '2025-08-05T09:00:00Z',
-        updatedAt: '2025-08-05T14:30:00Z',
-        estimatedCost: 200,
-        actualCost: 0,
-        estimatedTime: 3,
-        actualTime: 0,
-        notes: 'Pipes inspected, replacement parts ordered.',
-        images: ['https://images.unsplash.com/photo-1585128792020-803d29415281?w=300&h=200&fit=crop'],
-        roomUnavailable: true,
-      },
-      {
-        id: 'MT002',
-        roomId: 'R202',
-        title: 'AC Unit Not Cooling',
-        description: 'Air conditioning unit not maintaining set temperature.',
-        category: 'hvac',
-        priority: 'high',
-        status: 'pending',
-        reportedBy: 'Guest - Jane Doe',
-        reportedByType: 'guest',
-        reporterContact: 'jane.doe@email.com',
-        assignedTo: 'John Smith',
-        assignedToContact: 'john.smith@maintenance.com',
-        createdAt: '2025-08-04T16:00:00Z',
-        updatedAt: '2025-08-04T16:00:00Z',
-        estimatedCost: 300,
-        actualCost: 0,
-        estimatedTime: 4,
-        actualTime: 0,
-        notes: 'Scheduled for inspection tomorrow.',
-        images: [],
-        roomUnavailable: true,
-      },
-      {
-        id: 'MT003',
-        roomId: 'R101',
-        title: 'TV Signal Issue',
-        description: 'Television showing no signal despite cable checks.',
-        category: 'electronics',
-        priority: 'low',
-        status: 'completed',
-        reportedBy: 'Front Desk',
-        reportedByType: 'staff',
-        reporterContact: 'frontdesk@hotel.com',
-        assignedTo: 'Sarah Wilson',
-        assignedToContact: 'sarah.wilson@maintenance.com',
-        createdAt: '2025-08-03T10:00:00Z',
-        updatedAt: '2025-08-04T12:00:00Z',
-        estimatedCost: 50,
-        actualCost: 60,
-        estimatedTime: 1,
-        actualTime: 1.5,
-        notes: 'Cable replaced, issue resolved.',
-        images: [],
-        roomUnavailable: false,
-      },
-      {
-        id: 'MT004',
-        roomId: 'R201',
-        title: 'Window Lock Malfunction',
-        description: 'Window lock not engaging properly, posing security risk.',
-        category: 'doors_windows',
-        priority: 'medium',
-        status: 'scheduled',
-        reportedBy: 'Housekeeping',
-        reportedByType: 'staff',
-        reporterContact: 'housekeeping@hotel.com',
-        assignedTo: 'Tom Brown',
-        assignedToContact: 'tom.brown@maintenance.com',
-        createdAt: '2025-08-05T08:00:00Z',
-        updatedAt: '2025-08-05T09:00:00Z',
-        estimatedCost: 100,
-        actualCost: 0,
-        estimatedTime: 2,
-        actualTime: 0,
-        notes: 'Lock replacement scheduled.',
-        images: [],
-        roomUnavailable: false,
-      },
-    ];
-    setMaintenanceTickets(sampleTickets);
-    setFilteredTickets(sampleTickets);
+    const fetchTickets = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(TICKETS_API_URL);
+        setRoomMaintenance(response.data);
+        setFilteredTickets(response.data);
+      } catch (error) {
+        console.error('Error fetching maintenance tickets:', error);
+        setError('Failed to fetch maintenance tickets. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTickets();
   }, []);
 
-  // Categories, priorities, statuses, and staff members remain unchanged
-  const categories = [
-    { id: 'hvac', name: 'HVAC', icon: Wind, color: 'blue' },
-    { id: 'plumbing', name: 'Plumbing', icon: Droplets, color: 'cyan' },
-    { id: 'electrical', name: 'Electrical', icon: Zap, color: 'yellow' },
-    { id: 'electronics', name: 'Electronics', icon: Tv, color: 'purple' },
-    { id: 'doors_windows', name: 'Doors & Windows', icon: Home, color: 'green' },
-    { id: 'furniture', name: 'Furniture', icon: Bed, color: 'orange' },
-    { id: 'cleaning', name: 'Cleaning', icon: Bath, color: 'pink' },
-    { id: 'safety', name: 'Safety & Security', icon: AlertTriangle, color: 'red' },
-    { id: 'other', name: 'Other', icon: Wrench, color: 'gray' },
-  ];
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(CATEGORIES_API_URL);
+        const uniqueCategories = [...new Set([...response.data, 'other'])].map(category => ({
+          id: category.toLowerCase(),
+          name: category.charAt(0).toUpperCase() + category.slice(1),
+        }));
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setError('Failed to fetch categories. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
+  // Fetch staff members 
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(STAFF_API_URL);
+        setStaffMembers(response.data);
+      } catch (error) {
+        console.error('Error fetching staff members:', error);
+        setError('Failed to fetch staff members. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+  }, []);
+
+  // Priorities 
   const priorities = [
     { id: 'low', name: 'Low', color: 'green', icon: Clock },
     { id: 'medium', name: 'Medium', color: 'yellow', icon: AlertCircle },
@@ -264,6 +151,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     { id: 'critical', name: 'Critical', color: 'purple', icon: Zap },
   ];
 
+  // Statuses 
   const statuses = [
     { id: 'pending', name: 'Pending', color: 'gray', icon: Clock },
     { id: 'scheduled', name: 'Scheduled', color: 'blue', icon: Calendar },
@@ -272,16 +160,9 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     { id: 'cancelled', name: 'Cancelled', color: 'red', icon: X },
   ];
 
-  const staffMembers = [
-    { id: 'john_smith', name: 'John Smith', email: 'john.smith@maintenance.com', specialties: ['hvac', 'electrical'] },
-    { id: 'mike_davis', name: 'Mike Davis', email: 'mike.davis@maintenance.com', specialties: ['plumbing', 'doors_windows'] },
-    { id: 'sarah_wilson', name: 'Sarah Wilson', email: 'sarah.wilson@maintenance.com', specialties: ['electronics', 'furniture'] },
-    { id: 'tom_brown', name: 'Tom Brown', email: 'tom.brown@maintenance.com', specialties: ['doors_windows', 'safety'] },
-  ];
-
-  // Filter tickets (unchanged)
+  // Filter tickets
   useEffect(() => {
-    let filtered = maintenanceTickets;
+    let filtered = roomMaintenance;
 
     if (searchQuery) {
       filtered = filtered.filter(ticket =>
@@ -301,11 +182,11 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     }
 
     if (filterCategory !== 'all') {
-      filtered = filtered.filter(ticket => ticket.category === filterCategory);
+      filtered = filtered.filter(ticket => ticket.category.toLowerCase() === filterCategory);
     }
 
     setFilteredTickets(filtered);
-  }, [maintenanceTickets, filterStatus, filterPriority, filterCategory, rooms]);
+  }, [roomMaintenance, searchQuery, filterStatus, filterPriority, filterCategory, rooms]);
 
   const getRoomByTicket = (roomId) => {
     return rooms.find(room => room.id === roomId);
@@ -328,15 +209,15 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       case 'gray': return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'blue': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'yellow': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'green': return 'bg-green-100 text-green-800 border-gray-200';
+      case 'green': return 'bg-green-100 text-green-800 border-green-200';
       case 'red': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getCategoryColor = (category) => {
-    const categoryObj = categories.find(c => c.id === category);
-    switch (categoryObj?.color) {
+    const categoryStyle = categoryStyles[category.toLowerCase()] || categoryStyles.other;
+    switch (categoryStyle.color) {
       case 'blue': return 'bg-blue-100 text-blue-800';
       case 'cyan': return 'bg-cyan-100 text-cyan-800';
       case 'yellow': return 'bg-yellow-100 text-yellow-800';
@@ -349,70 +230,105 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     }
   };
 
-  const handleAddTicket = (ticketData) => {
-    const newTicket = {
-      ...ticketData,
-      id: `MT${String(maintenanceTickets.length + 1).padStart(3, '0')}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      actualCost: 0,
-      actualTime: 0,
-    };
-    setMaintenanceTickets([...maintenanceTickets, newTicket]);
-    setShowTicketForm(false);
-
-    if (newTicket.roomUnavailable) {
-      setRooms(rooms.map(room =>
-        room.id === newTicket.roomId
-          ? { ...room, status: 'maintenance', maintenanceNotes: newTicket.title }
-          : room
-      ));
-    }
+  const getCategoryIcon = (category) => {
+    return categoryStyles[category.toLowerCase()]?.icon || categoryStyles.other.icon;
   };
 
-  const handleEditTicket = (ticketData) => {
-    const updatedTicket = {
-      ...ticketData,
-      updatedAt: new Date().toISOString(),
-    };
-    setMaintenanceTickets(maintenanceTickets.map(ticket =>
-      ticket.id === ticketData.id ? updatedTicket : ticket
-    ));
-    setEditingTicket(null);
-    setShowTicketForm(false);
+  const handleAddTicket = async (ticketData) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(TICKETS_API_URL, ticketData);
+      setRoomMaintenance([...roomMaintenance, response.data]);
+      setShowTicketForm(false);
 
-    const room = getRoomByTicket(ticketData.roomId);
-    if (room) {
-      let newStatus = room.status;
-      let newNotes = room.maintenanceNotes;
-
-      if (ticketData.status === 'completed' && room.status === 'maintenance') {
-        newStatus = 'available';
-        newNotes = '';
-      } else if (ticketData.roomUnavailable && room.status !== 'maintenance') {
-        newStatus = 'maintenance';
-        newNotes = ticketData.title;
+      if (ticketData.roomUnavailable) {
+        const roomToUpdate = rooms.find(room => room.id === ticketData.roomId);
+        if (roomToUpdate) {
+          const updatedRoom = { ...roomToUpdate, status: 'maintenance', maintenanceNotes: ticketData.title };
+          await axios.put(`${ROOMS_API_URL}/${ticketData.roomId}`, updatedRoom);
+          setRooms(rooms.map(room => room.id === ticketData.roomId ? updatedRoom : room));
+        }
       }
 
-      setRooms(rooms.map(r =>
-        r.id === ticketData.roomId
-          ? { ...r, status: newStatus, maintenanceNotes: newNotes }
-          : r
-      ));
+      // Refresh categories
+      const catResponse = await axios.get(CATEGORIES_API_URL);
+      const uniqueCategories = [...new Set([...catResponse.data, 'other'])].map(category => ({
+        id: category.toLowerCase(),
+        name: category.charAt(0).toUpperCase() + category.slice(1),
+      }));
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error adding ticket:', error);
+      setError('Failed to add ticket. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteTicket = (ticketId) => {
-    if (window.confirm('Are you sure you want to delete this maintenance ticket?')) {
-      const ticket = maintenanceTickets.find(t => t.id === ticketId);
-      setMaintenanceTickets(maintenanceTickets.filter(ticket => ticket.id !== ticketId));
+  const handleEditTicket = async (ticketData) => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`${TICKETS_API_URL}/${ticketData.id}`, ticketData);
+      setRoomMaintenance(roomMaintenance.map(ticket => ticket.id === ticketData.id ? response.data : ticket));
+      setEditingTicket(null);
+      setShowTicketForm(false);
 
-      if (ticket && ticket.roomUnavailable) {
-        setRooms(rooms.map(room =>
-          room.id === ticket.roomId
-            ? { ...room, status: 'available', maintenanceNotes: '' }
-            : room
-        ));
+      const room = getRoomByTicket(ticketData.roomId);
+      if (room) {
+        let newStatus = room.status;
+        let newNotes = room.maintenanceNotes;
+
+        if (ticketData.status === 'completed' && room.status === 'maintenance') {
+          newStatus = 'available';
+          newNotes = '';
+        } else if (ticketData.roomUnavailable && room.status !== 'maintenance') {
+          newStatus = 'maintenance';
+          newNotes = ticketData.title;
+        }
+
+        if (newStatus !== room.status) {
+          const updatedRoom = { ...room, status: newStatus, maintenanceNotes: newNotes };
+          await axios.put(`${ROOMS_API_URL}/${ticketData.roomId}`, updatedRoom);
+          setRooms(rooms.map(r => r.id === ticketData.roomId ? updatedRoom : r));
+        }
+      }
+    } catch (error) {
+      console.error('Error editing ticket:', error);
+      setError('Failed to edit ticket. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId) => {
+    if (window.confirm('Are you sure you want to delete this maintenance ticket?')) {
+      try {
+        setLoading(true);
+        await axios.delete(`${TICKETS_API_URL}/${ticketId}`);
+        const ticket = roomMaintenance.find(t => t.id === ticketId);
+        setRoomMaintenance(roomMaintenance.filter(ticket => ticket.id !== ticketId));
+
+        if (ticket && ticket.roomUnavailable) {
+          const roomToUpdate = rooms.find(room => room.id === ticket.roomId);
+          if (roomToUpdate) {
+            const updatedRoom = { ...roomToUpdate, status: 'available', maintenanceNotes: '' };
+            await axios.put(`${ROOMS_API_URL}/${ticket.roomId}`, updatedRoom);
+            setRooms(rooms.map(room => room.id === ticket.roomId ? updatedRoom : room));
+          }
+        }
+
+        // Refresh categories after deletion to ensure accuracy
+        const response = await axios.get(CATEGORIES_API_URL);
+        const uniqueCategories = [...new Set([...response.data, 'other'])].map(category => ({
+          id: category.toLowerCase(),
+          name: category.charAt(0).toUpperCase() + category.slice(1),
+        }));
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error('Error deleting ticket:', error);
+        setError('Failed to delete ticket. Please try again.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -437,13 +353,6 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       roomUnavailable: false,
     });
 
-    const [tagInput, setTagInput] = useState('');
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      onSave(formData);
-    };
-
     const handleStaffChange = (staffId) => {
       const staff = staffMembers.find(s => s.id === staffId);
       if (staff) {
@@ -455,12 +364,25 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       }
     };
 
+    if (rooms.length === 0 || categories.length === 0 || staffMembers.length === 0) {
+      return createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 text-center">
+              <p className="text-gray-700">Loading data...</p>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+    }
+
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
-          <div className="p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {ticket ? 'Edit Maintenance Ticket' : 'Create New Maintenance Ticket'}
               </h2>
               <button onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -468,18 +390,17 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
               </button>
             </div>
           </div>
-
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-4 sm:p-6 space-y-6">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Room *</label>
                   <select
                     required
                     value={formData.roomId}
                     onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
                     <option value="">Select Room</option>
                     {rooms.map(room => (
@@ -493,50 +414,51 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                   <select
                     required
-                    value={formData.category}
+                    value={formData.category.toLowerCase()}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
+                    <option value="">Select Category</option>
                     {categories.map(category => (
                       <option key={category.id} value={category.id}>{category.name}</option>
                     ))}
                   </select>
                 </div>
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Brief description of the issue"
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                   <textarea
                     required
                     rows={4}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Detailed description of the maintenance issue..."
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Priority & Status</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Priority & Status</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
                   <select
                     required
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
                     {priorities.map(priority => (
                       <option key={priority.id} value={priority.id}>{priority.name}</option>
@@ -548,7 +470,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
                     {statuses.map(status => (
                       <option key={status.id} value={status.id}>{status.name}</option>
@@ -569,9 +491,9 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Reporter Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Reporter Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Reported By *</label>
                   <input
@@ -579,7 +501,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     required
                     value={formData.reportedBy}
                     onChange={(e) => setFormData({ ...formData, reportedBy: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Name or department"
                   />
                 </div>
@@ -588,7 +510,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                   <select
                     value={formData.reportedByType}
                     onChange={(e) => setFormData({ ...formData, reportedByType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
                     <option value="staff">Staff</option>
                     <option value="guest">Guest</option>
@@ -602,22 +524,22 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     type="text"
                     value={formData.reporterContact}
                     onChange={(e) => setFormData({ ...formData, reporterContact: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Email or phone"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Assignment</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Assign to Staff</label>
                   <select
                     value={staffMembers.find(s => s.name === formData.assignedTo)?.id || ''}
                     onChange={(e) => handleStaffChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   >
                     <option value="">Select Staff Member</option>
                     {staffMembers.map(staff => (
@@ -631,16 +553,16 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     type="email"
                     value={formData.assignedToContact}
                     onChange={(e) => setFormData({ ...formData, assignedToContact: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="staff@email.com"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Cost & Time Estimates</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Cost & Time Estimates</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Cost ($)</label>
                   <input
@@ -649,7 +571,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     step="0.01"
                     value={formData.estimatedCost}
                     onChange={(e) => setFormData({ ...formData, estimatedCost: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   />
                 </div>
                 <div>
@@ -660,14 +582,14 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     step="0.5"
                     value={formData.estimatedTime}
                     onChange={(e) => setFormData({ ...formData, estimatedTime: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
@@ -675,24 +597,24 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Additional notes or instructions..."
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 sm:px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                className="px-4 sm:px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm sm:text-base"
               >
                 {ticket ? 'Update Ticket' : 'Create Ticket'}
               </button>
@@ -706,54 +628,61 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
   const TicketDetails = ({ ticket, onClose, onEdit, onDelete }) => {
     const room = getRoomByTicket(ticket.roomId);
-    const category = categories.find(c => c.id === ticket.category);
+    const category = categories.find(c => c.id === ticket.category.toLowerCase());
     const priority = priorities.find(p => p.id === ticket.priority);
     const status = statuses.find(s => s.id === ticket.status);
     const StatusIcon = status?.icon || Clock;
+    const CategoryIcon = getCategoryIcon(ticket.category);
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-gray-200">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{ticket.title}</h2>
-                  <p className="text-sm text-gray-600">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{ticket.title}</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Ticket #{ticket.id} • Room {room?.roomNumber} • {category?.name}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <button
                   onClick={() => onEdit(ticket)}
-                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg"
+                  className="p-1 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-4 w-4 sm:h-5 w-5" />
                 </button>
                 <button
                   onClick={() => onDelete(ticket.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  className="p-1 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 sm:h-5 w-5" />
                 </button>
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg">
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <StatusIcon className="h-4 w-4 text-gray-600" />
-                <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
+          <div className="p-4 sm:p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <StatusIcon className="h-4 w-4 sm:h-5 w-5 text-gray-600" />
+                <span className={`inline-flex px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
                   {status?.name}
                 </span>
               </div>
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <CategoryIcon className="h-4 w-4 sm:h-5 w-5 text-gray-600" />
+                <span className={`inline-flex px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full border ${getCategoryColor(ticket.category)}`}>
+                  {category?.name}
+                </span>
+              </div>
               {ticket.roomUnavailable && (
-                <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
+                <span className="inline-flex px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
                   Room Unavailable
                 </span>
               )}
@@ -761,27 +690,27 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
             {room && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="flex items-center space-x-3">
                     <Home className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-600">Room</p>
-                      <p className="font-medium text-gray-900">{room.roomNumber} - {room.name}</p>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">{room.roomNumber} - {room.name}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <MapPin className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-600">Floor</p>
-                      <p className="font-medium text-gray-900">{room.floor}</p>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">{room.floor}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Users className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-600">Capacity</p>
-                      <p className="font-medium text-gray-900">{room.capacity} guests</p>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">{room.capacity} guests</p>
                     </div>
                   </div>
                 </div>
@@ -789,27 +718,27 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
             )}
 
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-              <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{ticket.description}</p>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Description</h3>
+              <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-4 rounded-lg">{ticket.description}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Reporter Information</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Reporter Information</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <User className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Reported by</p>
-                        <p className="font-medium text-gray-900">{ticket.reportedBy}</p>
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.reportedBy}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Badge className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Type</p>
-                        <p className="font-medium text-gray-900 capitalize">{ticket.reportedByType.replace('_', ' ')}</p>
+                        <p className="font-medium text-gray-900 capitalize text-sm sm:text-base">{ticket.reportedByType.replace('_', ' ')}</p>
                       </div>
                     </div>
                     {ticket.reporterContact && (
@@ -817,7 +746,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                         <Mail className="h-4 w-4 text-gray-500" />
                         <div>
                           <p className="text-sm text-gray-600">Contact</p>
-                          <p className="font-medium text-gray-900">{ticket.reporterContact}</p>
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.reporterContact}</p>
                         </div>
                       </div>
                     )}
@@ -825,13 +754,13 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Assignment</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Assignment</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <UserCheck className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Assigned to</p>
-                        <p className="font-medium text-gray-900">{ticket.assignedTo || 'Unassigned'}</p>
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.assignedTo || 'Unassigned'}</p>
                       </div>
                     </div>
                     {ticket.assignedToContact && (
@@ -839,7 +768,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                         <Mail className="h-4 w-4 text-gray-500" />
                         <div>
                           <p className="text-sm text-gray-600">Contact</p>
-                          <p className="font-medium text-gray-900">{ticket.assignedToContact}</p>
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.assignedToContact}</p>
                         </div>
                       </div>
                     )}
@@ -849,13 +778,13 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <Calendar className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Created</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
                           {new Date(ticket.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -864,7 +793,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                       <Clock className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Last Updated</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
                           {new Date(ticket.updatedAt).toLocaleString()}
                         </p>
                       </div>
@@ -873,20 +802,20 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Cost & Time</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Cost & Time</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <DollarSign className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Estimated Cost</p>
-                        <p className="font-medium text-gray-900">${ticket.estimatedCost}</p>
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">${ticket.estimatedCost}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Timer className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-600">Estimated Time</p>
-                        <p className="font-medium text-gray-900">{ticket.estimatedTime} hours</p>
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.estimatedTime} hours</p>
                       </div>
                     </div>
                     {ticket.actualCost > 0 && (
@@ -894,7 +823,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                         <DollarSign className="h-4 w-4 text-green-500" />
                         <div>
                           <p className="text-sm text-gray-600">Actual Cost</p>
-                          <p className="font-medium text-gray-900">${ticket.actualCost}</p>
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">${ticket.actualCost}</p>
                         </div>
                       </div>
                     )}
@@ -903,7 +832,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                         <Timer className="h-4 w-4 text-green-500" />
                         <div>
                           <p className="text-sm text-gray-600">Actual Time</p>
-                          <p className="font-medium text-gray-900">{ticket.actualTime} hours</p>
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.actualTime} hours</p>
                         </div>
                       </div>
                     )}
@@ -914,21 +843,21 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
             {ticket.notes && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Notes</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{ticket.notes}</p>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Notes</h3>
+                <p className="text-sm sm:text-base text-gray-700 bg-gray-50 p-4 rounded-lg">{ticket.notes}</p>
               </div>
             )}
 
             {ticket.images && ticket.images.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Images</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Images</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {ticket.images.map((image, index) => (
                     <img
                       key={index}
                       src={image}
                       alt={`Issue ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
+                      className="w-full h-32 sm:h-40 object-cover rounded-lg"
                     />
                   ))}
                 </div>
@@ -943,81 +872,86 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
   const TicketCard = ({ ticket, onView, onEdit, onDelete }) => {
     const room = getRoomByTicket(ticket.roomId);
-    const category = categories.find(c => c.id === ticket.category);
+    const category = categories.find(c => c.id === ticket.category.toLowerCase());
     const priority = priorities.find(p => p.id === ticket.priority);
     const status = statuses.find(s => s.id === ticket.status);
+    const CategoryIcon = getCategoryIcon(ticket.category);
 
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <div>
-                <h3 className="font-semibold text-gray-900 text-sm mb-1">{ticket.title}</h3>
-                <p className="text-xs text-gray-600">#{ticket.id} • Room {room?.roomNumber}</p>
-              </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow p-3 sm:p-4">
+        <div className="flex items-start justify-between mb-2 sm:mb-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-1 truncate">{ticket.title}</h3>
+              <p className="text-xs text-gray-600">#{ticket.id} • Room {room?.roomNumber}</p>
             </div>
           </div>
+        </div>
 
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{ticket.description}</p>
+        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">{ticket.description}</p>
 
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center justify-between">
-              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
-                {status?.name}
-              </span>
-              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(ticket.priority)}`}>
-                {priority?.name}
-              </span>
-            </div>
-            {ticket.roomUnavailable && (
-              <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
-                Room Unavailable
-              </span>
-            )}
+        <div className="space-y-2 mb-3 sm:mb-4">
+          <div className="flex items-center justify-between">
+            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
+              {status?.name}
+            </span>
+            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(ticket.priority)}`}>
+              {priority?.name}
+            </span>
           </div>
+          <div className="flex items-center space-x-2">
+            <CategoryIcon className="h-4 w-4 text-gray-600" />
+            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getCategoryColor(ticket.category)}`}>
+              {category?.name}
+            </span>
+          </div>
+          {ticket.roomUnavailable && (
+            <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
+              Room Unavailable
+            </span>
+          )}
+        </div>
 
-          <div className="space-y-2 mb-4 text-xs text-gray-600">
+        <div className="space-y-2 mb-3 sm:mb-4 text-xs text-gray-600">
+          <div className="flex items-center space-x-2">
+            <User className="h-3 w-3" />
+            <span className="truncate">Assigned: {ticket.assignedTo || 'Unassigned'}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-3 w-3" />
+            <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
+          </div>
+          {ticket.estimatedCost > 0 && (
             <div className="flex items-center space-x-2">
-              <User className="h-3 w-3" />
-              <span>Assigned: {ticket.assignedTo || 'Unassigned'}</span>
+              <DollarSign className="h-3 w-3" />
+              <span>Est. Cost: ${ticket.estimatedCost}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-3 w-3" />
-              <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
-            </div>
-            {ticket.estimatedCost > 0 && (
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-3 w-3" />
-                <span>Est. Cost: ${ticket.estimatedCost}</span>
-              </div>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
+          <button
+            onClick={() => onView(ticket)}
+            className="flex items-center space-x-1 text-orange-600 hover:text-orange-700 text-xs sm:text-sm font-medium"
+          >
+            <Eye className="h-4 w-4" />
+            <span>View Details</span>
+          </button>
+          <div className="flex items-center space-x-1">
             <button
-              onClick={() => onView(ticket)}
-              className="flex items-center space-x-1 text-orange-600 hover:text-orange-700 text-sm font-medium"
+              onClick={() => onEdit(ticket)}
+              className="p-1 text-gray-400 hover:text-orange-600 rounded"
+              title="Edit Ticket"
             >
-              <Eye className="h-4 w-4" />
-              <span>View Details</span>
+              <Edit className="h-4 w-4" />
             </button>
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => onEdit(ticket)}
-                className="p-1 text-gray-400 hover:text-orange-600 rounded"
-                title="Edit Ticket"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onDelete(ticket.id)}
-                className="p-1 text-gray-400 hover:text-red-600 rounded"
-                title="Delete Ticket"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+            <button
+              onClick={() => onDelete(ticket.id)}
+              className="p-1 text-gray-400 hover:text-red-600 rounded"
+              title="Delete Ticket"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -1026,50 +960,54 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
   const TicketListItem = ({ ticket, onView, onEdit, onDelete }) => {
     const room = getRoomByTicket(ticket.roomId);
-    const category = categories.find(c => c.id === ticket.category);
+    const category = categories.find(c => c.id === ticket.category.toLowerCase());
     const priority = priorities.find(p => p.id === ticket.priority);
     const status = statuses.find(s => s.id === ticket.status);
+    const CategoryIcon = getCategoryIcon(ticket.category);
 
     return (
       <tr className="border-b border-gray-100 hover:bg-gray-50">
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <div className="flex items-center space-x-3">
             <div>
-              <p className="font-medium text-gray-900 text-sm">{ticket.title}</p>
+              <p className="font-medium text-gray-900 text-sm truncate">{ticket.title}</p>
               <p className="text-xs text-gray-600">#{ticket.id}</p>
             </div>
           </div>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <span className="text-sm text-gray-900">
             Room {room?.roomNumber}
           </span>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{category?.name}</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <div className="flex items-center space-x-2">
+            <CategoryIcon className="h-4 w-4 text-gray-600" />
+            <span className="text-sm text-gray-900">{category?.name}</span>
+          </div>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(ticket.priority)}`}>
             {priority?.name}
           </span>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
             {status?.name}
           </span>
         </td>
-        <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{ticket.assignedTo || 'Unassigned'}</span>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm text-gray-900 truncate">{ticket.assignedTo || 'Unassigned'}</span>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <span className="text-sm text-gray-900">${ticket.estimatedCost}</span>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <span className="text-sm text-gray-900">
             {new Date(ticket.createdAt).toLocaleDateString()}
           </span>
         </td>
-        <td className="py-4 px-4">
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onView(ticket)}
@@ -1098,29 +1036,31 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     );
   };
 
-  // Dynamic sidebar width calculation
-  const sidebarWidth = sidebarMinimized ? 4 : 16; // rem
+  const sidebarWidth = sidebarMinimized ? 4 : 16;
   const sidebarOffset = sidebarOpen ? sidebarWidth : 0;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 transition-all duration-300">
+      {error && (
+        <div className="px-6 py-4 bg-red-100 border-b border-red-200">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
       <div
-        className="flex-1 transition-all duration-300"
         style={{
           marginLeft: `${sidebarOffset}rem`,
           width: `calc(100% - ${sidebarOffset}rem)`,
         }}
       >
-        {/* Filters and Controls */}
-        <div className="px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-20">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-wrap">
-              <div className="flex items-center space-x-2">
+        <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-20">
+          <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4 flex-wrap w-full">
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
                 <Filter className="h-4 w-4 text-gray-500" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                 >
                   <option value="all">All Status</option>
                   {statuses.map(status => (
@@ -1131,7 +1071,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
               <select
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Priorities</option>
                 {priorities.map(priority => (
@@ -1141,7 +1081,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Categories</option>
                 {categories.map(category => (
@@ -1150,23 +1090,20 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
               </select>
               <button
                 onClick={() => setShowTicketForm(true)}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2"
-                style={{ alignSelf: 'flex-start' }}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2 w-full sm:w-auto text-sm"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Ticket</span>
               </button>
-
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-                style={{ alignSelf: 'flex-start' }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto text-sm"
                 onClick={() => setShowUnavailableRooms(!showUnavailableRooms)}
               >
                 <span>Currently Unavailable Rooms</span>
               </button>
             </div>
             {!showUnavailableRooms && (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 w-full sm:w-auto">
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
@@ -1192,28 +1129,33 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           </div>
         </div>
 
-        {/*Unavailable Rooms */}
+        {loading && (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-600">Loading...</p>
+          </div>
+        )}
+
         {!showUnavailableRooms ? (
-          <div className="px-6 py-6 h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="px-4 sm:px-6 py-4 sm:py-6 h-[calc(100vh-4rem)] overflow-y-auto">
             {filteredTickets.length === 0 ? (
-              <div className="text-center py-12">
-                <Wrench className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance tickets found</h3>
-                <p className="text-gray-600 mb-6">
+              <div className="text-center py-8 sm:py-12">
+                <Wrench className="h-12 w-12 sm:h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No maintenance tickets found</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6">
                   {searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || filterCategory !== 'all'
                     ? 'No tickets match your current filters.'
                     : 'Get started by creating your first maintenance ticket.'}
                 </p>
                 <button
                   onClick={() => setShowTicketForm(true)}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2 mx-auto"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2 mx-auto text-sm sm:text-base"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create Ticket</span>
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                 {filteredTickets.map(ticket => (
                   <TicketCard
                     key={ticket.id}
@@ -1231,71 +1173,69 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Ticket</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Room</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Category</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Priority</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Assigned To</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Est. Cost</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTickets.map(ticket => (
-                        <TicketListItem
-                          key={ticket.id}
-                          ticket={ticket}
-                          onView={(ticket) => {
-                            setSelectedTicket(ticket);
-                            setShowTicketDetails(true);
-                          }}
-                          onEdit={(ticket) => {
-                            setEditingTicket(ticket);
-                            setShowTicketForm(true);
-                          }}
-                          onDelete={handleDeleteTicket}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <table className="w-full min-w-[640px]">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Ticket</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Room</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Category</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Priority</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Status</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Assigned To</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Est. Cost</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Created</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTickets.map(ticket => (
+                      <TicketListItem
+                        key={ticket.id}
+                        ticket={ticket}
+                        onView={(ticket) => {
+                          setSelectedTicket(ticket);
+                          setShowTicketDetails(true);
+                        }}
+                        onEdit={(ticket) => {
+                          setEditingTicket(ticket);
+                          setShowTicketForm(true);
+                        }}
+                        onDelete={handleDeleteTicket}
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         ) : (
           <div className="w-full mt-4">
-            <div className="px-6 py-4 bg-white border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Rooms Under Maintenance</h3>
+            <div className="px-4 sm:px-6 py-4 bg-white border-t border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Rooms Under Maintenance</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {rooms.filter(room => room.status === 'maintenance').map(room => {
-                  const roomTickets = maintenanceTickets.filter(t => t.roomId === room.id && t.status !== 'completed');
+                  const roomTickets = roomMaintenance.filter(t => t.roomId === room.id && t.status !== 'completed');
                   return (
                     <div key={room.id} className="bg-red-50 border border-red-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900">Room {room.roomNumber}</h4>
-                        <span className="text-sm text-red-600 font-medium">Unavailable</span>
+                        <h4 className="font-medium text-gray-900 text-sm">Room {room.roomNumber}</h4>
+                        <span className="text-xs text-red-600 font-medium">Unavailable</span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{room.name}</p>
+                      <p className="text-xs text-gray-600 mb-2">{room.name}</p>
                       <p className="text-xs text-gray-500">
                         {roomTickets.length} active ticket{roomTickets.length !== 1 ? 's' : ''}
                       </p>
                       {room.maintenanceNotes && (
-                        <p className="text-xs text-red-600 mt-1 italic">{room.maintenanceNotes}</p>
+                        <p className="text-xs text-red-600 mt-1 italic truncate">{room.maintenanceNotes}</p>
                       )}
                     </div>
                   );
                 })}
                 {rooms.filter(room => room.status === 'maintenance').length === 0 && (
                   <div className="col-span-full text-center py-8">
-                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <p className="text-gray-600">All rooms are currently available</p>
+                    <CheckCircle className="h-8 w-8 sm:h-12 w-12 text-green-500 mx-auto mb-2" />
+                    <p className="text-sm sm:text-gray-600">All rooms are currently available</p>
                   </div>
                 )}
               </div>
@@ -1303,7 +1243,6 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           </div>
         )}
 
-        {/* Modals */}
         {showTicketForm && (
           <TicketForm
             ticket={editingTicket}
@@ -1329,14 +1268,6 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
             }}
             onDelete={handleDeleteTicket}
           />
-        )}
-
-        {/* Sidebar Overlay for Mobile */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
         )}
       </div>
     </div>
