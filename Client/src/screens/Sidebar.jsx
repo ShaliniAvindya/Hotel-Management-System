@@ -46,7 +46,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
     >
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 bg-slate-900">
         {!sidebarMinimized && (
-          <h1 className="text-lg sm:text-xl font-bold text-white truncate">RestaurantPro</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-white truncate">Hotel Management</h1>
         )}
         {sidebarMinimized && <ChefHat className="h-8 w-8 text-white mx-auto" />}
         <div className="flex items-center space-x-2">
