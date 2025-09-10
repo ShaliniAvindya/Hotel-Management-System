@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const RoomRates = require('../models/roomRate');
+const RoomRates = require('../../models/RoomManaagemnt/roomRate');
 const mongoose = require('mongoose');
 
 // Get all room rates

@@ -4,11 +4,17 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-const roomRoutes = require('./routes/roomRoutes'); 
-const roomRateRoutes = require('./routes/roomRateRoutes');
-const maintenanceRoutes = require('./routes/maintenanceRoutes');
-const roomAvailabilityRoutes = require('./routes/roomAvailabilityRoutes');
-const staffMember = require('./routes/staffMemberRoutess');
+const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes'); 
+const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
+const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
+const roomAvailabilityRoutes = require('./routes/RoomManaagemnt/roomAvailabilityRoutes');
+const staffMember = require('./routes/RoomManaagemnt/staffMemberRoutess');
+const bookingRoutes = require('./routes/ReservationManagement/bookingRoutes');
+const guestRoutes = require('./routes/ReservationManagement/guestRoutes');
+const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoutes');
+const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
+const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
+const billingRoutes = require('./routes/billingRoutes');
 
 const app = express();
 
@@ -27,6 +33,13 @@ app.use('/api/room-rates', roomRateRoutes);
 app.use('/api/roomMaintenance', maintenanceRoutes);
 app.use('/api/roomAvailability', roomAvailabilityRoutes);
 app.use('/api/staffMembers', staffMember);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/guests', guestRoutes);
+app.use('/api/checkinout', checkInOutRoutes);
+app.use('/api/cancellations', Cancellation);
+app.use('/api/specialrequests', specialRequestRoutes);
+app.use('/api/billing', billingRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
