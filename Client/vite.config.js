@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     open:true,
     proxy: {      '/api': {
-        target: 'hotel-management-system-q26a.vercel.app',
+        target: 'https://hotel-management-system-q26a.vercel.app',
         changeOrigin: true,
       },
     },
