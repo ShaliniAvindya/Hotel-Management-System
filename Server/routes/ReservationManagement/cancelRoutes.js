@@ -137,7 +137,18 @@ router.post('/cancel/:id', async (req, res) => {
       select: 'id bookingReference guestName guestEmail guestPhone roomId checkInDate checkOutDate guests totalAmount splitStays'
     });
 
-    res.status(201).json(cancellation);
+      try {
+        const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
+        await updateRestaurantAnalytics({
+          items: [],
+          amount: 0,
+          prepTime: 0,
+          barDrinks: [],
+        });
+      } catch (err) {
+        console.error('Analytics update failed (cancellation):', err.message);
+      }
+      res.status(201).json(cancellation);
   } catch (err) {
     console.error('Error cancelling booking:', err);
     res.status(400).json({ message: err.message });
@@ -210,7 +221,18 @@ router.post('/noshow/:id', async (req, res) => {
       select: 'id bookingReference guestName guestEmail guestPhone roomId checkInDate checkOutDate guests totalAmount splitStays'
     });
 
-    res.status(201).json(noShow);
+      try {
+        const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
+        await updateRestaurantAnalytics({
+          items: [],
+          amount: 0,
+          prepTime: 0,
+          barDrinks: [],
+        });
+      } catch (err) {
+        console.error('Analytics update failed (no-show):', err.message);
+      }
+      res.status(201).json(noShow);
   } catch (err) {
     console.error('Error marking no-show:', err);
     res.status(400).json({ message: err.message });

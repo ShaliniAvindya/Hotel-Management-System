@@ -27,6 +27,7 @@ import {
   Split,
   Trash2
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   const room = booking.room;
@@ -35,16 +36,14 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
   const getStatusColor = (status) => {
-    const bookingStatuses = [
-      { id: 'all', name: 'All Bookings', color: 'gray' },
-      { id: 'confirmed', name: 'Confirmed', color: 'blue' },
-      { id: 'checked-in', name: 'Checked In', color: 'green' },
-      { id: 'checked-out', name: 'Checked Out', color: 'gray' },
-      { id: 'cancelled', name: 'Cancelled', color: 'red' },
-      { id: 'no-show', name: 'No Show', color: 'orange' }
-    ];
-    const statusObj = bookingStatuses.find(s => s.id === status);
-    return statusObj ? statusObj.color : 'gray';
+    switch (status) {
+      case 'confirmed': return 'blue';
+      case 'checked-in': return 'green';
+      case 'checked-out': return 'gray';
+      case 'cancelled': return 'red';
+      case 'no-show': return 'orange';
+      default: return 'gray';
+    }
   };
 
   return (
@@ -55,13 +54,7 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
           <p className="text-sm text-gray-600">{booking.bookingReference}</p>
           <p className="text-sm text-gray-600">Guest ID: {booking.guestId || 'N/A'}</p>
         </div>
-        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-          getStatusColor(booking.status) === 'green' ? 'bg-green-100 text-green-800' :
-          getStatusColor(booking.status) === 'blue' ? 'bg-blue-100 text-blue-800' :
-          getStatusColor(booking.status) === 'red' ? 'bg-red-100 text-red-800' :
-          getStatusColor(booking.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${getStatusColor(booking.status)}-100 text-${getStatusColor(booking.status)}-800`}>
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>
       </div>
@@ -242,7 +235,7 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
       b.id !== excludeBookingId &&
       b.status !== 'cancelled' &&
       b.splitStays.some(stay => 
-        stay.roomId === roomId &&
+        stay.roomId === roomId && 
         new Date(stay.checkIn) < end &&
         new Date(stay.checkOut) > start
       )
@@ -321,7 +314,7 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
 
     try {
       if (booking) {
-        const response = await axios.put(`http://localhost:8000/api/bookings/${booking.id}`, bookingData);
+        const response = await axios.put(`${API_BASE_URL}/bookings/${booking.id}`, bookingData);
         onSave(response.data);
         setSuccess('Booking updated successfully!');
         setTimeout(() => {
@@ -330,7 +323,7 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
         }, 2000);
       } else {
         // Create new booking
-        const response = await axios.post('http://localhost:8000/api/bookings', bookingData);
+        const response = await axios.post(`${API_BASE_URL}/bookings`, bookingData);
         onSave(response.data);
         setSuccess('Booking created successfully!');
         setTimeout(() => {
@@ -650,14 +643,13 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
 
 const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
   const room = rooms.find(r => r.id === booking.roomId);
-  const bookingStatuses = [
-    { id: 'confirmed', name: 'Confirmed', color: 'blue' },
-    { id: 'checked-in', name: 'Checked In', color: 'green' },
-    { id: 'checked-out', name: 'Checked Out', color: 'gray' },
-    { id: 'cancelled', name: 'Cancelled', color: 'red' },
-    { id: 'no-show', name: 'No Show', color: 'orange' }
-  ];
-  const statusConfig = bookingStatuses.find(s => s.id === booking.status) || { color: 'gray' };
+  const statusConfig = {
+    confirmed: { name: 'Confirmed', color: 'blue' },
+    'checked-in': { name: 'Checked In', color: 'green' },
+    'checked-out': { name: 'Checked Out', color: 'gray' },
+    cancelled: { name: 'Cancelled', color: 'red' },
+    'no-show': { name: 'No Show', color: 'orange' }
+  }[booking.status] || { name: booking.status, color: 'gray' };
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
@@ -685,13 +677,7 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Status</h3>
-              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                statusConfig.color === 'green' ? 'bg-green-100 text-green-800' :
-                statusConfig.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                statusConfig.color === 'red' ? 'bg-red-100 text-red-800' :
-                statusConfig.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${statusConfig.color}-100 text-${statusConfig.color}-800`}>
                 {statusConfig.name}
               </span>
             </div>
@@ -821,7 +807,7 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
        booking.checkInDate <= dateStr && 
        booking.checkOutDate > dateStr) ||
       booking.splitStays.some(stay => 
-        stay.roomId === roomId && 
+        stay.roomId === roomId &&
         stay.checkIn <= dateStr && 
         stay.checkOut > dateStr
       )
@@ -934,12 +920,12 @@ const BookingCalendar = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const roomsResponse = await axios.get('http://localhost:8000/api/rooms');
+        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
         const fetchedRooms = roomsResponse.data;
         setRooms(fetchedRooms);
         setFilteredRooms(fetchedRooms);
 
-        const bookingsResponse = await axios.get('http://localhost:8000/api/bookings');
+        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
         const fetchedBookings = bookingsResponse.data.map(booking => ({
           ...booking,
           room: booking.splitStays.length > 0 ? null : fetchedRooms.find(r => r.id === booking.roomId)
@@ -997,7 +983,7 @@ const BookingCalendar = () => {
   const handleAddBooking = async (bookingData) => {
     try {
       const { id, ...bookingDataWithoutId } = bookingData;
-      const response = await axios.post('http://localhost:8000/api/bookings', bookingDataWithoutId);
+      const response = await axios.post(`${API_BASE_URL}/bookings`, bookingDataWithoutId);
       const newBooking = {
         ...response.data,
         room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
@@ -1019,7 +1005,7 @@ const BookingCalendar = () => {
 
   const handleEditBooking = async (bookingData) => {
     try {
-      const response = await axios.put(`http://localhost:8000/api/bookings/${bookingData.id}`, bookingData);
+      const response = await axios.put(`${API_BASE_URL}/bookings/${bookingData.id}`, bookingData);
       const updatedBooking = {
         ...response.data,
         room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
@@ -1041,7 +1027,7 @@ const BookingCalendar = () => {
   const handleDeleteBooking = async (bookingId) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/bookings/${bookingId}`);
+        await axios.delete(`${API_BASE_URL}/bookings/${bookingId}`);
         const updatedBooking = bookings.find(b => b.id === bookingId);
         updatedBooking.status = 'cancelled';
         setBookings(bookings.map(b => b.id === bookingId ? updatedBooking : b));

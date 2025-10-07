@@ -2,6 +2,7 @@ const express = require('express');
 const Booking = require('../../models/ReservationManagement/Booking');
 const Room = require('../../models/RoomManaagemnt/Room');
 const Guest = require('../../models/ReservationManagement/Guest');
+const RoomAvailability = require('../../models/RoomManaagemnt/RoomAvailability');
 
 const router = express.Router();
 
@@ -132,6 +133,20 @@ router.post('/', async (req, res) => {
     const booking = new Booking(bookingData);
     await booking.save();
     console.log('Booking created:', booking.id, 'with guestId:', guest.id);
+      try {
+        const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
+        await updateRestaurantAnalytics({
+          amount: bookingData.totalAmount,
+          items: bookingData.items || [],
+          prepTime: bookingData.prepTime || 0,
+          barDrinks: bookingData.barDrinks || []
+        });
+      } catch (err) {
+        console.error('Analytics update failed:', err.message);
+      }
+
+    await updateRoomAvailabilityForBooking(booking);
+
     res.status(201).json(booking);
   } catch (err) {
     console.error('Error creating booking:', err.message);
@@ -192,6 +207,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const booking = await Booking.findOneAndUpdate({ id: req.params.id }, bookingData, { new: true });
+    await updateRoomAvailabilityForBooking(booking);
     res.json(booking);
   } catch (err) {
     console.error('Error updating booking:', err.message);
@@ -228,6 +244,8 @@ router.delete('/:id', async (req, res) => {
         await guest.save();
       }
     }
+
+    await updateRoomAvailabilityForBooking(booking);
 
     res.json(booking);
   } catch (err) {
@@ -272,6 +290,35 @@ async function checkRoomAvailability(roomId, checkIn, checkOut, excludeBookingId
         new Date(stay.checkOut) > start
     );
   });
+}
+
+async function updateRoomAvailabilityForBooking(booking) {
+  const updateForRoom = async (roomId, checkIn, checkOut, status) => {
+    const availability = await RoomAvailability.findOne({ roomId });
+    let availabilityData = availability ? availability.availability : [];
+
+    let currentDate = new Date(checkIn);
+    while (currentDate < new Date(checkOut)) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      availabilityData = availabilityData.filter(entry => entry.date !== dateKey);
+      availabilityData.push({ date: dateKey, status: status });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    await RoomAvailability.updateOne(
+      { roomId },
+      { availability: availabilityData },
+      { upsert: true }
+    );
+  };
+
+  if (booking.splitStays.length > 0) {
+    for (const stay of booking.splitStays) {
+      await updateForRoom(stay.roomId, stay.checkIn, stay.checkOut, booking.status === 'confirmed' ? 'reserved' : booking.status === 'checked-in' ? 'occupied' : booking.status === 'checked-out' ? 'checkout' : 'available');
+    }
+  } else {
+    await updateForRoom(booking.roomId, booking.checkInDate, booking.checkOutDate, booking.status === 'confirmed' ? 'reserved' : booking.status === 'checked-in' ? 'occupied' : booking.status === 'checked-out' ? 'checkout' : 'available');
+  }
 }
 
 module.exports = router;

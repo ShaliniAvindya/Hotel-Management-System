@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Eye,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const SpecialRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -63,9 +64,9 @@ const SpecialRequests = () => {
     const fetchData = async () => {
       try {
         const [roomsResponse, bookingsResponse, requestsResponse] = await Promise.all([
-          axios.get('http://localhost:8000/api/rooms'),
-          axios.get('http://localhost:8000/api/bookings'),
-          axios.get('http://localhost:8000/api/specialrequests'),
+          axios.get(`${API_BASE_URL}/rooms`),
+          axios.get(`${API_BASE_URL}/bookings`),
+          axios.get(`${API_BASE_URL}/specialrequests`),
         ]);
 
         setRooms(roomsResponse.data);
@@ -107,7 +108,7 @@ const SpecialRequests = () => {
 
   const handleAddRequest = async (requestData) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/specialrequests', requestData);
+      const response = await axios.post(`${API_BASE_URL}/specialrequests`, requestData);
       setRequests((prev) => [...prev, response.data]);
       setSuccess('Special request created successfully');
       setTimeout(() => {
@@ -122,7 +123,7 @@ const SpecialRequests = () => {
 
   const handleEditRequest = async (requestData) => {
     try {
-      const response = await axios.put(`http://localhost:8000/api/specialrequests/${requestData.id}`, requestData);
+      const response = await axios.put(`${API_BASE_URL}/specialrequests/${requestData.id}`, requestData);
       setRequests((prev) => prev.map((request) => (request.id === requestData.id ? response.data : request)));
       setSuccess('Special request updated successfully');
       setTimeout(() => {
@@ -139,7 +140,7 @@ const SpecialRequests = () => {
   const handleDeleteRequest = async (requestId) => {
     if (window.confirm('Are you sure you want to delete this request?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/specialrequests/${requestId}`);
+        await axios.delete(`${API_BASE_URL}/specialrequests/${requestId}`);
         setRequests(requests.filter((request) => request.id !== requestId));
         setSuccess('Special request deleted successfully');
         setTimeout(() => {

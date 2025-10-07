@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import {
   CreditCard, Receipt, FileText, Search, Filter, RefreshCw, CheckCircle, XCircle, AlertCircle, X, Download, Printer, Eye, Menu, History,
 } from 'lucide-react';
+import { API_BASE_URL } from '../apiconfig';
 
 // Helper to download invoice as PDF
 const handleDownloadInvoice = (invoice, reservation) => {
@@ -209,11 +210,11 @@ const BillingInvoice = () => {
       setLoading(true);
       try {
         const [bookingsRes, roomsRes, invoicesRes, paymentsRes, servicesRes] = await Promise.all([
-          fetch('/api/bookings'),
-          fetch('/api/billing/rooms'),
-          fetch('/api/billing/invoices'),
-          fetch('/api/billing/payments'),
-          fetch('/api/billing/services'),
+          fetch(`${API_BASE_URL}/bookings`),
+          fetch(`${API_BASE_URL}/billing/rooms`),
+          fetch(`${API_BASE_URL}/billing/invoices`),
+          fetch(`${API_BASE_URL}/billing/payments`),
+          fetch(`${API_BASE_URL}/billing/services`),
         ]);
         const bookings = await bookingsRes.json();
         const rooms = await roomsRes.json();
@@ -356,7 +357,7 @@ const BillingInvoice = () => {
           additionalServices: charges.filter(c => c.serviceId !== 'minibar' && c.serviceId !== 'damage').reduce((sum, c) => sum + c.total, 0),
           damageCharges: charges.filter(c => c.serviceId === 'damage').reduce((sum, c) => sum + c.total, 0),
         };
-        await fetch(`/api/bookings/${reservation.id}`, {
+        await fetch(`${API_BASE_URL}/bookings/${reservation.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedBooking),
@@ -364,12 +365,12 @@ const BillingInvoice = () => {
         toast.success('Charges updated successfully');
         onSave({ ...reservation, additionalCharges: charges });
         const [bookingsRes, invoicesRes, paymentsRes] = await Promise.all([
-          fetch('/api/bookings'),
-          fetch('/api/billing/invoices'),
-          fetch('/api/billing/payments'),
+          fetch(`${API_BASE_URL}/bookings`),
+          fetch(`${API_BASE_URL}/billing/invoices`),
+          fetch(`${API_BASE_URL}/billing/payments`),
         ]);
         const bookings = await bookingsRes.json();
-        const rooms = await (await fetch('/api/billing/rooms')).json();
+        const rooms = await (await fetch(`${API_BASE_URL}/billing/rooms`)).json();
         let invoices = await invoicesRes.json();
         const payments = await paymentsRes.json();
         const mappedReservations = bookings.map(booking => ({
@@ -610,7 +611,7 @@ const BillingInvoice = () => {
           reference: paymentData.reference,
           notes: paymentData.notes,
         };
-        const response = await fetch('/api/billing/payments', {
+        const response = await fetch(`${API_BASE_URL}/billing/payments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payment),
@@ -621,10 +622,10 @@ const BillingInvoice = () => {
         onSave(newPayment);
         // Auto-refresh data
         const [bookingsRes, roomsRes, invoicesRes, paymentsRes] = await Promise.all([
-          fetch('/api/bookings'),
-          fetch('/api/billing/rooms'),
-          fetch('/api/billing/invoices'),
-          fetch('/api/billing/payments'),
+          fetch(`${API_BASE_URL}/bookings`),
+          fetch(`${API_BASE_URL}/billing/rooms`),
+          fetch(`${API_BASE_URL}/billing/invoices`),
+          fetch(`${API_BASE_URL}/billing/payments`),
         ]);
         const bookings = await bookingsRes.json();
         const rooms = await roomsRes.json();
@@ -834,7 +835,7 @@ const BillingInvoice = () => {
         reservation,
         payments: getPaymentsByReservation(reservation.id),
       };
-      const response = await fetch('/api/billing/invoices', {
+      const response = await fetch(`${API_BASE_URL}/billing/invoices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invoice),
@@ -859,7 +860,7 @@ const BillingInvoice = () => {
     if (invoice.status !== newStatus) {
       const updatedInvoice = { ...invoice, status: newStatus };
       try {
-        await fetch(`/api/billing/invoices/${invoice.id}`, {
+        await fetch(`${API_BASE_URL}/billing/invoices/${invoice.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedInvoice),

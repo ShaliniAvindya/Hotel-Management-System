@@ -15,6 +15,7 @@ const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoute
 const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
 const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
 const billingRoutes = require('./routes/billingRoutes');
+const restaurantBarAnalyticsRoutes = require('./routes/Restaurant&BarManagement/analyticsRoutes');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/guests', guestRoutes);
 app.use('/api/checkinout', checkInOutRoutes);
 app.use('/api/cancellations', Cancellation);
 app.use('/api/specialrequests', specialRequestRoutes);
+app.use('/api/restaurant-bar/analytics', restaurantBarAnalyticsRoutes);
 app.use('/api/billing', billingRoutes);
 
 

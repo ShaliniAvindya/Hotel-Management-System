@@ -23,6 +23,7 @@ import {
   Timer,
   Ban
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const CheckInCheckOut = () => {
   const [bookings, setBookings] = useState([]);
@@ -58,10 +59,10 @@ const CheckInCheckOut = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const roomsResponse = await axios.get('http://localhost:8000/api/rooms');
+        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
         setRooms(roomsResponse.data);
 
-        const bookingsResponse = await axios.get('http://localhost:8000/api/bookings');
+        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
         const fetchedBookings = bookingsResponse.data.map(booking => ({
           ...booking,
           room: booking.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === booking.roomId)
@@ -151,7 +152,7 @@ const CheckInCheckOut = () => {
     if (!selectedBooking) return;
 
     try {
-      const response = await axios.put(`http://localhost:8000/api/checkinout/checkin/${selectedBooking.id}`, checkInData);
+      const response = await axios.put(`${API_BASE_URL}/checkinout/checkin/${selectedBooking.id}`, checkInData);
       const updatedBooking = {
         ...response.data,
         room: selectedBooking.room
@@ -174,7 +175,7 @@ const CheckInCheckOut = () => {
     if (!selectedBooking) return;
 
     try {
-      const response = await axios.put(`http://localhost:8000/api/checkinout/checkout/${selectedBooking.id}`, checkOutData);
+      const response = await axios.put(`${API_BASE_URL}/checkinout/checkout/${selectedBooking.id}`, checkOutData);
       const updatedBooking = {
         ...response.data,
         room: selectedBooking.room

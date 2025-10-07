@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Users
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const CancellationsNoShows = () => {
   const [activeBookings, setActiveBookings] = useState([]);
@@ -125,17 +126,17 @@ const CancellationsNoShows = () => {
 
   const fetchData = async () => {
     try {
-      const roomsResponse = await axios.get('http://localhost:8000/api/rooms');
+      const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
       setRooms(roomsResponse.data);
 
-      const bookingsResponse = await axios.get('http://localhost:8000/api/bookings');
+      const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
       const active = bookingsResponse.data.filter(b => ['confirmed', 'checked-in'].includes(b.status));
       setActiveBookings(active.map(b => ({
         ...b,
         room: b.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === b.roomId)
       })));
 
-      const cancellationsResponse = await axios.get('http://localhost:8000/api/cancellations');
+      const cancellationsResponse = await axios.get(`${API_BASE_URL}/cancellations`);
       setCancellations(cancellationsResponse.data.filter(c => c.type === 'cancellation'));
       setNoShows(cancellationsResponse.data.filter(c => c.type === 'no-show'));
     } catch (err) {
@@ -150,7 +151,7 @@ const CancellationsNoShows = () => {
 
   const handleCancelBooking = async (formData) => {
     try {
-      const response = await axios.post(`http://localhost:8000/api/cancellations/cancel/${formData.bookingId}`, {
+      const response = await axios.post(`${API_BASE_URL}/cancellations/cancel/${formData.bookingId}`, {
         reason: formData.reason,
         reasonNote: formData.reasonNote,
         refundMethod: formData.refundMethod,
@@ -175,7 +176,7 @@ const CancellationsNoShows = () => {
 
   const handleMarkNoShow = async (formData) => {
     try {
-      const response = await axios.post(`http://localhost:8000/api/cancellations/noshow/${formData.bookingId}`, {
+      const response = await axios.post(`${API_BASE_URL}/cancellations/noshow/${formData.bookingId}`, {
         contactAttempts: formData.contactAttempts,
         lastContactTime: formData.lastContactTime,
         notes: formData.notes,

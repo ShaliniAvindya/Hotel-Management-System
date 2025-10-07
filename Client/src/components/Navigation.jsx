@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Smartphone, Menu, X, User } from 'lucide-react';
 import { AuthContext } from './context/AuthContext';
 import axios from 'axios';
+import { API_BASE_URL } from '../apiconfig';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -63,7 +64,7 @@ export default function Navigation() {
     if (user) {
       try {
         // Get shop for this user by userId
-        const response = await axios.get(`http://localhost:8000/api/shops/by-user/${user._id}`);
+        const response = await axios.get(`${API_BASE_URL}/shops/by-user/${user._id}`);
         const shop = response.data;
         // Only redirect if shop exists 
         if (shop && shop._id && shop.sellerId === shop._id) {

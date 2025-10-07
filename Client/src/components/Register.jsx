@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Phone, Smartphone, Tablet, Laptop, Monitor, Cpu, Shield, Users, Star } from 'lucide-react';
 import { AuthContext } from './context/AuthContext';
+import { API_BASE_URL } from '../apiconfig';
 
 export default function Register() {
   const { api } = useContext(AuthContext);
@@ -104,9 +105,9 @@ export default function Register() {
         password: formData.password,
         isAdmin: false
       };
-      
-      const response = await api.post('/api/users/register', userData);
-      
+
+      const response = await api.post(`${API_BASE_URL}/users/register`, userData);
+
       console.log('Registration successful:', response.data);
       navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
     } catch (error) {

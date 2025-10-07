@@ -31,8 +31,10 @@ import {
   Coffee,
   Users,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = 'http://localhost:8000/api/room-Rates'; 
+const API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
+const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 
 // Error Boundary
 class ErrorBoundary extends React.Component {
@@ -67,6 +69,7 @@ class ErrorBoundary extends React.Component {
 
 const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const [rates, setRates] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [filteredRates, setFilteredRates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -82,6 +85,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const roomTypes = [
     { id: 'single', name: 'Single Room', icon: Bed },
     { id: 'double', name: 'Double Room', icon: Bed },
+    { id: 'twin', name: 'Twin Room', icon: Bed },
+    { id: 'triple', name: 'Triple Room', icon: Bed },
     { id: 'suite', name: 'Suite', icon: Home },
     { id: 'presidential', name: 'Presidential Suite', icon: Star },
     { id: 'villa', name: 'Villa', icon: Mountain },
@@ -104,6 +109,20 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
       }
     };
     fetchRates();
+  }, []);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await axios.get(ROOMS_API_BASE_URL);
+        const data = Array.isArray(response.data) ? response.data : [];
+        setRooms(data);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+        setRooms([]);
+      }
+    };
+    fetchRooms();
   }, []);
 
   // Filter rates based on search, type, and status
@@ -164,6 +183,17 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     try {
       const response = await axios.post(API_BASE_URL, data);
       setRates([...rates, response.data]);
+      if (data.rateType === 'ratePlan' && data.roomId) {
+        const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
+        const room = roomRes.data;
+        const updatedRoom = {
+          ...room,
+          basePrice: data.basePrice,
+          weekendPrice: data.weekendPrice
+        };
+        await axios.put(`${ROOMS_API_BASE_URL}/${data.roomId}`, updatedRoom);
+        setRooms(rooms.map(r => r.id === data.roomId ? updatedRoom : r));
+      }
       setShowRateForm(false);
     } catch (error) {
       console.error('Error adding rate:', error);
@@ -174,6 +204,17 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     try {
       const response = await axios.put(`${API_BASE_URL}/${data.id}`, data);
       setRates(rates.map(item => (item.id === data.id ? response.data : item)));
+      if (data.rateType === 'ratePlan' && data.roomId) {
+        const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
+        const room = roomRes.data;
+        const updatedRoom = {
+          ...room,
+          basePrice: data.basePrice,
+          weekendPrice: data.weekendPrice
+        };
+        await axios.put(`${ROOMS_API_BASE_URL}/${data.roomId}`, updatedRoom);
+        setRooms(rooms.map(r => r.id === data.roomId ? updatedRoom : r));
+      }
       setEditingRate(null);
       setShowRateForm(false);
     } catch (error) {
@@ -261,6 +302,27 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
       onSave(formData);
     };
 
+    const handleRoomTypeChange = (e) => {
+      const newType = e.target.value;
+      setFormData(prev => {
+        const newData = { ...prev, roomType: newType };
+        if (prev.roomId && !rooms.find(r => r.id === prev.roomId && r.type === newType)) {
+          newData.roomId = '';
+        }
+        return newData;
+      });
+    };
+
+    const handleRoomChange = (e) => {
+      const id = e.target.value;
+      const selected = rooms.find(r => r.id === id);
+      setFormData(prev => ({
+        ...prev,
+        roomId: id,
+        roomType: selected?.type || prev.roomType
+      }));
+    };
+
     const modalContent = (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
         <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -337,7 +399,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                     <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
                     <select
                       value={formData.roomType || 'single'}
-                      onChange={(e) => setFormData({ ...formData, roomType: e.target.value })}
+                      onChange={handleRoomTypeChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     >
                       {roomTypes.map(type => (
@@ -346,14 +408,21 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Room ID</label>
-                    <input
-                      type="text"
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Room</label>
+                    <select
                       value={formData.roomId || ''}
-                      onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
+                      onChange={handleRoomChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                      placeholder="e.g., R101"
-                    />
+                    >
+                      <option value="">Select a room</option>
+                      {rooms
+                        .filter(room => room.type === formData.roomType)
+                        .map(room => (
+                          <option key={room.id} value={room.id}>
+                            {`${room.roomNumber} - ${room.name} (${room.capacity} guests, ${room.size} sq ft)`}
+                          </option>
+                        ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Base Price ($)</label>
@@ -756,6 +825,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 rate.rateType === 'seasonal' ? Calendar : 
                 rate.rateType === 'discount' ? Tag : Building;
     const SafeIcon = Icon || Bed;
+    const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
 
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -802,6 +872,18 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 </button>
               </div>
             </div>
+            {rate.rateType === 'ratePlan' && selectedRoom && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Assigned Room</h3>
+                <div className="flex items-center space-x-3">
+                  <Bed className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-gray-900">{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</p>
+                    <p className="text-sm text-gray-600">{getRoomTypeName(selectedRoom.type)} • {selectedRoom.capacity} guests</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {rate.rateType === 'ratePlan' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
@@ -1175,6 +1257,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                             rate.rateType === 'discount' ? Tag : Building;
                 const SafeIcon = Icon || Bed;
                 const StatusIcon = getStatusIcon(rate.status);
+                const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
                 return (
                   <div key={rate.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                     <div className="p-4 sm:p-6">
@@ -1190,6 +1273,12 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                           <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 truncate">{rate.description || 'No description'}</p>
                           {rate.rateType === 'ratePlan' && (
                             <div className="space-y-2">
+                              {selectedRoom && (
+                                <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                                  <Bed className="h-4 w-4" />
+                                  <span>{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</span>
+                                </div>
+                              )}
                               <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
                                 <DollarSign className="h-4 w-4" />
                                 <span>Base: ${rate.basePrice || 0}/night</span>
@@ -1344,118 +1433,121 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRates.map(rate => (
-                    <tr key={rate.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{rate.name || 'Unnamed Rate'}</p>
-                          <p className="text-xs sm:text-sm text-gray-600 truncate">{rate.description || 'No description'}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-xs sm:text-sm text-gray-900 capitalize">
-                          {rate.rateType === 'ratePlan' ? getRoomTypeName(rate.roomType) :
-                           rate.rateType === 'seasonal' ? rate.season :
-                           rate.rateType === 'discount' ? rate.type : 'Corporate'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex px-2 py-1 text-xs sm:text-sm font-medium rounded-full border ${getStatusColor(rate.status)}`}>
-                          {rate.status || 'Unknown'}
-                        </span>
-                      </td>
-                      {rate.rateType === 'ratePlan' && (
-                        <>
-                          <td className="py-3 px-4">
-                            <span className="text-xs sm:text-sm text-gray-900">${rate.basePrice || 0}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-xs sm:text-sm text-gray-900">${rate.weekendPrice || 0}</span>
-                          </td>
-                        </>
-                      )}
-                      {rate.rateType === 'seasonal' && (
-                        <>
-                          <td className="py-3 px-4">
-                            <span className={`text-xs sm:text-sm ${(rate.rateAdjustment || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {(rate.rateAdjustment || 0) > 0 ? '+' : ''}${rate.rateAdjustment || 0}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-xs sm:text-sm text-gray-900">
-                              {rate.dateRange?.start && rate.dateRange?.end
-                                ? `${new Date(rate.dateRange.start).toLocaleDateString()} - ${new Date(rate.dateRange.end).toLocaleDateString()}`
-                                : 'N/A'}
-                            </span>
-                          </td>
-                        </>
-                      )}
-                      {rate.rateType === 'discount' && (
-                        <>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs sm:text-sm font-mono text-gray-900">{rate.code || 'N/A'}</span>
-                              <button
-                                onClick={() => handleCopyCode(rate.code)}
-                                className="p-1 hover:bg-gray-100 rounded"
-                                title="Copy code"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-xs sm:text-sm text-gray-900">
-                              {rate.type === 'percentage' ? `${rate.value || 0}%` : `$${rate.value || 0}`}
-                            </span>
-                          </td>
-                        </>
-                      )}
-                      {rate.rateType === 'corporate' && (
-                        <>
-                          <td className="py-3 px-4">
-                                                       <span className="text-xs sm:text-sm text-gray-900">{rate.companyName || 'N/A'}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-xs sm:text-sm text-gray-900">
-                              {rate.discountType === 'percentage' ? `${rate.discount || 0}%` : `$${rate.discount || 0}`}
-                            </span>
-                          </td>
-                        </>
-                      )}
-                      <td className="py-3 px-4">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => {
-                              setSelectedRate(rate);
-                              setShowRateDetails(true);
-                            }}
-                            className="p-1 text-gray-400 hover:text-blue-600 rounded"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingRate(rate);
-                              setShowRateForm(true);
-                            }}
-                            className="p-1 text-gray-400 hover:text-blue-600 rounded"
-                            title="Edit"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rate._id)}
-                            className="p-1 text-gray-400 hover:text-red-600 rounded"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredRates.map(rate => {
+                    const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
+                    return (
+                      <tr key={rate.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{rate.name || 'Unnamed Rate'}</p>
+                            <p className="text-xs sm:text-sm text-gray-600 truncate">{rate.description || 'No description'}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs sm:text-sm text-gray-900 capitalize">
+                            {rate.rateType === 'ratePlan' ? (selectedRoom ? `${selectedRoom.roomNumber} - ${selectedRoom.name}` : getRoomTypeName(rate.roomType)) :
+                             rate.rateType === 'seasonal' ? rate.season :
+                             rate.rateType === 'discount' ? rate.type : 'Corporate'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex px-2 py-1 text-xs sm:text-sm font-medium rounded-full border ${getStatusColor(rate.status)}`}>
+                            {rate.status || 'Unknown'}
+                          </span>
+                        </td>
+                        {rate.rateType === 'ratePlan' && (
+                          <>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">${rate.basePrice || 0}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">${rate.weekendPrice || 0}</span>
+                            </td>
+                          </>
+                        )}
+                        {rate.rateType === 'seasonal' && (
+                          <>
+                            <td className="py-3 px-4">
+                              <span className={`text-xs sm:text-sm ${(rate.rateAdjustment || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {(rate.rateAdjustment || 0) > 0 ? '+' : ''}${rate.rateAdjustment || 0}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">
+                                {rate.dateRange?.start && rate.dateRange?.end
+                                  ? `${new Date(rate.dateRange.start).toLocaleDateString()} - ${new Date(rate.dateRange.end).toLocaleDateString()}`
+                                  : 'N/A'}
+                              </span>
+                            </td>
+                          </>
+                        )}
+                        {rate.rateType === 'discount' && (
+                          <>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs sm:text-sm font-mono text-gray-900">{rate.code || 'N/A'}</span>
+                                <button
+                                  onClick={() => handleCopyCode(rate.code)}
+                                  className="p-1 hover:bg-gray-100 rounded"
+                                  title="Copy code"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">
+                                {rate.type === 'percentage' ? `${rate.value || 0}%` : `$${rate.value || 0}`}
+                              </span>
+                            </td>
+                          </>
+                        )}
+                        {rate.rateType === 'corporate' && (
+                          <>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">{rate.companyName || 'N/A'}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs sm:text-sm text-gray-900">
+                                {rate.discountType === 'percentage' ? `${rate.discount || 0}%` : `$${rate.discount || 0}`}
+                              </span>
+                            </td>
+                          </>
+                        )}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedRate(rate);
+                                setShowRateDetails(true);
+                              }}
+                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingRate(rate);
+                                setShowRateForm(true);
+                              }}
+                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              title="Edit"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(rate._id)}
+                              className="p-1 text-gray-400 hover:text-red-600 rounded"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

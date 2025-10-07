@@ -12,6 +12,17 @@ router.get('/', async (req, res) => {
     const requests = await SpecialRequest.find();
     res.json(requests);
   } catch (err) {
+    try {
+      const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
+      await updateRestaurantAnalytics({
+        items: [],
+        amount: 0,
+        prepTime: 0,
+        barDrinks: [],
+      });
+    } catch (err) {
+      console.error('Analytics update failed (special request):', err.message);
+    }
     res.status(400).json({ message: err.message });
   }
 });

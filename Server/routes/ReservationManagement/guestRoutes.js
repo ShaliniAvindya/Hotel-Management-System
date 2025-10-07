@@ -9,6 +9,17 @@ router.get('/', async (req, res) => {
     const guests = await Guest.find().sort({ createdDate: -1 });
     res.json(guests);
   } catch (err) {
+    try {
+      const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
+      await updateRestaurantAnalytics({
+        items: [],
+        amount: 0,
+        prepTime: 0,
+        barDrinks: [],
+      });
+    } catch (err) {
+      console.error('Analytics update failed (guest):', err.message);
+    }
     res.status(500).json({ message: err.message });
   }
 });

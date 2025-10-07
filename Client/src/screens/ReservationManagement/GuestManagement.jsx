@@ -40,6 +40,7 @@ import {
   PawPrint,
   Utensils
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const GuestForm = ({ guest, onSave, onCancel, rooms }) => {
   const [formData, setFormData] = useState(
@@ -1076,8 +1077,8 @@ const GuestManagement = () => {
       setLoading(true);
       try {
         const [guestsRes, roomsRes] = await Promise.all([
-          axios.get('http://localhost:8000/api/guests'),
-          axios.get('http://localhost:8000/api/rooms')
+          axios.get(`${API_BASE_URL}/guests`),
+          axios.get(`${API_BASE_URL}/rooms`)
         ]);
         setGuests(guestsRes.data);
         setFilteredGuests(guestsRes.data);
@@ -1114,7 +1115,7 @@ const GuestManagement = () => {
 
   const handleAddGuest = async (guestData) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/guests', guestData);
+      const response = await axios.post(`${API_BASE_URL}/guests`, guestData);
       setGuests([...guests, response.data]);
       setShowGuestForm(false);
     } catch (err) {
@@ -1124,7 +1125,7 @@ const GuestManagement = () => {
 
   const handleEditGuest = async (guestData) => {
     try {
-      const response = await axios.put(`http://localhost:8000/api/guests/${guestData.id}`, guestData);
+      const response = await axios.put(`${API_BASE_URL}/guests/${guestData.id}`, guestData);
       setGuests(guests.map((guest) => (guest.id === guestData.id ? response.data : guest)));
       setEditingGuest(null);
       setShowGuestForm(false);
@@ -1136,7 +1137,7 @@ const GuestManagement = () => {
   const handleDeleteGuest = async (guestId) => {
     if (window.confirm('Are you sure you want to delete this guest?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/guests/${guestId}`);
+        await axios.delete(`${API_BASE_URL}/guests/${guestId}`);
         setGuests(guests.filter((guest) => guest.id !== guestId));
       } catch (err) {
         alert('Failed to delete guest');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
@@ -187,7 +188,7 @@ const InquiryManagement = () => {
 
   const fetchInquiries = async () => {
     try {
-      const response = await axios.get('/api/inquiries');
+      const response = await axios.get(`${API_BASE_URL}/inquiries`);
       setInquiries(response.data);
     } catch (err) {
       console.error('Fetch inquiries error:', err);
@@ -201,7 +202,7 @@ const InquiryManagement = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`/api/inquiries/${deleteModal.id}`);
+      await axios.delete(`${API_BASE_URL}/inquiries/${deleteModal.id}`);
       setInquiries(inquiries.filter((i) => i._id.$oid !== deleteModal.id));
       setSuccess('Inquiry deleted successfully');
     } catch (err) {
@@ -218,7 +219,7 @@ const InquiryManagement = () => {
 
   const handleSendReply = async ({ inquiryId, subject, message }) => {
     try {
-      await axios.post('/api/inquiries/reply', { inquiryId, subject, message });
+      await axios.post(`${API_BASE_URL}/inquiries/reply`, { inquiryId, subject, message });
       setInquiries(inquiries.map((i) =>
         i._id.$oid === inquiryId ? { ...i, replyMessage: message } : i
       ));

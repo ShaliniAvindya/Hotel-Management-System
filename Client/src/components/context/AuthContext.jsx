@@ -1,9 +1,10 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../apiconfig';
 
 export const AuthContext = createContext();
 
-const API_URL = 'http://localhost:8000';
+const API_URL = API_BASE_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       api.defaults.headers['Authorization'] = `Bearer ${token}`;
-      api.get('/api/users/me')
+      api.get('/users/me')
         .then(response => {
           setUser(response.data);
         })

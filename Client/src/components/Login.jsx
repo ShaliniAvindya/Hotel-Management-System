@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Smartphone } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
+import { API_BASE_URL } from '../apiconfig';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/api/users/login', {
+      const response = await api.post(`${API_BASE_URL}/users/login`, {
         email: formData.email,
         password: formData.password
       });

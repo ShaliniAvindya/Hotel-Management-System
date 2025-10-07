@@ -34,11 +34,13 @@ import {
   Eye,
   Users,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
-const ROOMS_API_URL = 'http://localhost:8000/api/rooms';
-const TICKETS_API_URL = 'http://localhost:8000/api/roomMaintenance';
-const CATEGORIES_API_URL = 'http://localhost:8000/api/roomMaintenance/categories';
-const STAFF_API_URL = 'http://localhost:8000/api/staffMembers';
+const ROOMS_API_URL = `${API_BASE_URL}/rooms`;
+const TICKETS_API_URL = `${API_BASE_URL}/roomMaintenance`;
+const CATEGORIES_API_URL = `${API_BASE_URL}/roomMaintenance/categories`;
+const STAFF_API_URL = `${API_BASE_URL}/staffMembers`;
+const AVAIL_API_URL = `${API_BASE_URL}/roomAvailability`;
 
 const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const [rooms, setRooms] = useState([]);
@@ -209,7 +211,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       case 'gray': return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'blue': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'yellow': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'green': return 'bg-green-100 text-green-800 border-green-200';
+      case 'green': return 'bg-green-100 text-green-800 border-gray-200';
       case 'red': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -234,23 +236,72 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     return categoryStyles[category.toLowerCase()]?.icon || categoryStyles.other.icon;
   };
 
+  const getDateKey = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const updateAvailability = async (roomId, status) => {
+    const today = getDateKey(new Date());
+    const availabilityResponse = await axios.get(`${AVAIL_API_URL}/${roomId}`);
+    let availabilityData = availabilityResponse.data ? availabilityResponse.data.availability : [];
+    availabilityData = availabilityData.filter(entry => entry.date !== today);
+    availabilityData.push({ date: today, status: status });
+    await axios.put(`${AVAIL_API_URL}/${roomId}`, { availability: availabilityData });
+  };
+
+  const updateRoomMaintenanceStatus = async (roomId) => {
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+
+    const activeTickets = roomMaintenance.filter(
+      t => t.roomId === roomId && t.status !== 'completed' && t.roomUnavailable
+    );
+
+    let newStatus = 'available';
+    let maintenanceStartDate = null;
+    let maintenanceNotes = '';
+
+    if (activeTickets.length > 0) {
+      newStatus = 'maintenance';
+      const startDates = activeTickets
+        .map(t => t.scheduledStartDate)
+        .filter(d => d)
+        .sort();
+      maintenanceStartDate = startDates[0] || getDateKey(new Date());
+      maintenanceNotes = activeTickets.map(t => t.title).join('; ');
+    }
+
+    if (room.status !== newStatus || room.maintenanceStartDate !== maintenanceStartDate || room.maintenanceNotes !== maintenanceNotes) {
+      const updatedRoom = {
+        ...room,
+        status: newStatus,
+        maintenanceStartDate,
+        maintenanceNotes,
+        occupancyStatus: newStatus === 'maintenance' ? 'out-of-order' : 'vacant',
+      };
+      await axios.put(`${ROOMS_API_URL}/${roomId}`, updatedRoom);
+      await updateAvailability(roomId, newStatus);
+      setRooms(rooms.map(r => r.id === roomId ? updatedRoom : r));
+    }
+  };
+
   const handleAddTicket = async (ticketData) => {
     try {
       setLoading(true);
       const response = await axios.post(TICKETS_API_URL, ticketData);
-      setRoomMaintenance([...roomMaintenance, response.data]);
+      const newTicket = response.data;
+      setRoomMaintenance([...roomMaintenance, newTicket]);
       setShowTicketForm(false);
 
       if (ticketData.roomUnavailable) {
-        const roomToUpdate = rooms.find(room => room.id === ticketData.roomId);
-        if (roomToUpdate) {
-          const updatedRoom = { ...roomToUpdate, status: 'maintenance', maintenanceNotes: ticketData.title };
-          await axios.put(`${ROOMS_API_URL}/${ticketData.roomId}`, updatedRoom);
-          setRooms(rooms.map(room => room.id === ticketData.roomId ? updatedRoom : room));
-        }
+        await updateRoomMaintenanceStatus(ticketData.roomId);
       }
 
-      // Refresh categories
       const catResponse = await axios.get(CATEGORIES_API_URL);
       const uniqueCategories = [...new Set([...catResponse.data, 'other'])].map(category => ({
         id: category.toLowerCase(),
@@ -273,25 +324,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       setEditingTicket(null);
       setShowTicketForm(false);
 
-      const room = getRoomByTicket(ticketData.roomId);
-      if (room) {
-        let newStatus = room.status;
-        let newNotes = room.maintenanceNotes;
-
-        if (ticketData.status === 'completed' && room.status === 'maintenance') {
-          newStatus = 'available';
-          newNotes = '';
-        } else if (ticketData.roomUnavailable && room.status !== 'maintenance') {
-          newStatus = 'maintenance';
-          newNotes = ticketData.title;
-        }
-
-        if (newStatus !== room.status) {
-          const updatedRoom = { ...room, status: newStatus, maintenanceNotes: newNotes };
-          await axios.put(`${ROOMS_API_URL}/${ticketData.roomId}`, updatedRoom);
-          setRooms(rooms.map(r => r.id === ticketData.roomId ? updatedRoom : r));
-        }
-      }
+      await updateRoomMaintenanceStatus(ticketData.roomId);
     } catch (error) {
       console.error('Error editing ticket:', error);
       setError('Failed to edit ticket. Please try again.');
@@ -304,20 +337,14 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     if (window.confirm('Are you sure you want to delete this maintenance ticket?')) {
       try {
         setLoading(true);
-        await axios.delete(`${TICKETS_API_URL}/${ticketId}`);
         const ticket = roomMaintenance.find(t => t.id === ticketId);
+        await axios.delete(`${TICKETS_API_URL}/${ticketId}`);
         setRoomMaintenance(roomMaintenance.filter(ticket => ticket.id !== ticketId));
 
         if (ticket && ticket.roomUnavailable) {
-          const roomToUpdate = rooms.find(room => room.id === ticket.roomId);
-          if (roomToUpdate) {
-            const updatedRoom = { ...roomToUpdate, status: 'available', maintenanceNotes: '' };
-            await axios.put(`${ROOMS_API_URL}/${ticket.roomId}`, updatedRoom);
-            setRooms(rooms.map(room => room.id === ticket.roomId ? updatedRoom : room));
-          }
+          await updateRoomMaintenanceStatus(ticket.roomId);
         }
 
-        // Refresh categories after deletion to ensure accuracy
         const response = await axios.get(CATEGORIES_API_URL);
         const uniqueCategories = [...new Set([...response.data, 'other'])].map(category => ({
           id: category.toLowerCase(),
@@ -351,6 +378,8 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       notes: '',
       images: [],
       roomUnavailable: false,
+      scheduledStartDate: getDateKey(new Date()), // Default to today
+      scheduledEndDate: '',
     });
 
     const handleStaffChange = (staffId) => {
@@ -487,6 +516,31 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                     />
                     <span className="text-sm font-medium text-gray-700">Mark Room Unavailable</span>
                   </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Schedule</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scheduled Start Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.scheduledStartDate}
+                    onChange={(e) => setFormData({ ...formData, scheduledStartDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scheduled End Date</label>
+                  <input
+                    type="date"
+                    value={formData.scheduledEndDate}
+                    onChange={(e) => setFormData({ ...formData, scheduledEndDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
+                  />
                 </div>
               </div>
             </div>
@@ -686,6 +740,28 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                   Room Unavailable
                 </span>
               )}
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Schedule</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Scheduled Start</p>
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.scheduledStartDate}</p>
+                  </div>
+                </div>
+                {ticket.scheduledEndDate && (
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-600">Scheduled End</p>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">{ticket.scheduledEndDate}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {room && (
@@ -914,6 +990,16 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
 
         <div className="space-y-2 mb-3 sm:mb-4 text-xs text-gray-600">
           <div className="flex items-center space-x-2">
+            <Calendar className="h-3 w-3" />
+            <span>Start: {ticket.scheduledStartDate}</span>
+          </div>
+          {ticket.scheduledEndDate && (
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-3 w-3" />
+              <span>End: {ticket.scheduledEndDate}</span>
+            </div>
+          )}
+          <div className="flex items-center space-x-2">
             <User className="h-3 w-3" />
             <span className="truncate">Assigned: {ticket.assignedTo || 'Unassigned'}</span>
           </div>
@@ -1003,9 +1089,10 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           <span className="text-sm text-gray-900">${ticket.estimatedCost}</span>
         </td>
         <td className="py-3 sm:py-4 px-3 sm:px-4">
-          <span className="text-sm text-gray-900">
-            {new Date(ticket.createdAt).toLocaleDateString()}
-          </span>
+          <span className="text-sm text-gray-900">{ticket.scheduledStartDate}</span>
+        </td>
+        <td className="py-3 sm:py-4 px-3 sm:px-4">
+          <span className="text-sm text-gray-900">{ticket.scheduledEndDate || 'Indefinite'}</span>
         </td>
         <td className="py-3 sm:py-4 px-3 sm:px-4">
           <div className="flex items-center space-x-2">
@@ -1184,7 +1271,8 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                       <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Status</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Assigned To</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Est. Cost</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Created</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Start Date</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">End Date</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm">Actions</th>
                     </tr>
                   </thead>
