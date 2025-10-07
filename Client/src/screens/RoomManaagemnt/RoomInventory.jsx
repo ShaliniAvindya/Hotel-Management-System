@@ -49,10 +49,10 @@ import {
   Wind,
   Sun,
 } from 'lucide-react';
-import { API_BASE_URL } from '../../apiconfig';
+import { API1_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = `${API_BASE_URL}/rooms`; 
-const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
+const API1_BASE_URL = `${API1_BASE_URL}/rooms`; 
+const RATES_API1_BASE_URL = `${API1_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
   const [rooms, setRooms] = useState([]);
@@ -110,7 +110,7 @@ const RoomInventory = () => {
   // Fetch rooms 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(API_BASE_URL);
+      const response = await axios.get(API1_BASE_URL);
       setRooms(response.data);
       setFilteredRooms(response.data);
     } catch (error) {
@@ -120,7 +120,7 @@ const RoomInventory = () => {
 
   const fetchRates = async () => {
     try {
-      const response = await axios.get(RATES_API_BASE_URL);
+      const response = await axios.get(RATES_API1_BASE_URL);
       setRates(response.data);
     } catch (error) {
       console.error('Error fetching rates:', error);
@@ -159,7 +159,7 @@ const RoomInventory = () => {
 
   const handleAddRoom = async (roomData) => {
     try {
-      const response = await axios.post(API_BASE_URL, roomData);
+      const response = await axios.post(API1_BASE_URL, roomData);
       if (response.status === 201) {
         const newRoom = response.data;
         // Sync to rate plan
@@ -170,7 +170,7 @@ const RoomInventory = () => {
             basePrice: newRoom.basePrice,
             weekendPrice: newRoom.weekendPrice
           };
-          await axios.put(`${RATES_API_BASE_URL}/${existingRate._id}`, updatedRate);
+          await axios.put(`${RATES_API1_BASE_URL}/${existingRate._id}`, updatedRate);
         } else {
           const newRate = {
             rateType: 'ratePlan',
@@ -188,7 +188,7 @@ const RoomInventory = () => {
             validFrom: new Date().toISOString().split('T')[0],
             validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           };
-          await axios.post(RATES_API_BASE_URL, newRate);
+          await axios.post(RATES_API1_BASE_URL, newRate);
         }
         fetchRooms();
         fetchRates();
@@ -201,7 +201,7 @@ const RoomInventory = () => {
 
   const handleEditRoom = async (roomData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/${roomData.id}`, roomData);
+      const response = await axios.put(`${API1_BASE_URL}/${roomData.id}`, roomData);
       if (response.status === 200) {
         const updatedRoom = response.data;
         // Sync to rate plan
@@ -212,7 +212,7 @@ const RoomInventory = () => {
             basePrice: updatedRoom.basePrice,
             weekendPrice: updatedRoom.weekendPrice
           };
-          await axios.put(`${RATES_API_BASE_URL}/${existingRate._id}`, updatedRate);
+          await axios.put(`${RATES_API1_BASE_URL}/${existingRate._id}`, updatedRate);
         } else {
           const newRate = {
             rateType: 'ratePlan',
@@ -230,7 +230,7 @@ const RoomInventory = () => {
             validFrom: new Date().toISOString().split('T')[0],
             validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           };
-          await axios.post(RATES_API_BASE_URL, newRate);
+          await axios.post(RATES_API1_BASE_URL, newRate);
         }
         fetchRooms();
         fetchRates();
@@ -245,11 +245,11 @@ const RoomInventory = () => {
   const handleDeleteRoom = async (roomId) => {
     if (window.confirm('Are you sure you want to delete this room?')) {
       try {
-        const response = await axios.delete(`${API_BASE_URL}/${roomId}`);
+        const response = await axios.delete(`${API1_BASE_URL}/${roomId}`);
         if (response.status === 200) {
           const rateToDelete = rates.find(r => r.rateType === 'ratePlan' && r.roomId === roomId);
           if (rateToDelete) {
-            await axios.delete(`${RATES_API_BASE_URL}/${rateToDelete._id}`);
+            await axios.delete(`${RATES_API1_BASE_URL}/${rateToDelete._id}`);
           }
           fetchRooms();
           fetchRates();
