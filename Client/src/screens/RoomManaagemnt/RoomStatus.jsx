@@ -52,8 +52,6 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = `${API_BASE_URL}/rooms`;
-
 const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const [rooms, setRooms] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');

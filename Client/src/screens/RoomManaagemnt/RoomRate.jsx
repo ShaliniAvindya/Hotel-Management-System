@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
+const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 
 // Error Boundary
@@ -98,7 +98,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     const fetchRates = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_BASE_URL);
+        const response = await axios.get(RATES_API_BASE_URL);
         const data = Array.isArray(response.data) ? response.data : [];
         setRates(data);
       } catch (error) {
@@ -181,7 +181,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
 
   const handleAdd = async (data) => {
     try {
-      const response = await axios.post(API_BASE_URL, data);
+      const response = await axios.post(RATES_API_BASE_URL, data);
       setRates([...rates, response.data]);
       if (data.rateType === 'ratePlan' && data.roomId) {
         const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
@@ -202,7 +202,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
 
   const handleEdit = async (data) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/${data.id}`, data);
+      const response = await axios.put(`${RATES_API_BASE_URL}/${data.id}`, data);
       setRates(rates.map(item => (item.id === data.id ? response.data : item)));
       if (data.rateType === 'ratePlan' && data.roomId) {
         const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
@@ -225,7 +225,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-          await axios.delete(`${API_BASE_URL}/${id}`);
+          await axios.delete(`${RATES_API_BASE_URL}/${id}`);
           setRates(rates.filter(item => item._id !== id));
       } catch (error) {
         console.error('Error deleting rate:', error);

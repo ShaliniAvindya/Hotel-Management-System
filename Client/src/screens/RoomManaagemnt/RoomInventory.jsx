@@ -51,7 +51,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = `${API_BASE_URL}/rooms`; 
+const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`; 
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
@@ -110,7 +110,7 @@ const RoomInventory = () => {
   // Fetch rooms 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(API_BASE_URL);
+      const response = await axios.get(ROOMS_API_BASE_URL);
       setRooms(response.data);
       setFilteredRooms(response.data);
     } catch (error) {
@@ -159,7 +159,7 @@ const RoomInventory = () => {
 
   const handleAddRoom = async (roomData) => {
     try {
-      const response = await axios.post(API_BASE_URL, roomData);
+      const response = await axios.post(ROOMS_API_BASE_URL, roomData);
       if (response.status === 201) {
         const newRoom = response.data;
         // Sync to rate plan
@@ -201,7 +201,7 @@ const RoomInventory = () => {
 
   const handleEditRoom = async (roomData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/${roomData.id}`, roomData);
+      const response = await axios.put(`${ROOMS_API_BASE_URL}/${roomData.id}`, roomData);
       if (response.status === 200) {
         const updatedRoom = response.data;
         // Sync to rate plan
@@ -245,8 +245,9 @@ const RoomInventory = () => {
   const handleDeleteRoom = async (roomId) => {
     if (window.confirm('Are you sure you want to delete this room?')) {
       try {
-        const response = await axios.delete(`${API_BASE_URL}/${roomId}`);
+        const response = await axios.delete(`${ROOMS_API_BASE_URL}/${roomId}`);
         if (response.status === 200) {
+          // Delete associated rate plan
           const rateToDelete = rates.find(r => r.rateType === 'ratePlan' && r.roomId === roomId);
           if (rateToDelete) {
             await axios.delete(`${RATES_API_BASE_URL}/${rateToDelete._id}`);
