@@ -22,8 +22,8 @@ const app = express();
 // --- MIDDLEWARE ---
 app.use(cors({
   origin: [
-    'http://localhost:5173',                      
-    'https://hotel-management-system-seven-woad.vercel.app' // Live frontend
+    'http://localhost:5173',                       
+    'https://hotel-management-system-seven-woad.vercel.app' 
   ],
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
@@ -46,31 +46,6 @@ app.use('/api/specialrequests', specialRequestRoutes);
 app.use('/api/restaurant-bar/analytics', restaurantBarAnalyticsRoutes);
 app.use('/api/billing', billingRoutes);
 
-// --- HEALTH CHECK ENDPOINT ---
-app.get(['/', '/api/health'], async (req, res) => {
-  try {
-    const mongoStates = ['Disconnected','Connected','Connecting','Disconnecting'];
-    const state = mongoose.connection.readyState;
-    res.status(200).json({
-      status: '✅ API Health: OK',
-      mongoDB: mongoStates[state],
-      environment: process.env.NODE_ENV || 'Development',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: '❌ API Health: Failed',
-      error: error.message
-    });
-  }
-});
-
-// --- GLOBAL ERROR HANDLER ---
-app.use((err, req, res, next) => {
-  console.error('🔥 Server Error:', err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
-});
-
 // --- MONGODB CONNECTION ---
 const connectDB = async () => {
   try {
@@ -81,7 +56,6 @@ const connectDB = async () => {
   }
 };
 
-// Initial connection
 connectDB();
 
 // Connection event logs
@@ -89,11 +63,38 @@ mongoose.connection.on('connected', () => console.log('🟢 MongoDB Connected'))
 mongoose.connection.on('disconnected', () => console.log('🔴 MongoDB Disconnected'));
 mongoose.connection.on('error', (err) => console.error('⚠️ MongoDB Error:', err));
 
+// Keep-alive ping every 5 mins
 setInterval(() => {
   if (mongoose.connection.readyState !== 1) {
     console.log('⏳ Reconnecting MongoDB...');
     connectDB();
   }
 }, 5 * 60 * 1000);
+
+// --- HEALTH CHECK ENDPOINT ---
+app.get(['/', '/api/health'], async (req, res) => {
+  const mongoStates = ['Disconnected','Connected','Connecting','Disconnecting'];
+
+  const waitForConnection = async () => {
+    let retries = 5;
+    while(mongoose.connection.readyState !== 1 && retries > 0){
+      await new Promise(r => setTimeout(r, 1000)); // wait 1 sec
+      retries--;
+    }
+  };
+  await waitForConnection();
+
+  res.status(200).json({
+    status: '✅ API Health: OK',
+    mongoDB: mongoStates[mongoose.connection.readyState],
+    environment: process.env.NODE_ENV || 'Development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.error('🔥 Server Error:', err.stack);
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+});
 
 module.exports = app;
