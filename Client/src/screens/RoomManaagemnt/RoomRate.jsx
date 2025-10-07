@@ -31,7 +31,7 @@ import {
   Coffee,
   Users,
 } from 'lucide-react';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL } from '../../apiconfig';
 
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
