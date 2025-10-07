@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
   Calendar,
@@ -42,10 +43,12 @@ import {
   Edit,
   MapPin,
   DollarSign,
+  Split,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 7, 1)); 
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
@@ -54,75 +57,9 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   const [filterRoomType, setFilterRoomType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const [rooms, setRooms] = useState([
-    {
-      id: 'R001',
-      roomNumber: '101',
-      type: 'single',
-      name: 'Deluxe Single Room',
-      capacity: 1,
-      maxCapacity: 2,
-      basePrice: 120,
-      weekendPrice: 150,
-      floor: 1,
-      size: 250,
-      description: 'A comfortable single room with modern amenities and city view.',
-      amenities: ['wifi', 'tv', 'ac', 'minibar', 'phone'],
-      images: [
-        'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=500&h=300&fit=crop',
-      ],
-      lastCleaned: '2024-01-15T10:00:00Z',
-      maintenanceNotes: '',
-      bookingHistory: 45,
-      rating: 4.2,
-    },
-    {
-      id: 'R002',
-      roomNumber: '201',
-      type: 'double',
-      name: 'Premium Double Room',
-      capacity: 2,
-      maxCapacity: 3,
-      basePrice: 180,
-      weekendPrice: 220,
-      floor: 2,
-      size: 350,
-      description: 'Spacious double room with king-size bed and ocean view.',
-      amenities: ['wifi', 'tv', 'ac', 'minibar', 'balcony', 'oceanview', 'bathtub'],
-      images: [
-        'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500&h=300&fit=crop',
-      ],
-      lastCleaned: '2024-01-14T14:00:00Z',
-      maintenanceNotes: '',
-      bookingHistory: 78,
-      rating: 4.7,
-    },
-    {
-      id: 'R003',
-      roomNumber: '301',
-      type: 'suite',
-      name: 'Executive Suite',
-      capacity: 4,
-      maxCapacity: 6,
-      basePrice: 350,
-      weekendPrice: 420,
-      floor: 3,
-      size: 600,
-      description: 'Luxurious suite with separate living area and premium amenities.',
-      amenities: ['wifi', 'tv', 'ac', 'kitchen', 'balcony', 'oceanview', 'bathtub', 'sofa', 'work_desk'],
-      images: [
-        'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=500&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500&h=300&fit=crop',
-      ],
-      lastCleaned: '2024-01-13T09:00:00Z',
-      maintenanceNotes: 'AC unit needs servicing',
-      bookingHistory: 32,
-      rating: 4.9,
-    },
-  ]);
+  const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [roomMaintenance, setRoomMaintenance] = useState([]);
 
   const availableAmenities = [
     { id: 'wifi', name: 'Free WiFi', icon: Wifi, category: 'technology' },
@@ -152,103 +89,14 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     { id: 'work_desk', name: 'Work Desk', icon: Shield, category: 'business' },
   ];
 
-  // Sample availability data
-  const [availability, setAvailability] = useState({});
-
-  // Generate sample availability data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const generateAvailability = () => {
-          const data = {};
-          const today = new Date(2025, 7, 1); 
-
-          rooms.forEach(room => {
-            data[room.id] = {};
-
-            for (let i = -30; i < 30; i++) {
-              const date = new Date(today);
-              date.setDate(today.getDate() + i);
-              const dateKey = date.toISOString().split('T')[0];
-
-              const rand = Math.random();
-              let status = 'available';
-
-              if (rand < 0.4) status = 'occupied';
-              else if (rand < 0.55) status = 'reserved';
-              else if (rand < 0.65) status = 'checkout';
-              else if (rand < 0.75) status = 'cleaning';
-              else if (rand < 0.8) status = 'maintenance';
-              else if (rand < 0.85) status = 'blocked';
-
-              data[room.id][dateKey] = {
-                status,
-                guest: status === 'occupied' || status === 'reserved' ? `Guest ${Math.floor(Math.random() * 100)}` : null,
-                checkIn: status === 'occupied' && rand < 0.7 ? dateKey : null,
-                checkOut: status === 'occupied' && rand < 0.7 ?
-                  new Date(date.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
-                rate: status === 'occupied' || status === 'reserved' ? Math.floor(Math.random() * 200) + 100 : null,
-                notes: status === 'maintenance' ? 'AC repair needed' :
-                       status === 'cleaning' ? 'Deep cleaning' : null,
-              };
-            }
-          });
-
-          return data;
-        };
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setAvailability(generateAvailability());
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch room availability. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [rooms]);
-
   const statusConfig = {
-    available: {
-      color: 'bg-green-100 border-green-300 text-green-800',
-      icon: CheckCircle,
-      label: 'Available',
-    },
-    occupied: {
-      color: 'bg-red-100 border-red-300 text-red-800',
-      icon: Users,
-      label: 'Occupied',
-    },
-    reserved: {
-      color: 'bg-blue-100 border-blue-300 text-blue-800',
-      icon: Calendar,
-      label: 'Reserved',
-    },
-    checkout: {
-      color: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-      icon: Clock,
-      label: 'Check-out',
-    },
-    cleaning: {
-      color: 'bg-purple-100 border-purple-300 text-purple-800',
-      icon: RefreshCw,
-      label: 'Cleaning',
-    },
-    maintenance: {
-      color: 'bg-orange-100 border-orange-300 text-orange-800',
-      icon: Wrench,
-      label: 'Maintenance',
-    },
-    blocked: {
-      color: 'bg-gray-100 border-gray-300 text-gray-800',
-      icon: X,
-      label: 'Blocked',
-    },
+    available: { color: 'bg-green-100 border-green-300 text-green-800', icon: CheckCircle, label: 'Available' },
+    occupied: { color: 'bg-red-100 border-red-300 text-red-800', icon: Users, label: 'Occupied' },
+    reserved: { color: 'bg-blue-100 border-blue-300 text-blue-800', icon: Calendar, label: 'Reserved' },
+    checkout: { color: 'bg-yellow-100 border-yellow-300 text-yellow-800', icon: Clock, label: 'Check-out' },
+    cleaning: { color: 'bg-purple-100 border-purple-300 text-purple-800', icon: RefreshCw, label: 'Cleaning' },
+    maintenance: { color: 'bg-orange-100 border-orange-300 text-orange-800', icon: Wrench, label: 'Maintenance' },
+    blocked: { color: 'bg-gray-100 border-gray-300 text-gray-800', icon: X, label: 'Blocked' },
   };
 
   const roomTypes = [
@@ -262,12 +110,34 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     { id: 'penthouse', name: 'Penthouse', icon: Sparkles, defaultCapacity: 10 },
   ];
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [roomsRes, bookingsRes, maintenanceRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/rooms`),
+          axios.get(`${API_BASE_URL}/bookings`),
+          axios.get(`${API_BASE_URL}/roomMaintenance`),
+        ]);
+        setRooms(roomsRes.data);
+        setBookings(bookingsRes.data);
+        setRoomMaintenance(maintenanceRes.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const getDaysInMonth = (date) => {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-
     const days = [];
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
@@ -279,28 +149,109 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   };
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   };
 
   const getDateKey = (date) => {
-    return date.toISOString().split('T')[0];
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getRoomStatus = (roomId, date) => {
-    if (!date || !availability[roomId]) return null;
+    if (!date) return { status: 'available', guest: null, booking: null };
     const dateKey = getDateKey(date);
-    return availability[roomId][dateKey] || { status: 'available' };
+    const todayKey = getDateKey(new Date());
+
+    // Check maintenance tickets first
+    const maintenanceTickets = roomMaintenance.filter(
+      (ticket) =>
+        ticket.roomId === roomId &&
+        ticket.status !== 'completed' &&
+        ticket.roomUnavailable &&
+        dateKey >= ticket.scheduledStartDate &&
+        (!ticket.scheduledEndDate || dateKey <= ticket.scheduledEndDate)
+    );
+
+    if (maintenanceTickets.length > 0) {
+      return { status: 'maintenance', guest: null, booking: null };
+    }
+
+    // Check manual status 
+    const room = rooms.find((r) => r.id === roomId);
+    if (room && dateKey === todayKey) {
+      if (room.status === 'cleaning') {
+        return { status: 'cleaning', guest: null, booking: null };
+      } else if (room.status === 'blocked') {
+        return { status: 'blocked', guest: null, booking: null };
+      }
+    }
+
+    // Check for bookings
+    const overlappingBooking = bookings.find((booking) => {
+      if (booking.status === 'cancelled' || booking.status === 'no-show' || booking.status === 'checked-out') return false;
+      if (booking.roomId === roomId) {
+        return getDateKey(new Date(booking.checkInDate)) <= dateKey && dateKey <= getDateKey(new Date(booking.checkOutDate));
+      } else if (booking.splitStays && booking.splitStays.length > 0) {
+        return booking.splitStays.some(
+          (stay) => stay.roomId === roomId && getDateKey(new Date(stay.checkIn)) <= dateKey && dateKey <= getDateKey(new Date(stay.checkOut))
+        );
+      }
+      return false;
+    });
+
+    if (overlappingBooking) {
+      let status = 'available';
+      if (overlappingBooking.status === 'confirmed') {
+        status = 'reserved';
+      } else if (overlappingBooking.status === 'checked-in') {
+        status = 'occupied';
+      }
+      // Check if this is the check-out date
+      const isCheckoutDate =
+        dateKey === getDateKey(new Date(overlappingBooking.checkOutDate)) ||
+        (overlappingBooking.splitStays &&
+          overlappingBooking.splitStays.some(
+            (stay) => stay.roomId === roomId && dateKey === getDateKey(new Date(stay.checkOut))
+          ));
+      if (isCheckoutDate) {
+        status = 'checkout';
+      }
+      return {
+        status,
+        guest: `${overlappingBooking.firstName} ${overlappingBooking.lastName || ''}`,
+        booking: overlappingBooking,
+      };
+    }
+
+    // Automatically set cleaning status for check-out date
+    const hasCheckout = bookings.some((booking) => {
+      if (booking.status === 'cancelled' || booking.status === 'no-show' || booking.status === 'checked-out') return false;
+      if (booking.roomId === roomId) {
+        return dateKey === getDateKey(new Date(booking.checkOutDate));
+      } else if (booking.splitStays && booking.splitStays.length > 0) {
+        return booking.splitStays.some(
+          (stay) => stay.roomId === roomId && dateKey === getDateKey(new Date(stay.checkOut))
+        );
+      }
+      return false;
+    });
+
+    if (hasCheckout) {
+      return { status: 'cleaning', guest: null, booking: null };
+    }
+
+    return { status: 'available', guest: null, booking: null };
   };
 
-  const filteredRooms = rooms.filter(room => {
+  const filteredRooms = rooms.filter((room) => {
     const matchesRoomType = filterRoomType === 'all' || room.type === filterRoomType;
     let matchesStatus = true;
     if (filterStatus !== 'all') {
       const daysInMonth = getDaysInMonth(currentDate);
-      matchesStatus = daysInMonth.some(day => {
+      matchesStatus = daysInMonth.some((day) => {
         if (!day) return false;
         const status = getRoomStatus(room.id, day);
         return status && status.status === filterStatus;
@@ -322,18 +273,44 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     setShowRoomDetails(true);
   };
 
-  const handleStatusUpdate = (roomId, date, statusData) => {
+  const handleStatusUpdate = async (roomId, date, statusData) => {
     const dateKey = getDateKey(date);
-    setAvailability(prev => ({
-      ...prev,
-      [roomId]: {
-        ...prev[roomId],
-        [dateKey]: {
-          ...prev[roomId][dateKey],
-          ...statusData,
-        },
-      },
-    }));
+    try {
+      const todayKey = getDateKey(new Date());
+      if (dateKey === todayKey) {
+        const room = rooms.find((r) => r.id === roomId);
+        if (room) {
+          const activeTickets = roomMaintenance.filter(
+            (t) => t.roomId === roomId && t.status !== 'completed' && t.roomUnavailable
+          );
+          const startDates = activeTickets
+            .map((t) => t.scheduledStartDate)
+            .filter((d) => d)
+            .sort();
+          const maintenanceStartDate = statusData.status === 'maintenance' ? dateKey : startDates[0] || null;
+          const maintenanceNotes = activeTickets.length > 0 ? activeTickets.map((t) => t.title).join('; ') : '';
+
+          const updatedRoom = {
+            ...room,
+            status: statusData.status === 'available' ? 'clean' : statusData.status,
+            occupancyStatus:
+              statusData.status === 'occupied' ? 'occupied' :
+              statusData.status === 'maintenance' ? 'out-of-order' :
+              statusData.status === 'blocked' ? 'out-of-order' : 'vacant',
+            guestName: statusData.guest || null,
+            checkInDate: statusData.checkIn || null,
+            expectedCheckOut: statusData.checkOut || null,
+            maintenanceStartDate,
+            maintenanceNotes,
+          };
+          await axios.put(`${API_BASE_URL}/rooms/${roomId}`, updatedRoom);
+          setRooms(rooms.map((r) => (r.id === roomId ? updatedRoom : r)));
+        }
+      }
+    } catch (err) {
+      console.error('Error updating room status:', err);
+      setError('Failed to update room status. Please try again.');
+    }
     setShowStatusForm(false);
   };
 
@@ -359,7 +336,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
       });
     };
 
-    const modalContent = (
+    return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
@@ -371,7 +348,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
-
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -459,19 +435,17 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
             </div>
           </form>
         </div>
-      </div>
+      </div>,
+      document.body
     );
-
-    return createPortal(modalContent, document.body);
   };
 
   const RoomDetailsModal = () => {
     if (!showRoomDetails || !selectedRoom || !selectedDate) return null;
-
     const roomData = getRoomStatus(selectedRoom.id, selectedDate);
     const StatusIcon = statusConfig[roomData.status]?.icon || CheckCircle;
 
-    const modalContent = (
+    return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
@@ -482,7 +456,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedRoom.name}</h2>
                 <p className="text-sm text-gray-600">
-                  Room {selectedRoom.roomNumber} • {roomTypes.find(rt => rt.id === selectedRoom.type)?.name || 'Unknown'}
+                  Room {selectedRoom.roomNumber} • {roomTypes.find((rt) => rt.id === selectedRoom.type)?.name || 'Unknown'}
                 </p>
               </div>
             </div>
@@ -493,20 +467,13 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
-
           <div className="p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
               <p className="text-lg font-semibold text-gray-900">
-                {selectedDate.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
               <div className="flex items-center space-x-2">
@@ -516,7 +483,12 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 </span>
               </div>
             </div>
-
+            {selectedRoom.maintenanceNotes && roomData.status === 'maintenance' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Maintenance Notes</label>
+                <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">{selectedRoom.maintenanceNotes}</p>
+              </div>
+            )}
             {selectedRoom.images && selectedRoom.images.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
@@ -532,7 +504,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 </div>
               </div>
             )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
@@ -577,14 +548,12 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 </div>
               </div>
             </div>
-
             {selectedRoom.description && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
                 <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedRoom.description}</p>
               </div>
             )}
-
             {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
@@ -606,7 +575,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 </div>
               </div>
             )}
-
             {(roomData.guest || roomData.checkIn || roomData.checkOut || roomData.rate || roomData.notes) && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Booking Details</h3>
@@ -652,7 +620,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 </div>
               </div>
             )}
-
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button
                 onClick={() => {
@@ -664,52 +631,35 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 <Edit className="h-4 w-4" />
                 <span>Edit Status</span>
               </button>
-              <button
-                onClick={() => setShowRoomDetails(true)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
-              >
-                <Eye className="h-4 w-4" />
-                <span>View Details</span>
-              </button>
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
-
-    return createPortal(modalContent, document.body);
   };
 
-  const sidebarWidth = sidebarMinimized ? 4 : 16; 
+  const sidebarWidth = sidebarMinimized ? 4 : 16;
   const sidebarOffset = sidebarOpen ? sidebarWidth : 0;
-
-  // Calendar layout
   const daysInMonth = getDaysInMonth(currentDate);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
     <div
       className="min-h-screen bg-gray-50 transition-all duration-300 ease-in-out"
-      style={{
-        marginLeft: `${sidebarOffset}rem`,
-        width: `calc(100% - ${sidebarOffset}rem)`,
-      }}
+      style={{ marginLeft: `${sidebarOffset}rem`, width: `calc(100% - ${sidebarOffset}rem)` }}
     >
-      {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => sidebarOpen(false)} 
+          onClick={() => sidebarOpen(false)}
         ></div>
       )}
-
       {error && (
         <div className="px-6 py-4 bg-red-100 border-b border-red-200">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-
-      {/* Filters and Controls */}
       <div className="px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -734,7 +684,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Room Types</option>
-                {roomTypes.map(type => (
+                {roomTypes.map((type) => (
                   <option key={type.id} value={type.id}>{type.name}</option>
                 ))}
               </select>
@@ -767,7 +717,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <ChevronRight className="h-5 w-5" />
             </button>
             <button
-              onClick={() => setCurrentDate(new Date(2025, 7, 1))}
+              onClick={() => setCurrentDate(new Date())}
               className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
             >
               Today
@@ -781,8 +731,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
           </div>
         </div>
       </div>
-
-      {/* Legend */}
       <div className="px-6 py-4 bg-blue-50 border-b border-blue-200">
         <div className="flex flex-wrap gap-4">
           {Object.entries(statusConfig).map(([status, config]) => {
@@ -795,10 +743,12 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               </div>
             );
           })}
+          <div className="flex items-center space-x-2">
+            <Split className="h-4 w-4 text-yellow-600" />
+            <span className="text-sm text-gray-700">Split Stay</span>
+          </div>
         </div>
       </div>
-
-      {/* Calendar Grid */}
       <div className="px-6 py-2">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
           <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200">
@@ -809,10 +759,14 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200">
-          </div>
+          <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200"></div>
           <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
-            {filteredRooms.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 text-gray-400 animate-spin mx-auto" />
+                <p className="mt-2 text-gray-600">Loading...</p>
+              </div>
+            ) : filteredRooms.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
@@ -822,7 +776,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               filteredRooms.map((room) => {
                 const weeks = [];
                 let currentWeek = [];
-
                 daysInMonth.forEach((date, index) => {
                   currentWeek.push(date);
                   if (currentWeek.length === 7 || index === daysInMonth.length - 1) {
@@ -841,7 +794,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                           </div>
                           <div>
                             <p className="font-medium text-sm text-gray-900">{room.name}</p>
-                            <p className="text-xs text-gray-600">{roomTypes.find(rt => rt.id === room.type)?.name || 'Unknown'}</p>
+                            <p className="text-xs text-gray-600">{roomTypes.find((rt) => rt.id === room.type)?.name || 'Unknown'}</p>
                           </div>
                         </div>
                       )}
@@ -849,27 +802,40 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                     {week.map((date, dayIndex) => {
                       const roomStatus = getRoomStatus(room.id, date);
                       const statusColor = roomStatus ? statusConfig[roomStatus.status]?.color : 'bg-gray-50';
+                      const isFirstDay = roomStatus.booking && (
+                        getDateKey(new Date(roomStatus.booking.checkInDate)) === getDateKey(date) ||
+                        (roomStatus.booking.splitStays && roomStatus.booking.splitStays.some(
+                          (stay) => getDateKey(new Date(stay.checkIn)) === getDateKey(date)
+                        ))
+                      );
+                      const isSplitStay = roomStatus.booking?.splitStays?.some(
+                        (stay) => stay.roomId === room.id && getDateKey(new Date(stay.checkIn)) <= getDateKey(date) && getDateKey(date) <= getDateKey(new Date(stay.checkOut))
+                      );
 
                       return (
                         <div
                           key={dayIndex}
-                          className={`p-2 border-r border-gray-200 last:border-r-0 min-h-[80px] cursor-pointer transition-colors relative ${
-                            date ? 'hover:bg-gray-100' : ''
-                          }`}
+                          className={`p-2 border-r border-gray-200 last:border-r-0 min-h-[80px] cursor-pointer transition-colors relative ${date ? 'hover:bg-gray-100' : ''}`}
                           onClick={() => date && handleCellClick(room, date)}
                         >
-                          {date && roomStatus && (
+                          {date && (
                             <>
                               <div className="absolute top-1 left-1 text-xs bg-gray-100 border border-gray-200 rounded px-1 py-0.5 text-gray-700">
                                 {date.getDate()}
                               </div>
                               <div className={`w-full h-full rounded border ${statusColor} flex items-center justify-center pt-4`}>
                                 <div className="text-center">
-                                  {roomStatus.guest && (
-                                    <p className="text-xs truncate">{roomStatus.guest}</p>
-                                  )}
-                                  {roomStatus.rate && (
-                                    <p className="text-sm font-medium">${roomStatus.rate}</p>
+                                  {roomStatus.guest && roomStatus.status !== 'cleaning' && roomStatus.status !== 'maintenance' && roomStatus.status !== 'blocked' && (
+                                    <>
+                                      <p className="text-xs font-medium truncate">{roomStatus.guest}</p>
+                                      <p className="text-xs truncate opacity-90">{roomStatus.booking?.bookingReference || 'N/A'}</p>
+                                      <div className="flex items-center justify-center space-x-1 mt-1">
+                                        <Users className="h-3 w-3" />
+                                        <span className="text-xs">{roomStatus.booking?.guests || 1}</span>
+                                        {isFirstDay && <Clock className="h-3 w-3 ml-1" />}
+                                        {isSplitStay && <Split className="h-3 w-3 ml-1" />}
+                                      </div>
+                                    </>
                                   )}
                                 </div>
                               </div>

@@ -1,9 +1,9 @@
 const express = require('express');
-const RoomMaintenance = require('../models/maintenance');
+const RoomMaintenance = require('../../models/RoomManaagemnt/maintenance');
 
 const router = express.Router();
 
-// GET all maintenance tickets
+// GET all
 router.get('/', async (req, res) => {
   try {
     const tickets = await RoomMaintenance.find().sort({ createdAt: -1 });
@@ -39,7 +39,6 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const ticketData = req.body;
-    // Generate a unique id for the ticket
     let newId;
     let attempts = 0;
     do {
@@ -58,7 +57,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT update maintenance ticket
+// PUT 
 router.put('/:id', async (req, res) => {
   try {
     const ticket = await RoomMaintenance.findOneAndUpdate(

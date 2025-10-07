@@ -50,8 +50,9 @@ import {
   Settings,
   Calendar,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = `${API_BASE_URL}/rooms`;
 
 const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const [rooms, setRooms] = useState([]);
@@ -61,13 +62,13 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
   const [showRoomDetails, setShowRoomDetails] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(new Date(2025, 7, 5));
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   const fetchRooms = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/rooms`);
       setRooms(response.data);
-      setLastUpdated(new Date(2025, 7, 5));
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching rooms:', error);
     }
@@ -103,7 +104,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
       id: Date.now(),
       message,
       type,
-      timestamp: new Date(2025, 7, 5),
+      timestamp: new Date(),
     };
     setNotifications(prev => [notification, ...prev.slice(0, 4)]);
   };
@@ -117,7 +118,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
         ...roomToUpdate,
         status: 'dirty',
         occupancyStatus: 'vacant',
-        lastCheckOut: new Date(2025, 7, 5).toISOString(),
+        lastCheckOut: new Date().toISOString(),
         guestName: null,
         checkInDate: null,
         expectedCheckOut: null,
@@ -127,7 +128,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
       const roomResponse = await axios.put(`${API_BASE_URL}/rooms/${roomId}`, updatedRoom);
 
       // Update RoomAvailability
-      const today = new Date(2025, 7, 5).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
       const availabilityResponse = await axios.get(`${API_BASE_URL}/roomAvailability/${roomId}`);
       let availabilityData = availabilityResponse.data ? availabilityResponse.data.availability : [];
       availabilityData = availabilityData.filter(entry => entry.date !== today);
@@ -174,20 +175,24 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
       const updatedRoom = {
         ...roomToUpdate,
         status: newStatus,
-        ...(newStatus === 'cleaning' && { cleaningStarted: new Date(2025, 7, 5).toISOString() }),
-        ...(newStatus === 'clean' && { lastCleaned: new Date(2025, 7, 5).toISOString(), cleaningStarted: null }),
+        ...(newStatus === 'cleaning' && { cleaningStarted: new Date().toISOString() }),
+        ...(newStatus === 'clean' && { lastCleaned: new Date().toISOString(), cleaningStarted: null }),
         ...(newStatus === 'out-of-order' && { maintenanceNotes: roomToUpdate.maintenanceNotes || 'Reason not specified' }),
+        occupancyStatus: newStatus === 'maintenance' || newStatus === 'out-of-order' ? 'out-of-order' : roomToUpdate.occupancyStatus,
       };
 
       // Update Room
       const roomResponse = await axios.put(`${API_BASE_URL}/rooms/${roomId}`, updatedRoom);
 
       // Update RoomAvailability
-      const today = new Date(2025, 7, 5).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
       const availabilityResponse = await axios.get(`${API_BASE_URL}/roomAvailability/${roomId}`);
       let availabilityData = availabilityResponse.data ? availabilityResponse.data.availability : [];
       availabilityData = availabilityData.filter(entry => entry.date !== today);
-      const availabilityStatus = newStatus === 'out-of-order' ? 'maintenance' : newStatus === 'clean' ? 'available' : newStatus;
+      const availabilityStatus = newStatus === 'out-of-order' ? 'maintenance' : 
+                                newStatus === 'clean' ? 'available' : 
+                                newStatus === 'cleaning' ? 'cleaning' : 
+                                newStatus;
       availabilityData.push({ date: today, status: availabilityStatus });
 
       await axios.put(`${API_BASE_URL}/roomAvailability/${roomId}`, { availability: availabilityData });
@@ -199,6 +204,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
           dirty: 'marked as dirty',
           cleaning: 'cleaning started',
           'out-of-order': 'marked out of order',
+          maintenance: 'marked for maintenance',
         };
         addNotification(`Room ${roomId.slice(1)} ${statusMessages[newStatus]}`, 'success');
       }
@@ -251,7 +257,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
         <div className="space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <StatusIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+              <StatusIcon className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
               <span className={`px-2 py-1 text-xs sm:text-sm font-medium rounded-full border ${statusConfig[room.status]?.color}`}>
                 {statusConfig[room.status]?.label}
               </span>
@@ -266,14 +272,14 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
 
           {room.housekeeperAssigned && (
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+              <UserCheck className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
               <span className="text-xs sm:text-sm text-gray-700 truncate">{room.housekeeperAssigned}</span>
             </div>
           )}
 
           {room.status === 'cleaning' && room.cleaningStarted && (
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+              <Clock className="h-4 w-4 sm:h-5 w-5 text-blue-500" />
               <span className="text-xs sm:text-sm text-blue-700">
                 Started:{' '}
                 {new Date(room.cleaningStarted).toLocaleTimeString('en-US', {
@@ -287,7 +293,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
 
           {room.nextCheckIn && (
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <LogIn className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+              <LogIn className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
               <span className="text-xs sm:text-sm text-gray-700">
                 Next:{' '}
                 {new Date(room.nextCheckIn).toLocaleTimeString('en-US', {
@@ -416,7 +422,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Current Status</label>
               <div className="flex items-center space-x-2">
-                <StatusIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                <StatusIcon className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                 <span className={`px-3 py-1 text-sm font-medium rounded-full border ${statusConfig[selectedRoom.status]?.color}`}>
                   {statusConfig[selectedRoom.status]?.label}
                 </span>
@@ -428,24 +434,24 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <Home className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <Home className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Floor:</span>
                     <span className="text-sm font-medium">{selectedRoom.floor}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <Users className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Capacity:</span>
                     <span className="text-sm font-medium">
                       {selectedRoom.capacity} guests (Max: {selectedRoom.maxCapacity})
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <MapPin className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Size:</span>
                     <span className="text-sm font-medium">{selectedRoom.size} sq ft</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Bookings:</span>
                     <span className="text-sm font-medium">{selectedRoom.bookingHistory} total</span>
                   </div>
@@ -455,12 +461,12 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Pricing</h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Base Price:</span>
                     <span className="text-sm font-medium">${selectedRoom.basePrice}/night</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                    <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
                     <span className="text-sm text-gray-600">Weekend Price:</span>
                     <span className="text-sm font-medium">${selectedRoom.weekendPrice}/night</span>
                   </div>
@@ -696,7 +702,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+              <Filter className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -725,7 +731,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={() => setAutoRefresh(!autoRefresh)}
-                className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 sm:h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <span className="text-xs sm:text-sm text-gray-600">Auto-refresh</span>
             </div>
@@ -753,8 +759,8 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
             const Icon = config.icon;
             return (
               <div key={status} className="flex items-center space-x-2">
-                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded border ${config.color}`}></div>
-                <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                <div className={`w-4 h-4 sm:w-5 h-5 rounded border ${config.color}`}></div>
+                <Icon className="h-4 w-4 sm:h-5 w-5 text-gray-600" />
                 <span className="text-xs sm:text-sm text-gray-700">{config.label}</span>
               </div>
             );

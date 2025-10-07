@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const RoomRates = require('../models/roomRate');
+const RoomRates = require('../../models/RoomManaagemnt/roomRate');
 const mongoose = require('mongoose');
 
 // Get all room rates
@@ -42,10 +42,18 @@ router.post('/', async (req, res) => {
 // Update a room rate
 router.put('/:id', async (req, res) => {
   try {
-    const rate = await RoomRates.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    let rate;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      rate = await RoomRates.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+    } else {
+      rate = await RoomRates.findOneAndUpdate({ roomId: req.params.id }, req.body, {
+        new: true,
+        runValidators: true,
+      });
+    }
     if (!rate) {
       return res.status(404).json({ message: 'Rate not found' });
     }
@@ -59,10 +67,12 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid or missing room rate ID' });
+    let deletedRate;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      deletedRate = await RoomRates.findOneAndDelete({ _id: id });
+    } else {
+      deletedRate = await RoomRates.findOneAndDelete({ roomId: id });
     }
-    const deletedRate = await RoomRates.findOneAndDelete({ _id: id });
     if (!deletedRate) {
       return res.status(404).json({ message: 'Rate not found' });
     }

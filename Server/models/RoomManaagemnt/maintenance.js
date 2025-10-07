@@ -20,6 +20,8 @@ const roomMaintenanceSchema = new mongoose.Schema({
   notes: { type: String },
   images: { type: [String], default: [] },
   roomUnavailable: { type: Boolean, default: false },
+  scheduledStartDate: { type: String, required: true }, 
+  scheduledEndDate: { type: String }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('roomMaintenance', roomMaintenanceSchema, 'roomMaintenance');

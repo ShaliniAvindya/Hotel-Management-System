@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import {
   Calendar,
   ChevronLeft,
@@ -26,6 +27,7 @@ import {
   Split,
   Trash2
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   const room = booking.room;
@@ -34,32 +36,25 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
   const getStatusColor = (status) => {
-    const bookingStatuses = [
-      { id: 'all', name: 'All Bookings', color: 'gray' },
-      { id: 'confirmed', name: 'Confirmed', color: 'blue' },
-      { id: 'checked-in', name: 'Checked In', color: 'green' },
-      { id: 'checked-out', name: 'Checked Out', color: 'gray' },
-      { id: 'cancelled', name: 'Cancelled', color: 'red' },
-      { id: 'no-show', name: 'No Show', color: 'orange' }
-    ];
-    const statusObj = bookingStatuses.find(s => s.id === status);
-    return statusObj ? statusObj.color : 'gray';
+    switch (status) {
+      case 'confirmed': return 'blue';
+      case 'checked-in': return 'green';
+      case 'checked-out': return 'gray';
+      case 'cancelled': return 'red';
+      case 'no-show': return 'orange';
+      default: return 'gray';
+    }
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-gray-900 text-lg">{booking.guestName}</h3>
+          <h3 className="font-semibold text-gray-900 text-lg">{`${booking.firstName} ${booking.lastName || ''}`}</h3>
           <p className="text-sm text-gray-600">{booking.bookingReference}</p>
+          <p className="text-sm text-gray-600">Guest ID: {booking.guestId || 'N/A'}</p>
         </div>
-        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-          getStatusColor(booking.status) === 'green' ? 'bg-green-100 text-green-800' :
-          getStatusColor(booking.status) === 'blue' ? 'bg-blue-100 text-blue-800' :
-          getStatusColor(booking.status) === 'red' ? 'bg-red-100 text-red-800' :
-          getStatusColor(booking.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${getStatusColor(booking.status)}-100 text-${getStatusColor(booking.status)}-800`}>
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>
       </div>
@@ -132,13 +127,21 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   );
 });
 
-const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingData }) => {
+const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingData, setSuccess, setError }) => {
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState(
     quickBookingData
       ? {
-          guestName: '',
+          firstName: '',
+          lastName: '',
           guestEmail: '',
           guestPhone: '',
+          guestId: null,
           roomId: quickBookingData.roomId,
           checkInDate: quickBookingData.date,
           checkOutDate: '',
@@ -148,10 +151,25 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
           specialRequests: '',
           splitStays: []
         }
-      : booking || {
-          guestName: '',
+      : booking
+      ? {
+          ...booking,
+          firstName: booking.firstName || '',
+          lastName: booking.lastName || '',
+          guestEmail: booking.guestEmail || '',
+          guestPhone: booking.guestPhone || '',
+          guestId: booking.guestId || null,
+          checkInDate: formatDateForInput(booking.checkInDate),
+          checkOutDate: formatDateForInput(booking.checkOutDate),
+          specialRequests: booking.specialRequests || '',
+          splitStays: booking.splitStays || []
+        }
+      : {
+          firstName: '',
+          lastName: '',
           guestEmail: '',
           guestPhone: '',
+          guestId: null,
           roomId: '',
           checkInDate: '',
           checkOutDate: '',
@@ -162,7 +180,13 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
           splitStays: []
         }
   );
-  const [splitStays, setSplitStays] = useState(booking?.splitStays || []);
+  const [splitStays, setSplitStays] = useState(
+    booking?.splitStays?.map(stay => ({
+      ...stay,
+      checkIn: formatDateForInput(stay.checkIn),
+      checkOut: formatDateForInput(stay.checkOut)
+    })) || []
+  );
   const [useSplitStay, setUseSplitStay] = useState(booking?.splitStays?.length > 0 || false);
 
   const calculateTotal = (splitStays, roomId, checkIn, checkOut) => {
@@ -173,7 +197,14 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
         const startDate = new Date(stay.checkIn);
         const endDate = new Date(stay.checkOut);
         const nights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-        return total + nights * room.basePrice;
+        const isWeekend = (date) => date.getDay() === 0 || date.getDay() === 6;
+        let price = 0;
+        let current = new Date(startDate);
+        while (current < endDate) {
+          price += isWeekend(current) ? room.weekendPrice : room.basePrice;
+          current.setDate(current.getDate() + 1);
+        }
+        return total + price;
       }, 0);
     }
     const room = rooms.find(r => r.id === roomId);
@@ -181,7 +212,14 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
     const nights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    return nights * room.basePrice;
+    const isWeekend = (date) => date.getDay() === 0 || date.getDay() === 6;
+    let price = 0;
+    let current = new Date(startDate);
+    while (current < endDate) {
+      price += isWeekend(current) ? room.weekendPrice : room.basePrice;
+      current.setDate(current.getDate() + 1);
+    }
+    return price;
   };
 
   const isRoomAvailable = (roomId, checkIn, checkOut, excludeBookingId) => {
@@ -197,7 +235,7 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
       b.id !== excludeBookingId &&
       b.status !== 'cancelled' &&
       b.splitStays.some(stay => 
-        stay.roomId === roomId &&
+        stay.roomId === roomId && 
         new Date(stay.checkIn) < end &&
         new Date(stay.checkOut) > start
       )
@@ -236,46 +274,66 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
     setSplitStays(newSplitStays);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
     
+    if (!formData.firstName) {
+      setError('First name is required');
+      return;
+    }
+
     if (checkOut <= checkIn) {
-      alert('Check-out date must be after check-in date');
+      setError('Check-out date must be after check-in date');
       return;
     }
 
     const selectedRoom = rooms.find(r => r.id === formData.roomId);
     if (!useSplitStay && selectedRoom && formData.guests > selectedRoom.maxCapacity) {
-      alert(`Selected room can accommodate maximum ${selectedRoom.maxCapacity} guests`);
-      return;
-    }
-
-    if (!useSplitStay && !isRoomAvailable(formData.roomId, formData.checkInDate, formData.checkOutDate, booking?.id)) {
-      alert('Selected room is not available for the specified dates');
+      setError(`Selected room can accommodate maximum ${selectedRoom.maxCapacity} guests`);
       return;
     }
 
     if (useSplitStay && !validateSplitStays(splitStays, formData.checkInDate, formData.checkOutDate)) {
-      alert('Split stays must cover the entire booking period without gaps or overlaps and rooms must be available');
+      setError('Split stays must cover the entire booking period without gaps or overlaps and rooms must be available');
       return;
     }
 
     if (useSplitStay && splitStays.some(stay => !stay.roomId || !stay.checkIn || !stay.checkOut)) {
-      alert('All split stay segments must have a room and valid dates');
+      setError('All split stay segments must have a room and valid dates');
       return;
     }
 
-    onSave({
+    const bookingData = {
       ...formData,
       totalAmount: calculateTotal(useSplitStay ? splitStays : [], formData.roomId, formData.checkInDate, formData.checkOutDate),
-      id: booking ? booking.id : `B${String(Math.random()).slice(2, 8)}`,
-      bookingReference: booking ? booking.bookingReference : `HTL2024${String(Math.random()).slice(2, 8)}`,
-      createdAt: booking ? booking.createdAt : new Date().toISOString(),
       splitStays: useSplitStay ? splitStays : []
-    });
+    };
+
+    try {
+      if (booking) {
+        const response = await axios.put(`${API_BASE_URL}/bookings/${booking.id}`, bookingData);
+        onSave(response.data);
+        setSuccess('Booking updated successfully!');
+        setTimeout(() => {
+          onCancel();
+          window.location.reload();
+        }, 2000);
+      } else {
+        // Create new booking
+        const response = await axios.post(`${API_BASE_URL}/bookings`, bookingData);
+        onSave(response.data);
+        setSuccess('Booking created successfully!');
+        setTimeout(() => {
+          onCancel();
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'An error occurred while saving the booking');
+    }
   };
 
   return createPortal(
@@ -306,15 +364,27 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Guest Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    value={formData.guestName}
-                    onChange={(e) => setFormData({ ...formData, guestName: e.target.value })}
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -573,14 +643,13 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
 
 const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
   const room = rooms.find(r => r.id === booking.roomId);
-  const bookingStatuses = [
-    { id: 'confirmed', name: 'Confirmed', color: 'blue' },
-    { id: 'checked-in', name: 'Checked In', color: 'green' },
-    { id: 'checked-out', name: 'Checked Out', color: 'gray' },
-    { id: 'cancelled', name: 'Cancelled', color: 'red' },
-    { id: 'no-show', name: 'No Show', color: 'orange' }
-  ];
-  const statusConfig = bookingStatuses.find(s => s.id === booking.status) || { color: 'gray' };
+  const statusConfig = {
+    confirmed: { name: 'Confirmed', color: 'blue' },
+    'checked-in': { name: 'Checked In', color: 'green' },
+    'checked-out': { name: 'Checked Out', color: 'gray' },
+    cancelled: { name: 'Cancelled', color: 'red' },
+    'no-show': { name: 'No Show', color: 'orange' }
+  }[booking.status] || { name: booking.status, color: 'gray' };
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
@@ -592,7 +661,8 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{booking.bookingReference}</h2>
-              <p className="text-sm text-gray-600">{booking.guestName}</p>
+              <p className="text-sm text-gray-600">{`${booking.firstName} ${booking.lastName || ''}`}</p>
+              <p className="text-sm text-gray-600">Guest ID: {booking.guestId || 'N/A'}</p>
             </div>
           </div>
           <button
@@ -607,13 +677,7 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Status</h3>
-              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                statusConfig.color === 'green' ? 'bg-green-100 text-green-800' :
-                statusConfig.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                statusConfig.color === 'red' ? 'bg-red-100 text-red-800' :
-                statusConfig.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${statusConfig.color}-100 text-${statusConfig.color}-800`}>
                 {statusConfig.name}
               </span>
             </div>
@@ -633,7 +697,7 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Name:</span>
-                <span className="text-sm font-medium">{booking.guestName}</span>
+                <span className="text-sm font-medium">{`${booking.firstName} ${booking.lastName || ''}`}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-500" />
@@ -743,7 +807,7 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
        booking.checkInDate <= dateStr && 
        booking.checkOutDate > dateStr) ||
       booking.splitStays.some(stay => 
-        stay.roomId === roomId && 
+        stay.roomId === roomId &&
         stay.checkIn <= dateStr && 
         stay.checkOut > dateStr
       )
@@ -791,7 +855,7 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
           >
             {booking ? (
               <div className={`h-full rounded px-2 py-1 bg-${statusConfig.color}-500 text-white text-xs`}>
-                <div className="font-medium truncate">{booking.guestName}</div>
+                <div className="font-medium truncate">{`${booking.firstName} ${booking.lastName || ''}`}</div>
                 <div className="truncate opacity-90">{booking.bookingReference}</div>
                 <div className="flex items-center space-x-1 mt-1">
                   <Users className="h-3 w-3" />
@@ -826,6 +890,10 @@ const BookingCalendar = () => {
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [quickBookingData, setQuickBookingData] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [formError, setFormError] = useState(null);
+  const [formSuccess, setFormSuccess] = useState(null);
 
   const bookingStatuses = [
     { id: 'all', name: 'All Bookings', color: 'gray' },
@@ -848,81 +916,28 @@ const BookingCalendar = () => {
     { id: 'penthouse', name: 'Penthouse' }
   ];
 
-  // Initialize sample data
+  // Fetch rooms and bookings
   useEffect(() => {
-    const sampleRooms = [
-      { id: 'R001', roomNumber: '101', type: 'single', name: 'Deluxe Single Room', capacity: 1, maxCapacity: 2, basePrice: 120, weekendPrice: 150, floor: 1 },
-      { id: 'R002', roomNumber: '201', type: 'double', name: 'Premium Double Room', capacity: 2, maxCapacity: 3, basePrice: 180, weekendPrice: 220, floor: 2 },
-      { id: 'R003', roomNumber: '301', type: 'suite', name: 'Executive Suite', capacity: 4, maxCapacity: 6, basePrice: 350, weekendPrice: 420, floor: 3 },
-      { id: 'R004', roomNumber: '102', type: 'single', name: 'Standard Single Room', capacity: 1, maxCapacity: 2, basePrice: 100, weekendPrice: 130, floor: 1 },
-      { id: 'R005', roomNumber: '202', type: 'double', name: 'Deluxe Double Room', capacity: 2, maxCapacity: 3, basePrice: 200, weekendPrice: 240, floor: 2 },
-      { id: 'R006', roomNumber: '302', type: 'suite', name: 'Family Suite', capacity: 4, maxCapacity: 6, basePrice: 320, weekendPrice: 380, floor: 3 }
-    ];
-    setRooms(sampleRooms);
+    const fetchData = async () => {
+      try {
+        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
+        const fetchedRooms = roomsResponse.data;
+        setRooms(fetchedRooms);
+        setFilteredRooms(fetchedRooms);
 
-    const today = new Date();
-    const sampleBookings = [
-      {
-        id: 'B001',
-        bookingReference: 'HTL2024001',
-        guestName: 'John Smith',
-        guestEmail: 'john.smith@email.com',
-        guestPhone: '+1-555-0123',
-        roomId: 'R001',
-        checkInDate: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 1,
-        status: 'confirmed',
-        totalAmount: 360,
-        bookingSource: 'walk-in',
-        createdAt: new Date().toISOString(),
-        specialRequests: 'Late check-in requested',
-        splitStays: []
-      },
-      {
-        id: 'B002',
-        bookingReference: 'HTL2024002',
-        guestName: 'Sarah Johnson',
-        guestEmail: 'sarah.j@email.com',
-        guestPhone: '+1-555-0456',
-        roomId: 'R002',
-        checkInDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 2,
-        status: 'confirmed',
-        totalAmount: 540,
-        bookingSource: 'phone',
-        createdAt: new Date().toISOString(),
-        specialRequests: '',
-        splitStays: []
-      },
-      {
-        id: 'B003',
-        bookingReference: 'HTL2024003',
-        guestName: 'Mike Davis',
-        guestEmail: 'mike.davis@email.com',
-        guestPhone: '+1-555-0789',
-        roomId: 'R003',
-        checkInDate: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 4,
-        status: 'checked-in',
-        totalAmount: 700 + 180, // R003 for 2 nights + R002 for 1 night
-        bookingSource: 'email',
-        createdAt: new Date().toISOString(),
-        specialRequests: 'Extra towels, early breakfast',
-        splitStays: [
-          { roomId: 'R003', checkIn: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], checkOut: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-          { roomId: 'R002', checkIn: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], checkOut: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }
-        ]
+        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
+        const fetchedBookings = bookingsResponse.data.map(booking => ({
+          ...booking,
+          room: booking.splitStays.length > 0 ? null : fetchedRooms.find(r => r.id === booking.roomId)
+        }));
+        setBookings(fetchedBookings);
+        setFilteredBookings(fetchedBookings);
+      } catch (error) {
+        setError(error.response?.data?.message || 'Failed to fetch data from the server');
       }
-    ].map(booking => ({
-      ...booking,
-      room: booking.splitStays.length > 0 ? null : sampleRooms.find(r => r.id === booking.roomId)
-    }));
-    setBookings(sampleBookings);
-    setFilteredBookings(sampleBookings);
-    setFilteredRooms(sampleRooms);
+    };
+
+    fetchData();
   }, []);
 
   // Filter bookings and rooms
@@ -933,10 +948,10 @@ const BookingCalendar = () => {
     if (filters.search) {
       filteredB = filteredB.filter(
         (booking) =>
-          booking.guestName.toLowerCase().includes(filters.search.toLowerCase()) ||
+          `${booking.firstName} ${booking.lastName || ''}`.toLowerCase().includes(filters.search.toLowerCase()) ||
           booking.bookingReference.toLowerCase().includes(filters.search.toLowerCase()) ||
-          booking.guestEmail.toLowerCase().includes(filters.search.toLowerCase()) ||
-          booking.guestPhone.includes(filters.search)
+          booking.guestEmail?.toLowerCase().includes(filters.search.toLowerCase()) ||
+          booking.guestPhone?.includes(filters.search)
       );
       filteredR = filteredR.filter(
         (room) =>
@@ -965,30 +980,70 @@ const BookingCalendar = () => {
     setFilteredRooms(filteredR);
   }, [bookings, rooms, filters]);
 
-  const handleAddBooking = (bookingData) => {
-    const newBooking = {
-      ...bookingData,
-      room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
-    };
-    setBookings([...bookings, newBooking]);
-    setShowBookingForm(false);
-    setQuickBookingData(null);
-  };
-
-  const handleEditBooking = (bookingData) => {
-    const updatedBooking = {
-      ...bookingData,
-      room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
-    };
-    setBookings(bookings.map((b) => (b.id === bookingData.id ? updatedBooking : b)));
-    setShowBookingForm(false);
-    setEditingBooking(null);
-  };
-
-  const handleDeleteBooking = (bookingId) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+  const handleAddBooking = async (bookingData) => {
+    try {
+      const { id, ...bookingDataWithoutId } = bookingData;
+      const response = await axios.post(`${API_BASE_URL}/bookings`, bookingDataWithoutId);
+      const newBooking = {
+        ...response.data,
+        room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
+      };
+      setBookings([...bookings, newBooking]);
+      setFilteredBookings([...filteredBookings, newBooking]);
+      setQuickBookingData(null);
+      setFormError(null);
+      setFormSuccess('Booking created successfully!');
+      setTimeout(() => {
+        setFormSuccess(null);
+        setShowBookingForm(false);
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      setFormError(error.response?.data?.message || 'Failed to create booking');
     }
+  };
+
+  const handleEditBooking = async (bookingData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/bookings/${bookingData.id}`, bookingData);
+      const updatedBooking = {
+        ...response.data,
+        room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
+      };
+      setBookings(bookings.map((b) => (b.id === bookingData.id ? updatedBooking : b)));
+      setFilteredBookings(filteredBookings.map((b) => (b.id === bookingData.id ? updatedBooking : b)));
+      setShowBookingForm(false);
+      setEditingBooking(null);
+      setFormSuccess('Booking updated successfully!');
+      setTimeout(() => {
+        setFormSuccess(null);
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      setFormError(error.response?.data?.message || 'Failed to update booking');
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/bookings/${bookingId}`);
+        const updatedBooking = bookings.find(b => b.id === bookingId);
+        updatedBooking.status = 'cancelled';
+        setBookings(bookings.map(b => b.id === bookingId ? updatedBooking : b));
+        setFilteredBookings(filteredBookings.map(b => b.id === bookingId ? updatedBooking : b));
+        setSuccess('Booking cancelled successfully!');
+        setTimeout(() => setSuccess(null), 2000);
+      } catch (error) {
+        setError(error.response?.data?.message || 'Failed to cancel booking');
+      }
+    }
+  };
+
+  // Function to clear form-specific messages when form is closed
+  const clearFormMessages = () => {
+    setFormError(null);
+    setFormSuccess(null);
   };
 
   // Calendar logic
@@ -1062,6 +1117,37 @@ const BookingCalendar = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {createPortal(
+        <div className="fixed top-6 right-6 z-[100]">
+          {(success || formSuccess) && (
+            <div className="bg-green-100 border border-green-400 text-green-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in mb-4">
+              <CheckCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="flex-1">{success || formSuccess}</span>
+              <button 
+                onClick={() => { setSuccess(null); setFormSuccess(null); }} 
+                className="ml-2 text-green-700 hover:text-green-900 focus:outline-none flex-shrink-0"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+          
+          {(error || formError) && !(success || formSuccess) && (
+            <div className="bg-red-100 border border-red-400 text-red-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="flex-1">{error || formError}</span>
+              <button 
+                onClick={() => { setError(null); setFormError(null); }} 
+                className="ml-2 text-red-700 hover:text-red-900 focus:outline-none flex-shrink-0"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
       {/* View Toggle and Filters */}
       <div className="px-6 py-4 bg-white border-b border-gray-200">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
@@ -1113,7 +1199,6 @@ const BookingCalendar = () => {
                       </option>
                     ))}
                   </select>
-                 
                 </>
               )}
             </div>
@@ -1215,7 +1300,7 @@ const BookingCalendar = () => {
                   <Calendar className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Bookings</p>
+                  <p className="text-sm font-medium text-gray-600">Total Bookings</p>
                   <p className="text-xl font-semibold text-gray-900">{bookings.length}</p>
                 </div>
               </div>
@@ -1226,7 +1311,7 @@ const BookingCalendar = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Checked In</p>
+                  <p className="text-sm font-medium text-gray-600">Checked In</p>
                   <p className="text-xl font-semibold text-gray-900">
                     {bookings.filter(b => b.status === 'checked-in').length}
                   </p>
@@ -1239,7 +1324,7 @@ const BookingCalendar = () => {
                   <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Confirmed</p>
+                  <p className="text-sm font-medium text-gray-600">Confirmed</p>
                   <p className="text-xl font-semibold text-gray-900">
                     {bookings.filter(b => b.status === 'confirmed').length}
                   </p>
@@ -1252,7 +1337,7 @@ const BookingCalendar = () => {
                   <AlertCircle className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Cancelled</p>
+                  <p className="text-sm font-medium text-gray-600">Cancelled</p>
                   <p className="text-xl font-semibold text-gray-900">
                     {bookings.filter(b => b.status === 'cancelled').length}
                   </p>
@@ -1372,7 +1457,10 @@ const BookingCalendar = () => {
             setShowBookingForm(false);
             setEditingBooking(null);
             setQuickBookingData(null);
+            clearFormMessages();
           }}
+          setSuccess={setFormSuccess}
+          setError={setFormError}
         />
       )}
 

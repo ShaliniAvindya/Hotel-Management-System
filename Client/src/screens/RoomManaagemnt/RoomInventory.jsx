@@ -49,11 +49,14 @@ import {
   Wind,
   Sun,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
-const API_BASE_URL = 'http://localhost:8000/api/rooms'; 
+const API_BASE_URL = `${API_BASE_URL}/rooms`; 
+const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
   const [rooms, setRooms] = useState([]);
+  const [rates, setRates] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -115,8 +118,18 @@ const RoomInventory = () => {
     }
   };
 
+  const fetchRates = async () => {
+    try {
+      const response = await axios.get(RATES_API_BASE_URL);
+      setRates(response.data);
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
+    fetchRates();
   }, []);
 
   // Filter rooms
@@ -148,7 +161,37 @@ const RoomInventory = () => {
     try {
       const response = await axios.post(API_BASE_URL, roomData);
       if (response.status === 201) {
-        fetchRooms(); 
+        const newRoom = response.data;
+        // Sync to rate plan
+        const existingRate = rates.find(r => r.rateType === 'ratePlan' && r.roomId === newRoom.id);
+        if (existingRate) {
+          const updatedRate = {
+            ...existingRate,
+            basePrice: newRoom.basePrice,
+            weekendPrice: newRoom.weekendPrice
+          };
+          await axios.put(`${RATES_API_BASE_URL}/${existingRate._id}`, updatedRate);
+        } else {
+          const newRate = {
+            rateType: 'ratePlan',
+            name: `${newRoom.name}`,
+            description: 'Default rate plan for the room',
+            status: 'active',
+            roomType: newRoom.type,
+            roomId: newRoom.id,
+            basePrice: newRoom.basePrice,
+            weekendPrice: newRoom.weekendPrice,
+            refundable: true,
+            breakfastIncluded: false,
+            inclusions: [],
+            restrictions: { minStay: 1, maxStay: 14, advanceBooking: 0, cancellationDeadline: 24 },
+            validFrom: new Date().toISOString().split('T')[0],
+            validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          };
+          await axios.post(RATES_API_BASE_URL, newRate);
+        }
+        fetchRooms();
+        fetchRates();
         setShowRoomForm(false);
       }
     } catch (error) {
@@ -160,7 +203,37 @@ const RoomInventory = () => {
     try {
       const response = await axios.put(`${API_BASE_URL}/${roomData.id}`, roomData);
       if (response.status === 200) {
-        fetchRooms(); 
+        const updatedRoom = response.data;
+        // Sync to rate plan
+        const existingRate = rates.find(r => r.rateType === 'ratePlan' && r.roomId === updatedRoom.id);
+        if (existingRate) {
+          const updatedRate = {
+            ...existingRate,
+            basePrice: updatedRoom.basePrice,
+            weekendPrice: updatedRoom.weekendPrice
+          };
+          await axios.put(`${RATES_API_BASE_URL}/${existingRate._id}`, updatedRate);
+        } else {
+          const newRate = {
+            rateType: 'ratePlan',
+            name: `${updatedRoom.name}`,
+            description: 'Default rate plan for the room',
+            status: 'active',
+            roomType: updatedRoom.type,
+            roomId: updatedRoom.id,
+            basePrice: updatedRoom.basePrice,
+            weekendPrice: updatedRoom.weekendPrice,
+            refundable: true,
+            breakfastIncluded: false,
+            inclusions: [],
+            restrictions: { minStay: 1, maxStay: 14, advanceBooking: 0, cancellationDeadline: 24 },
+            validFrom: new Date().toISOString().split('T')[0],
+            validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          };
+          await axios.post(RATES_API_BASE_URL, newRate);
+        }
+        fetchRooms();
+        fetchRates();
         setEditingRoom(null);
         setShowRoomForm(false);
       }
@@ -174,7 +247,12 @@ const RoomInventory = () => {
       try {
         const response = await axios.delete(`${API_BASE_URL}/${roomId}`);
         if (response.status === 200) {
-          fetchRooms();   
+          const rateToDelete = rates.find(r => r.rateType === 'ratePlan' && r.roomId === roomId);
+          if (rateToDelete) {
+            await axios.delete(`${RATES_API_BASE_URL}/${rateToDelete._id}`);
+          }
+          fetchRooms();
+          fetchRates();
         }
       } catch (error) {
         console.error('Error deleting room:', error);

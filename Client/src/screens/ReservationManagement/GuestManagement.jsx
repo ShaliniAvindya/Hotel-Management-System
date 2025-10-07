@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import {
   User,
   Plus,
@@ -39,6 +40,7 @@ import {
   PawPrint,
   Utensils
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const GuestForm = ({ guest, onSave, onCancel, rooms }) => {
   const [formData, setFormData] = useState(
@@ -1058,15 +1060,9 @@ const GuestManagement = () => {
   const [editingGuest, setEditingGuest] = useState(null);
   const [showGuestDetails, setShowGuestDetails] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState(null);
-
-  const rooms = [
-    { id: 'R001', roomNumber: '101', type: 'single', name: 'Deluxe Single Room', capacity: 1, maxCapacity: 2, basePrice: 120, weekendPrice: 150, floor: 1 },
-    { id: 'R002', roomNumber: '201', type: 'double', name: 'Premium Double Room', capacity: 2, maxCapacity: 3, basePrice: 180, weekendPrice: 220, floor: 2 },
-    { id: 'R003', roomNumber: '301', type: 'suite', name: 'Executive Suite', capacity: 4, maxCapacity: 6, basePrice: 350, weekendPrice: 420, floor: 3 },
-    { id: 'R004', roomNumber: '102', type: 'single', name: 'Standard Single Room', capacity: 1, maxCapacity: 2, basePrice: 100, weekendPrice: 130, floor: 1 },
-    { id: 'R005', roomNumber: '202', type: 'double', name: 'Deluxe Double Room', capacity: 2, maxCapacity: 3, basePrice: 200, weekendPrice: 240, floor: 2 },
-    { id: 'R006', roomNumber: '302', type: 'suite', name: 'Family Suite', capacity: 4, maxCapacity: 6, basePrice: 320, weekendPrice: 380, floor: 3 }
-  ];
+  const [rooms, setRooms] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const guestStatuses = [
     { id: 'all', name: 'All Guests', color: 'gray' },
@@ -1077,116 +1073,23 @@ const GuestManagement = () => {
   ];
 
   useEffect(() => {
-    const sampleGuests = [
-      {
-        id: 'G001',
-        firstName: 'John',
-        lastName: 'Smith',
-        email: 'john.smith@email.com',
-        phone: '+1-555-0123',
-        address: '123 Main Street, New York, NY 10001',
-        nationality: 'United States',
-        idType: 'passport',
-        idNumber: 'P123456789',
-        dateOfBirth: '1985-03-15',
-        vipLevel: 'gold',
-        status: 'active',
-        preferences: ['high_floor', 'ocean_view', 'wifi', 'vegetarian', 'early_checkin'],
-        specialRequests: ['Extra towels', 'Late check-in preferred'],
-        emergencyContact: { name: 'Jane Smith', phone: '+1-555-0124', relationship: 'Spouse' },
-        notes: 'Very loyal customer, always polite',
-        totalStays: 12,
-        totalSpent: 4500,
-        lastStay: '2024-01-10',
-        createdDate: '2023-01-15',
-        stayHistory: [
-          { id: 'B001', roomId: 'R003', roomNumber: '301', checkIn: '2024-01-08', checkOut: '2024-01-10', amount: 700, status: 'completed' },
-          { id: 'B015', roomId: 'R002', roomNumber: '201', checkIn: '2023-12-15', checkOut: '2023-12-18', amount: 540, status: 'completed' },
-          { id: 'B025', roomId: 'R003', roomNumber: '301', checkIn: '2023-11-10', checkOut: '2023-11-13', amount: 1050, status: 'completed' }
-        ]
-      },
-      {
-        id: 'G002',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah.j@corporate.com',
-        phone: '+1-555-0456',
-        address: '456 Business Ave, Toronto, ON M5V 1A1',
-        nationality: 'Canada',
-        idType: 'drivers_license',
-        idNumber: 'C987654321',
-        dateOfBirth: '1990-07-22',
-        vipLevel: 'silver',
-        status: 'checked-out',
-        preferences: ['quiet_room', 'ac', 'minibar', 'gluten_free', 'no_smoking'],
-        specialRequests: ['Hypoallergenic pillows'],
-        emergencyContact: { name: 'Mike Johnson', phone: '+1-555-0457', relationship: 'Brother' },
-        notes: 'Corporate account - always pays on time',
-        totalStays: 8,
-        totalSpent: 2800,
-        lastStay: '2024-01-05',
-        createdDate: '2023-03-20',
-        stayHistory: [
-          { id: 'B002', roomId: 'R002', roomNumber: '201', checkIn: '2024-01-03', checkOut: '2024-01-05', amount: 360, status: 'completed' },
-          { id: 'B018', roomId: 'R001', roomNumber: '101', checkIn: '2023-12-08', checkOut: '2023-12-10', amount: 240, status: 'completed' }
-        ]
-      },
-      {
-        id: 'G003',
-        firstName: 'Michael',
-        lastName: 'Davis',
-        email: 'mike.davis@email.com',
-        phone: '+1-555-0789',
-        address: '789 London Road, Manchester, UK M1 1AA',
-        nationality: 'United Kingdom',
-        idType: 'passport',
-        idNumber: 'UK456789123',
-        dateOfBirth: '1978-11-08',
-        vipLevel: 'platinum',
-        status: 'active',
-        preferences: ['high_floor', 'city_view', 'room_service', 'halal', 'late_checkout'],
-        specialRequests: ['Halal meals only', 'Prayer mat'],
-        emergencyContact: { name: 'Emma Davis', phone: '+44-20-1234-5678', relationship: 'Wife' },
-        notes: 'Top VIP guest - provide exceptional service',
-        totalStays: 25,
-        totalSpent: 12500,
-        lastStay: '2024-01-12',
-        createdDate: '2022-06-10',
-        stayHistory: [
-          { id: 'B003', roomId: 'R003', roomNumber: '301', checkIn: '2024-01-10', checkOut: '2024-01-12', amount: 700, status: 'completed' },
-          { id: 'B020', roomId: 'R003', roomNumber: '301', checkIn: '2023-12-20', checkOut: '2023-12-25', amount: 2100, status: 'completed' },
-          { id: 'B030', roomId: 'R006', roomNumber: '302', checkIn: '2023-11-15', checkOut: '2023-11-18', amount: 960, status: 'completed' }
-        ]
-      },
-      {
-        id: 'G004',
-        firstName: 'Emily',
-        lastName: 'Chen',
-        email: 'emily.chen@email.com',
-        phone: '+1-555-0321',
-        address: '321 Orchard Road, Singapore 238123',
-        nationality: 'Singapore',
-        idType: 'passport',
-        idNumber: 'SG789123456',
-        dateOfBirth: '1992-04-30',
-        vipLevel: 'bronze',
-        status: 'inactive',
-        preferences: ['quiet_room', 'no_smoking'],
-        specialRequests: ['Vegetarian meals only'],
-        emergencyContact: { name: 'David Chen', phone: '+65-9876-5432', relationship: 'Brother' },
-        notes: 'First-time international traveler, very friendly',
-        totalStays: 3,
-        totalSpent: 850,
-        lastStay: '2023-12-28',
-        createdDate: '2023-10-15',
-        stayHistory: [
-          { id: 'B035', roomId: 'R001', roomNumber: '101', checkIn: '2023-12-26', checkOut: '2023-12-28', amount: 240, status: 'completed' },
-          { id: 'B040', roomId: 'R004', roomNumber: '102', checkIn: '2023-11-20', checkOut: '2023-11-22', amount: 260, status: 'completed' }
-        ]
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [guestsRes, roomsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/guests`),
+          axios.get(`${API_BASE_URL}/rooms`)
+        ]);
+        setGuests(guestsRes.data);
+        setFilteredGuests(guestsRes.data);
+        setRooms(roomsRes.data);
+      } catch (err) {
+        setError('Failed to fetch data');
+      } finally {
+        setLoading(false);
       }
-    ];
-    setGuests(sampleGuests);
-    setFilteredGuests(sampleGuests);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -1210,29 +1113,35 @@ const GuestManagement = () => {
     setFilteredGuests(filtered);
   }, [guests, searchQuery, filterStatus]);
 
-  const handleAddGuest = (guestData) => {
-    const newGuest = {
-      ...guestData,
-      id: `G${String(guests.length + 1).padStart(3, '0')}`,
-      totalStays: 0,
-      totalSpent: 0,
-      lastStay: null,
-      createdDate: new Date().toISOString().split('T')[0],
-      stayHistory: []
-    };
-    setGuests([...guests, newGuest]);
-    setShowGuestForm(false);
+  const handleAddGuest = async (guestData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/guests`, guestData);
+      setGuests([...guests, response.data]);
+      setShowGuestForm(false);
+    } catch (err) {
+      alert('Failed to add guest');
+    }
   };
 
-  const handleEditGuest = (guestData) => {
-    setGuests(guests.map((guest) => (guest.id === guestData.id ? guestData : guest)));
-    setEditingGuest(null);
-    setShowGuestForm(false);
+  const handleEditGuest = async (guestData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/guests/${guestData.id}`, guestData);
+      setGuests(guests.map((guest) => (guest.id === guestData.id ? response.data : guest)));
+      setEditingGuest(null);
+      setShowGuestForm(false);
+    } catch (err) {
+      alert('Failed to update guest');
+    }
   };
 
-  const handleDeleteGuest = (guestId) => {
+  const handleDeleteGuest = async (guestId) => {
     if (window.confirm('Are you sure you want to delete this guest?')) {
-      setGuests(guests.filter((guest) => guest.id !== guestId));
+      try {
+        await axios.delete(`${API_BASE_URL}/guests/${guestId}`);
+        setGuests(guests.filter((guest) => guest.id !== guestId));
+      } catch (err) {
+        alert('Failed to delete guest');
+      }
     }
   };
 
@@ -1240,6 +1149,9 @@ const GuestManagement = () => {
   const vipGuests = guests.filter(g => g.vipLevel !== 'none').length;
   const activeGuests = guests.filter(g => g.status === 'active').length;
   const avgStaysPerGuest = guests.length > 0 ? (guests.reduce((sum, g) => sum + g.totalStays, 0) / guests.length).toFixed(1) : 0;
+
+  if (loading) return <div className="text-center py-12">Loading...</div>;
+  if (error) return <div className="text-center py-12 text-red-600">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

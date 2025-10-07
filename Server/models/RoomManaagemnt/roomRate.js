@@ -26,7 +26,7 @@ const roomRatesSchema = new mongoose.Schema({
     default: 'active',
   },
   // Rate Plan fields
-  roomType: { type: String, enum: ['single', 'double', 'suite', 'presidential', 'villa', 'penthouse'] },
+  roomType: { type: String, enum: ['single', 'double', 'twin', 'triple', 'suite', 'presidential', 'villa', 'penthouse'] },
   roomId: { type: String },
   basePrice: { type: Number, min: 0 },
   weekendPrice: { type: Number, min: 0 },
@@ -60,7 +60,7 @@ const roomRatesSchema = new mongoose.Schema({
   discountType: { type: String, enum: ['percentage', 'fixed'] },
   contractStart: { type: Date },
   contractEnd: { type: Date },
-  applicableRoomTypes: [{ type: String, enum: ['single', 'double', 'suite', 'presidential', 'villa', 'penthouse'] }],
+  applicableRoomTypes: [{ type: String, enum: ['single', 'double', 'twin', 'triple', 'suite', 'presidential', 'villa', 'penthouse'] }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('RoomRates', roomRatesSchema, 'roomRates');

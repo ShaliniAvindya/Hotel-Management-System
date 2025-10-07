@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import {
   Calendar,
   Clock,
@@ -22,13 +23,14 @@ import {
   Timer,
   Ban
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const CheckInCheckOut = () => {
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewFilter, setViewFilter] = useState('today'); // today, arriving, departing, all
+  const [viewFilter, setViewFilter] = useState('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [showCheckOutModal, setShowCheckOutModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -37,7 +39,8 @@ const CheckInCheckOut = () => {
     notes: '',
     keyCardNumber: '',
     depositAmount: 0,
-    specialRequests: ''
+    specialRequests: '',
+    isEarlyCheckIn: false
   });
   const [checkOutData, setCheckOutData] = useState({
     actualCheckOutTime: '',
@@ -46,130 +49,38 @@ const CheckInCheckOut = () => {
     minibarCharges: 0,
     additionalServices: 0,
     finalAmount: 0,
-    refundAmount: 0
+    refundAmount: 0,
+    isLateCheckOut: false
   });
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
 
-  // Initialize sample data
+  // Fetch rooms and bookings
   useEffect(() => {
-    const sampleRooms = [
-      { id: 'R001', roomNumber: '101', type: 'single', name: 'Deluxe Single Room', capacity: 1, maxCapacity: 2, basePrice: 120, weekendPrice: 150, floor: 1, status: 'occupied' },
-      { id: 'R002', roomNumber: '201', type: 'double', name: 'Premium Double Room', capacity: 2, maxCapacity: 3, basePrice: 180, weekendPrice: 220, floor: 2, status: 'available' },
-      { id: 'R003', roomNumber: '301', type: 'suite', name: 'Executive Suite', capacity: 4, maxCapacity: 6, basePrice: 350, weekendPrice: 420, floor: 3, status: 'maintenance' },
-      { id: 'R004', roomNumber: '102', type: 'single', name: 'Standard Single Room', capacity: 1, maxCapacity: 2, basePrice: 100, weekendPrice: 130, floor: 1, status: 'available' },
-      { id: 'R005', roomNumber: '202', type: 'double', name: 'Deluxe Double Room', capacity: 2, maxCapacity: 3, basePrice: 200, weekendPrice: 240, floor: 2, status: 'cleaning' },
-      { id: 'R006', roomNumber: '302', type: 'suite', name: 'Family Suite', capacity: 4, maxCapacity: 6, basePrice: 320, weekendPrice: 380, floor: 3, status: 'available' }
-    ];
-    setRooms(sampleRooms);
+    const fetchData = async () => {
+      try {
+        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
+        setRooms(roomsResponse.data);
 
-    const today = new Date();
-    const yesterday = new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000);
-    const tomorrow = new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000);
-
-    const sampleBookings = [
-      {
-        id: 'B001',
-        bookingReference: 'HTL2024001',
-        guestName: 'John Smith',
-        guestEmail: 'john.smith@email.com',
-        guestPhone: '+1-555-0123',
-        roomId: 'R001',
-        checkInDate: today.toISOString().split('T')[0],
-        checkOutDate: tomorrow.toISOString().split('T')[0],
-        guests: 1,
-        status: 'confirmed',
-        totalAmount: 240,
-        bookingSource: 'walk-in',
-        createdAt: new Date().toISOString(),
-        specialRequests: 'Late check-in requested',
-        splitStays: [],
-        checkInTime: '15:00',
-        checkOutTime: '11:00',
-        isEarlyCheckIn: false,
-        isLateCheckOut: false,
-        actualCheckInTime: null,
-        actualCheckOutTime: null
-      },
-      {
-        id: 'B002',
-        bookingReference: 'HTL2024002',
-        guestName: 'Sarah Johnson',
-        guestEmail: 'sarah.j@email.com',
-        guestPhone: '+1-555-0456',
-        roomId: 'R002',
-        checkInDate: today.toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 2,
-        status: 'confirmed',
-        totalAmount: 360,
-        bookingSource: 'phone',
-        createdAt: new Date().toISOString(),
-        specialRequests: '',
-        splitStays: [],
-        checkInTime: '14:00',
-        checkOutTime: '12:00',
-        isEarlyCheckIn: true,
-        isLateCheckOut: false,
-        actualCheckInTime: null,
-        actualCheckOutTime: null
-      },
-      {
-        id: 'B003',
-        bookingReference: 'HTL2024003',
-        guestName: 'Mike Davis',
-        guestEmail: 'mike.davis@email.com',
-        guestPhone: '+1-555-0789',
-        roomId: 'R003',
-        checkInDate: yesterday.toISOString().split('T')[0],
-        checkOutDate: today.toISOString().split('T')[0],
-        guests: 4,
-        status: 'checked-in',
-        totalAmount: 350,
-        bookingSource: 'email',
-        createdAt: new Date().toISOString(),
-        specialRequests: 'Extra towels, early breakfast',
-        splitStays: [],
-        checkInTime: '15:00',
-        checkOutTime: '11:00',
-        isEarlyCheckIn: false,
-        isLateCheckOut: true,
-        actualCheckInTime: '2024-01-14T15:30:00Z',
-        actualCheckOutTime: null
-      },
-      {
-        id: 'B004',
-        bookingReference: 'HTL2024004',
-        guestName: 'Emily Brown',
-        guestEmail: 'emily.brown@email.com',
-        guestPhone: '+1-555-0321',
-        roomId: 'R004',
-        checkInDate: tomorrow.toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 1,
-        status: 'confirmed',
-        totalAmount: 200,
-        bookingSource: 'online',
-        createdAt: new Date().toISOString(),
-        specialRequests: '',
-        splitStays: [],
-        checkInTime: '16:00',
-        checkOutTime: '10:00',
-        isEarlyCheckIn: false,
-        isLateCheckOut: false,
-        actualCheckInTime: null,
-        actualCheckOutTime: null
+        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
+        const fetchedBookings = bookingsResponse.data.map(booking => ({
+          ...booking,
+          room: booking.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === booking.roomId)
+        }));
+        console.log('Fetched bookings:', fetchedBookings);
+        setBookings(fetchedBookings);
+        setFilteredBookings(fetchedBookings);
+      } catch (err) {
+        setError('Failed to fetch data from the server');
       }
-    ].map(booking => ({
-      ...booking,
-      room: sampleRooms.find(r => r.id === booking.roomId)
-    }));
-
-    setBookings(sampleBookings);
-    setFilteredBookings(sampleBookings);
+    };
+    fetchData();
   }, []);
 
   // Filter bookings
   useEffect(() => {
-    let filtered = bookings;
+  let filtered = bookings;
+  console.log('Bookings before filter:', bookings);
     const today = new Date().toISOString().split('T')[0];
 
     if (searchQuery) {
@@ -177,7 +88,7 @@ const CheckInCheckOut = () => {
         (booking) =>
           booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           booking.bookingReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          booking.room?.roomNumber.includes(searchQuery) ||
+          (booking.room?.roomNumber && booking.room.roomNumber.includes(searchQuery)) ||
           booking.guestPhone.includes(searchQuery)
       );
     }
@@ -186,24 +97,27 @@ const CheckInCheckOut = () => {
       case 'today':
         filtered = filtered.filter(
           (booking) =>
-            booking.checkInDate === today ||
-            booking.checkOutDate === today ||
-            (booking.status === 'checked-in' && booking.checkInDate <= today && booking.checkOutDate >= today)
+            booking.checkInDate.split('T')[0] === today ||
+            booking.checkOutDate.split('T')[0] === today ||
+            (booking.status === 'checked-in' && 
+             booking.checkInDate.split('T')[0] <= today && 
+             booking.checkOutDate.split('T')[0] >= today)
         );
         break;
       case 'arriving':
         filtered = filtered.filter(
-          (booking) => booking.checkInDate === today && booking.status === 'confirmed'
+          (booking) => booking.checkInDate.split('T')[0] === today && booking.status === 'confirmed'
         );
         break;
       case 'departing':
         filtered = filtered.filter(
-          (booking) => booking.checkOutDate === today && booking.status === 'checked-in'
+          (booking) => booking.checkOutDate.split('T')[0] === today && booking.status === 'checked-in'
         );
         break;
     }
 
-    setFilteredBookings(filtered);
+  console.log('Filtered bookings:', filtered);
+  setFilteredBookings(filtered);
   }, [bookings, searchQuery, viewFilter]);
 
   const handleCheckIn = (booking) => {
@@ -213,7 +127,8 @@ const CheckInCheckOut = () => {
       notes: '',
       keyCardNumber: `KEY${booking.room?.roomNumber || '000'}`,
       depositAmount: Math.round(booking.totalAmount * 0.1),
-      specialRequests: booking.specialRequests || ''
+      specialRequests: booking.specialRequests || '',
+      isEarlyCheckIn: booking.isEarlyCheckIn || false
     });
     setShowCheckInModal(true);
   };
@@ -227,59 +142,56 @@ const CheckInCheckOut = () => {
       minibarCharges: 0,
       additionalServices: 0,
       finalAmount: booking.totalAmount,
-      refundAmount: 0
+      refundAmount: 0,
+      isLateCheckOut: booking.isLateCheckOut || false
     });
     setShowCheckOutModal(true);
   };
 
-  const confirmCheckIn = () => {
+  const confirmCheckIn = async () => {
     if (!selectedBooking) return;
 
-    const updatedBooking = {
-      ...selectedBooking,
-      status: 'checked-in',
-      actualCheckInTime: checkInData.actualCheckInTime,
-      checkInNotes: checkInData.notes,
-      keyCardNumber: checkInData.keyCardNumber,
-      depositAmount: checkInData.depositAmount
-    };
-
-    setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
-    
-    // Update room status to occupied
-    setRooms(rooms.map(r => 
-      r.id === selectedBooking.roomId ? { ...r, status: 'occupied' } : r
-    ));
-
-    setShowCheckInModal(false);
-    setSelectedBooking(null);
+    try {
+      const response = await axios.put(`${API_BASE_URL}/checkinout/checkin/${selectedBooking.id}`, checkInData);
+      const updatedBooking = {
+        ...response.data,
+        room: selectedBooking.room
+      };
+      setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      setFilteredBookings(filteredBookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      setSuccess('Guest checked in successfully');
+      setTimeout(() => {
+        setShowCheckInModal(false);
+        setSuccess(null);
+        window.location.reload();
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to check in guest');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
-  const confirmCheckOut = () => {
+  const confirmCheckOut = async () => {
     if (!selectedBooking) return;
 
-    const updatedBooking = {
-      ...selectedBooking,
-      status: 'checked-out',
-      actualCheckOutTime: checkOutData.actualCheckOutTime,
-      checkOutNotes: checkOutData.notes,
-      finalAmount: checkOutData.finalAmount,
-      additionalCharges: {
-        damage: checkOutData.damageCharges,
-        minibar: checkOutData.minibarCharges,
-        services: checkOutData.additionalServices
-      },
-      refundAmount: checkOutData.refundAmount
-    };
-
-    setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
-    
-    setRooms(rooms.map(r => 
-      r.id === selectedBooking.roomId ? { ...r, status: 'cleaning' } : r
-    ));
-
-    setShowCheckOutModal(false);
-    setSelectedBooking(null);
+    try {
+      const response = await axios.put(`${API_BASE_URL}/checkinout/checkout/${selectedBooking.id}`, checkOutData);
+      const updatedBooking = {
+        ...response.data,
+        room: selectedBooking.room
+      };
+      setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      setFilteredBookings(filteredBookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      setSuccess('Guest checked out successfully');
+      setTimeout(() => {
+        setShowCheckOutModal(false);
+        setSuccess(null);
+        window.location.reload();
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to check out guest');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -288,6 +200,7 @@ const CheckInCheckOut = () => {
       case 'checked-in': return 'bg-green-100 text-green-800';
       case 'checked-out': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'no-show': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -295,15 +208,18 @@ const CheckInCheckOut = () => {
   const getRoomStatusColor = (status) => {
     switch (status) {
       case 'available': return 'bg-green-100 text-green-800';
+      case 'clean': return 'bg-green-100 text-green-800';
       case 'occupied': return 'bg-red-100 text-red-800';
       case 'cleaning': return 'bg-yellow-100 text-yellow-800';
       case 'maintenance': return 'bg-orange-100 text-orange-800';
+      case 'out-of-order': return 'bg-red-100 text-red-800';
+      case 'dirty': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const isToday = (dateString) => {
-    return dateString === new Date().toISOString().split('T')[0];
+    return dateString.split('T')[0] === new Date().toISOString().split('T')[0];
   };
 
   const CheckInModal = () => (
@@ -334,7 +250,7 @@ const CheckInCheckOut = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-blue-700">Room:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber} - {selectedBooking?.room?.name}</span>
+                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
                 </div>
                 <div>
                   <span className="text-blue-700">Guests:</span>
@@ -342,7 +258,7 @@ const CheckInCheckOut = () => {
                 </div>
                 <div>
                   <span className="text-blue-700">Scheduled Check-in:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.checkInTime}</span>
+                  <span className="ml-2 font-medium">{selectedBooking?.checkInTime || '14:00'}</span>
                 </div>
                 <div>
                   <span className="text-blue-700">Total Amount:</span>
@@ -388,7 +304,7 @@ const CheckInCheckOut = () => {
                     min="0"
                     step="0.01"
                     value={checkInData.depositAmount}
-                    onChange={(e) => setCheckInData({...checkInData, depositAmount: parseFloat(e.target.value)})}
+                    onChange={(e) => setCheckInData({...checkInData, depositAmount: parseFloat(e.target.value) || 0})}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -410,6 +326,17 @@ const CheckInCheckOut = () => {
               <div className="bg-yellow-50 rounded-lg p-3">
                 <h4 className="text-sm font-medium text-yellow-800 mb-1">Special Requests</h4>
                 <p className="text-sm text-yellow-700">{selectedBooking.specialRequests}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{success}</span>
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
               </div>
             )}
 
@@ -463,11 +390,11 @@ const CheckInCheckOut = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-blue-700">Room:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber} - {selectedBooking?.room?.name}</span>
+                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
                 </div>
                 <div>
                   <span className="text-blue-700">Check-in:</span>
-                  <span className="ml-2 font-medium">{new Date(selectedBooking?.actualCheckInTime || '').toLocaleDateString()}</span>
+                  <span className="ml-2 font-medium">{selectedBooking?.actualCheckInTime ? new Date(selectedBooking.actualCheckInTime).toLocaleDateString() : 'Not checked in'}</span>
                 </div>
                 <div>
                   <span className="text-blue-700">Original Total:</span>
@@ -475,7 +402,7 @@ const CheckInCheckOut = () => {
                 </div>
                 <div>
                   <span className="text-blue-700">Scheduled Check-out:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.checkOutTime}</span>
+                  <span className="ml-2 font-medium">{selectedBooking?.checkOutTime || '12:00'}</span>
                 </div>
               </div>
               {selectedBooking?.isLateCheckOut && (
@@ -513,7 +440,7 @@ const CheckInCheckOut = () => {
                       onChange={(e) => {
                         const newCharges = parseFloat(e.target.value) || 0;
                         setCheckOutData({
-                          ...checkOutData, 
+                          ...checkOutData,
                           damageCharges: newCharges,
                           finalAmount: selectedBooking.totalAmount + newCharges + checkOutData.minibarCharges + checkOutData.additionalServices
                         });
@@ -534,7 +461,7 @@ const CheckInCheckOut = () => {
                       onChange={(e) => {
                         const newCharges = parseFloat(e.target.value) || 0;
                         setCheckOutData({
-                          ...checkOutData, 
+                          ...checkOutData,
                           minibarCharges: newCharges,
                           finalAmount: selectedBooking.totalAmount + checkOutData.damageCharges + newCharges + checkOutData.additionalServices
                         });
@@ -555,7 +482,7 @@ const CheckInCheckOut = () => {
                       onChange={(e) => {
                         const newCharges = parseFloat(e.target.value) || 0;
                         setCheckOutData({
-                          ...checkOutData, 
+                          ...checkOutData,
                           additionalServices: newCharges,
                           finalAmount: selectedBooking.totalAmount + checkOutData.damageCharges + checkOutData.minibarCharges + newCharges
                         });
@@ -584,6 +511,17 @@ const CheckInCheckOut = () => {
                 placeholder="Room condition, lost items, feedback, etc..."
               />
             </div>
+
+            {success && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{success}</span>
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button
@@ -710,7 +648,7 @@ const CheckInCheckOut = () => {
               <div>
                 <p className="text-sm text-gray-600">Occupied Rooms</p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {rooms.filter(r => r.status === 'occupied').length}
+                  {rooms.filter(r => r.occupancyStatus === 'occupied').length}
                 </p>
               </div>
             </div>
@@ -769,11 +707,11 @@ const CheckInCheckOut = () => {
                       <td className="py-4 px-4">
                         <div>
                           <p className="font-medium text-gray-900">
-                            {booking.room?.roomNumber} - {booking.room?.name}
+                            {booking.room?.roomNumber || 'Split Stay'} - {booking.room?.name || 'Multiple Rooms'}
                           </p>
                           <div className="flex items-center space-x-2 mt-1">
                             <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getRoomStatusColor(booking.room?.status)}`}>
-                              {booking.room?.status}
+                              {booking.room?.status || 'N/A'}
                             </span>
                             <span className="text-xs text-gray-500">
                               {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
@@ -787,7 +725,7 @@ const CheckInCheckOut = () => {
                             {new Date(booking.checkInDate).toLocaleDateString()}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {booking.checkInTime}
+                            {booking.checkInTime || '14:00'}
                             {booking.isEarlyCheckIn && (
                               <span className="ml-1 text-orange-600">(Early)</span>
                             )}
@@ -805,7 +743,7 @@ const CheckInCheckOut = () => {
                             {new Date(booking.checkOutDate).toLocaleDateString()}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {booking.checkOutTime}
+                            {booking.checkOutTime || '12:00'}
                             {booking.isLateCheckOut && (
                               <span className="ml-1 text-orange-600">(Late)</span>
                             )}
@@ -883,6 +821,16 @@ const CheckInCheckOut = () => {
       </div>
       {showCheckInModal && selectedBooking && <CheckInModal />}
       {showCheckOutModal && selectedBooking && <CheckOutModal />}
+      {success && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">
+          <span>{success}</span>
+        </div>
+      )}
+      {error && (
+        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg">
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 };

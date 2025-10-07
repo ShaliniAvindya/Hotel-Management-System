@@ -1,5 +1,5 @@
 const express = require('express');
-const StaffMember = require('../models/staffMember');
+const StaffMember = require('../../models/RoomManaagemnt/staffMember');
 
 const router = express.Router();
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import moment from 'moment-timezone';
+import axios from 'axios';
 import {
   XCircle,
   AlertTriangle,
@@ -21,21 +22,56 @@ import {
   AlertCircle,
   Users
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const CancellationsNoShows = () => {
   const [activeBookings, setActiveBookings] = useState([]);
   const [cancellations, setCancellations] = useState([]);
   const [noShows, setNoShows] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [view, setView] = useState('active'); 
+  const [view, setView] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [showNoShowForm, setShowNoShowForm] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+
+  const calculateRefund = (booking, reason) => {
+    const policyConfig = cancellationPolicies.find(p => p.id === booking?.cancellationPolicy) || cancellationPolicies[0];
+    const checkInDate = moment(booking.checkInDate).tz('Asia/Kolkata');
+    const now = moment().tz('Asia/Kolkata');
+    const hoursUntilCheckIn = checkInDate.diff(now, 'hours');
+
+    if (["medical-emergency", "hotel-maintenance", "overbooking"].includes(reason)) {
+      return {
+        refund: booking.totalAmount * 0.9,
+        penalty: booking.totalAmount * 0.1
+      };
+    }
+
+    if (reason === "no-show" && hoursUntilCheckIn < 0) {
+      return {
+        refund: 0,
+        penalty: booking.totalAmount
+      };
+    }
+
+    if (hoursUntilCheckIn >= policyConfig.minHoursBefore) {
+      return {
+        refund: booking.totalAmount * (policyConfig.refundPercentage / 100),
+        penalty: policyConfig.penaltyFee
+      };
+    } else {
+      return {
+        refund: Math.max(0, booking.totalAmount * (policyConfig.refundPercentage / 100) - policyConfig.penaltyFee),
+        penalty: policyConfig.penaltyFee
+      };
+    }
+  };
 
   // Cancellation policies
   const cancellationPolicies = [
@@ -88,270 +124,79 @@ const CancellationsNoShows = () => {
     { id: 'other', name: 'Other', category: 'other' }
   ];
 
-  // Initialize sample data
+  const fetchData = async () => {
+    try {
+      const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
+      setRooms(roomsResponse.data);
+
+      const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
+      const active = bookingsResponse.data.filter(b => ['confirmed', 'checked-in'].includes(b.status));
+      setActiveBookings(active.map(b => ({
+        ...b,
+        room: b.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === b.roomId)
+      })));
+
+      const cancellationsResponse = await axios.get(`${API_BASE_URL}/cancellations`);
+      setCancellations(cancellationsResponse.data.filter(c => c.type === 'cancellation'));
+      setNoShows(cancellationsResponse.data.filter(c => c.type === 'no-show'));
+    } catch (err) {
+      setError('Failed to fetch data from the server');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   useEffect(() => {
-    const sampleRooms = [
-      { id: 'R001', roomNumber: '101', type: 'single', name: 'Deluxe Single Room', capacity: 1, maxCapacity: 2, basePrice: 120, weekendPrice: 150, floor: 1, available: true },
-      { id: 'R002', roomNumber: '201', type: 'double', name: 'Premium Double Room', capacity: 2, maxCapacity: 3, basePrice: 180, weekendPrice: 220, floor: 2, available: true },
-      { id: 'R003', roomNumber: '301', type: 'suite', name: 'Executive Suite', capacity: 4, maxCapacity: 6, basePrice: 350, weekendPrice: 420, floor: 3, available: true },
-      { id: 'R004', roomNumber: '102', type: 'single', name: 'Standard Single Room', capacity: 1, maxCapacity: 2, basePrice: 100, weekendPrice: 130, floor: 1, available: true },
-      { id: 'R005', roomNumber: '202', type: 'double', name: 'Deluxe Double Room', capacity: 2, maxCapacity: 3, basePrice: 200, weekendPrice: 240, floor: 2, available: true },
-      { id: 'R006', roomNumber: '302', type: 'suite', name: 'Family Suite', capacity: 4, maxCapacity: 6, basePrice: 320, weekendPrice: 380, floor: 3, available: true }
-    ];
-
-    const today = moment().tz('Asia/Kolkata');
-    const sampleActiveBookings = [
-      {
-        id: 'B001',
-        bookingReference: 'HTL2024001',
-        guestName: 'John Smith',
-        guestEmail: 'john.smith@email.com',
-        guestPhone: '+1-555-0123',
-        roomId: 'R001',
-        checkInDate: today.clone().add(2, 'days').format('YYYY-MM-DD'),
-        checkOutDate: today.clone().add(5, 'days').format('YYYY-MM-DD'),
-        guests: 1,
-        status: 'confirmed',
-        totalAmount: 360,
-        bookingSource: 'walk-in',
-        createdAt: today.toISOString(),
-        specialRequests: 'Late check-in requested',
-        cancellationPolicy: 'flexible',
-        splitStays: []
-      },
-      {
-        id: 'B002',
-        bookingReference: 'HTL2024002',
-        guestName: 'Sarah Johnson',
-        guestEmail: 'sarah.j@email.com',
-        guestPhone: '+1-555-0456',
-        roomId: 'R002',
-        checkInDate: today.clone().add(1, 'days').format('YYYY-MM-DD'),
-        checkOutDate: today.clone().add(4, 'days').format('YYYY-MM-DD'),
-        guests: 2,
-        status: 'confirmed',
-        totalAmount: 540,
-        bookingSource: 'phone',
-        createdAt: today.toISOString(),
-        specialRequests: '',
-        cancellationPolicy: 'moderate',
-        splitStays: []
-      },
-      {
-        id: 'B003',
-        bookingReference: 'HTL2024003',
-        guestName: 'Mike Davis',
-        guestEmail: 'mike.davis@email.com',
-        guestPhone: '+1-555-0789',
-        roomId: 'R003',
-        checkInDate: today.clone().subtract(1, 'days').format('YYYY-MM-DD'),
-        checkOutDate: today.clone().add(2, 'days').format('YYYY-MM-DD'),
-        guests: 4,
-        status: 'confirmed',
-        totalAmount: 1050,
-        bookingSource: 'email',
-        createdAt: today.toISOString(),
-        specialRequests: 'Extra towels, early breakfast',
-        cancellationPolicy: 'strict',
-        splitStays: []
-      },
-      {
-        id: 'B004',
-        bookingReference: 'HTL2024004',
-        guestName: 'Emily Brown',
-        guestEmail: 'emily.brown@email.com',
-        guestPhone: '+1-555-0321',
-        roomId: 'R004',
-        checkInDate: today.clone().subtract(2, 'days').format('YYYY-MM-DD'),
-        checkOutDate: today.clone().subtract(1, 'days').format('YYYY-MM-DD'),
-        guests: 1,
-        status: 'confirmed',
-        totalAmount: 200,
-        bookingSource: 'online',
-        createdAt: today.toISOString(),
-        specialRequests: '',
-        cancellationPolicy: 'flexible',
-        splitStays: []
-      }
-    ];
-
-    const sampleCancellations = [
-      {
-        id: 'C001',
-        originalBooking: {
-          id: 'B005',
-          bookingReference: 'HTL2024005',
-          guestName: 'David Wilson',
-          guestEmail: 'david.wilson@email.com',
-          guestPhone: '+1-555-0654',
-          roomId: 'R005',
-          checkInDate: today.clone().add(7, 'days').format('YYYY-MM-DD'),
-          checkOutDate: today.clone().add(10, 'days').format('YYYY-MM-DD'),
-          guests: 2,
-          totalAmount: 600,
-          cancellationPolicy: 'moderate',
-          splitStays: []
-        },
-        cancellationDate: today.toISOString(),
-        reason: 'medical-emergency',
-        reasonNote: 'Family medical emergency, unable to travel',
-        refundAmount: 575,
-        penaltyFee: 25,
-        processedBy: 'Front Desk Agent',
-        status: 'processed'
-      },
-      {
-        id: 'C002',
-        originalBooking: {
-          id: 'B006',
-          bookingReference: 'HTL2024006',
-          guestName: 'Lisa Anderson',
-          guestEmail: 'lisa.anderson@email.com',
-          guestPhone: '+1-555-0987',
-          roomId: 'R006',
-          checkInDate: today.clone().add(14, 'days').format('YYYY-MM-DD'),
-          checkOutDate: today.clone().add(17, 'days').format('YYYY-MM-DD'),
-          guests: 4,
-          totalAmount: 960,
-          cancellationPolicy: 'flexible',
-          splitStays: []
-        },
-        cancellationDate: today.clone().subtract(1, 'days').toISOString(),
-        reason: 'travel-restrictions',
-        reasonNote: 'Government travel restrictions imposed',
-        refundAmount: 960,
-        penaltyFee: 0,
-        processedBy: 'Manager',
-        status: 'pending'
-      }
-    ];
-
-    const sampleNoShows = [
-      {
-        id: 'NS001',
-        originalBooking: {
-          id: 'B007',
-          bookingReference: 'HTL2024007',
-          guestName: 'Robert Taylor',
-          guestEmail: 'robert.taylor@email.com',
-          guestPhone: '+1-555-0147',
-          roomId: 'R001',
-          checkInDate: today.clone().subtract(1, 'days').format('YYYY-MM-DD'),
-          checkOutDate: today.clone().add(2, 'days').format('YYYY-MM-DD'),
-          guests: 1,
-          totalAmount: 360,
-          cancellationPolicy: 'strict',
-          splitStays: []
-        },
-        noShowDate: today.clone().subtract(1, 'days').toISOString(),
-        contactAttempts: 3,
-        lastContactTime: today.clone().subtract(12, 'hours').toISOString(),
-        notes: 'Multiple calls made, no response. Email sent.',
-        refundAmount: 0,
-        processedBy: 'Night Manager',
-        status: 'confirmed'
-      }
-    ];
-
-    setRooms(sampleRooms);
-    setActiveBookings(sampleActiveBookings);
-    setCancellations(sampleCancellations);
-    setNoShows(sampleNoShows);
+    fetchData();
   }, []);
 
-  const calculateRefund = (booking, policy, reason) => {
-    const policyConfig = cancellationPolicies.find(p => p.id === policy);
-    if (!policyConfig) return { refund: 0, penalty: 0 };
-
-    const checkInDate = moment(booking.checkInDate).tz('Asia/Kolkata');
-    const now = moment().tz('Asia/Kolkata'); 
-    const hoursUntilCheckIn = checkInDate.diff(now, 'hours');
-
-    // Emergency situations or hotel issues override policy
-    if (['medical-emergency', 'hotel-maintenance', 'overbooking'].includes(reason)) {
-      return {
-        refund: booking.totalAmount * 0.9,
-        penalty: booking.totalAmount * 0.1
-      };
-    }
-
-    // For no-shows past check-in date, apply non-refundable policy
-    if (reason === 'no-show' && hoursUntilCheckIn < 0) {
-      return {
-        refund: 0,
-        penalty: booking.totalAmount
-      };
-    }
-
-    if (hoursUntilCheckIn >= policyConfig.minHoursBefore) {
-      return {
-        refund: booking.totalAmount * (policyConfig.refundPercentage / 100),
-        penalty: policyConfig.penaltyFee
-      };
-    } else {
-      return {
-        refund: Math.max(0, booking.totalAmount * (policyConfig.refundPercentage / 100) - policyConfig.penaltyFee),
-        penalty: policyConfig.penaltyFee
-      };
+  const handleCancelBooking = async (formData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/cancellations/cancel/${formData.bookingId}`, {
+        reason: formData.reason,
+        reasonNote: formData.reasonNote,
+        refundMethod: formData.refundMethod,
+      });
+      if (!response.data || response.status !== 200) {
+        setError('Cancellation failed: No response from server');
+        return;
+      }
+      setSuccess('Booking cancelled successfully');
+      setTimeout(async () => {
+        setShowCancelForm(false);
+        setSelectedBooking(null);
+        setSuccess('');
+        await fetchData();
+      }, 2000);
+    } catch (err) {
+      console.error('Cancel booking error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to cancel booking');
+      setTimeout(() => setError(''), 3000);
     }
   };
 
-  const handleCancelBooking = (formData) => {
-    const booking = activeBookings.find(b => b.id === formData.bookingId);
-    if (!booking) {
-      setError('Booking not found');
-      return;
+  const handleMarkNoShow = async (formData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/cancellations/noshow/${formData.bookingId}`, {
+        contactAttempts: formData.contactAttempts,
+        lastContactTime: formData.lastContactTime,
+        notes: formData.notes,
+      });
+      if (!response.data || response.status !== 200) {
+        setError('No-show failed: No response from server');
+        return;
+      }
+      setSuccess('Booking marked as no-show successfully');
+      setTimeout(async () => {
+        setShowNoShowForm(false);
+        setSelectedBooking(null);
+        setSuccess('');
+        await fetchData();
+      }, 2000);
+    } catch (err) {
+      console.error('No-show error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to mark as no-show');
+      setTimeout(() => setError(''), 3000);
     }
-
-    const refundCalc = calculateRefund(booking, booking.cancellationPolicy, formData.reason);
-    
-    const newCancellation = {
-      id: `C${String(cancellations.length + 1).padStart(3, '0')}`,
-      originalBooking: booking,
-      cancellationDate: moment().tz('Asia/Kolkata').toISOString(),
-      reason: formData.reason,
-      reasonNote: formData.reasonNote,
-      refundAmount: refundCalc.refund,
-      penaltyFee: refundCalc.penalty,
-      processedBy: 'Current User',
-      status: 'pending'
-    };
-
-    setCancellations([...cancellations, newCancellation]);
-    setActiveBookings(activeBookings.filter(b => b.id !== formData.bookingId));
-    setRooms(rooms.map(r => r.id === booking.roomId ? { ...r, available: true } : r));
-    setShowCancelForm(false);
-    setSelectedBooking(null);
-    setError('');
-  };
-
-  const handleMarkNoShow = (formData) => {
-    const booking = activeBookings.find(b => b.id === formData.bookingId);
-    if (!booking) {
-      setError('Booking not found');
-      return;
-    }
-
-    const refundCalc = calculateRefund(booking, booking.cancellationPolicy, 'no-show');
-    
-    const newNoShow = {
-      id: `NS${String(noShows.length + 1).padStart(3, '0')}`,
-      originalBooking: booking,
-      noShowDate: moment().tz('Asia/Kolkata').toISOString(),
-      contactAttempts: formData.contactAttempts,
-      lastContactTime: formData.lastContactTime,
-      notes: formData.notes,
-      refundAmount: refundCalc.refund,
-      processedBy: 'Current User',
-      status: 'confirmed'
-    };
-
-    setNoShows([...noShows, newNoShow]);
-    setActiveBookings(activeBookings.filter(b => b.id !== formData.bookingId));
-    setRooms(rooms.map(r => r.id === booking.roomId ? { ...r, available: true } : r));
-    setShowNoShowForm(false);
-    setSelectedBooking(null);
-    setError('');
   };
 
   const getFilteredData = () => {
@@ -377,7 +222,7 @@ const CancellationsNoShows = () => {
 
     if (searchQuery) {
       data = data.filter(item => {
-        const booking = item.originalBooking || item;
+        const booking = item.originalBookingId || item;
         return (
           booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           booking.bookingReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -389,6 +234,7 @@ const CancellationsNoShows = () => {
     return data;
   };
 
+
   const CancellationForm = ({ booking, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
       bookingId: booking?.id || '',
@@ -399,7 +245,7 @@ const CancellationsNoShows = () => {
     const [formError, setFormError] = useState('');
 
     const policy = cancellationPolicies.find(p => p.id === booking?.cancellationPolicy);
-    const refundCalc = formData.reason ? calculateRefund(booking, booking?.cancellationPolicy, formData.reason) : { refund: 0, penalty: 0 };
+    const refundCalc = formData.reason ? calculateRefund(booking, formData.reason) : { refund: 0, penalty: 0 };
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -436,7 +282,7 @@ const CancellationsNoShows = () => {
                 <div>
                   <span className="text-red-700">Room:</span>
                   <span className="font-medium ml-2">
-                    {rooms.find(r => r.id === booking?.roomId)?.roomNumber} - {rooms.find(r => r.id === booking?.roomId)?.name}
+                    {booking?.room?.roomNumber || 'Split Stay'} - {booking?.room?.name || 'Multiple Rooms'}
                   </span>
                 </div>
                 <div>
@@ -450,6 +296,12 @@ const CancellationsNoShows = () => {
               <div className="bg-red-100 text-red-700 p-3 rounded-lg flex items-center space-x-2">
                 <AlertCircle className="h-4 w-4" />
                 <span>{formError}</span>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-100 text-green-700 p-3 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>{success}</span>
               </div>
             )}
 
@@ -599,6 +451,12 @@ const CancellationsNoShows = () => {
                 <span>{formError}</span>
               </div>
             )}
+            {success && (
+              <div className="bg-green-100 text-green-700 p-3 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>{success}</span>
+              </div>
+            )}
 
             <div>
               <label htmlFor="contactAttempts" className="block text-sm font-medium text-gray-700 mb-2">Number of Contact Attempts</label>
@@ -673,8 +531,8 @@ const CancellationsNoShows = () => {
   };
 
   const DetailsModal = ({ item, type, onClose }) => {
-    const booking = item.originalBooking || item;
-    const room = rooms.find(r => r.id === booking.roomId);
+    const booking = item.originalBookingId || item;
+    const room = booking.room || rooms.find(r => r.id === booking.roomId);
 
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="details-modal-title">
@@ -683,16 +541,16 @@ const CancellationsNoShows = () => {
             <div className="flex items-center space-x-3">
               <div className={`p-2 rounded-lg ${
                 type === 'cancelled' ? 'bg-red-100' : 
-                type === 'no-show' ? 'bg-orange-100' : 'bg-blue-100'
+                type === 'no-shows' ? 'bg-orange-100' : 'bg-blue-100'
               }`}>
                 {type === 'cancelled' ? <XCircle className="h-6 w-6 text-red-600" /> :
-                 type === 'no-show' ? <AlertTriangle className="h-6 w-6 text-orange-600" /> :
+                 type === 'no-shows' ? <AlertTriangle className="h-6 w-6 text-orange-600" /> :
                  <CheckCircle className="h-6 w-6 text-blue-600" />}
               </div>
               <div>
                 <h2 id="details-modal-title" className="text-xl font-semibold text-gray-900">
                   {type === 'cancelled' ? 'Cancelled Booking' :
-                   type === 'no-show' ? 'No-Show Record' : 'Booking Details'}
+                   type === 'no-shows' ? 'No-Show Record' : 'Booking Details'}
                 </h2>
                 <p className="text-sm text-gray-600">{booking.bookingReference}</p>
               </div>
@@ -736,7 +594,7 @@ const CancellationsNoShows = () => {
                   <div className="flex items-center space-x-2">
                     <Bed className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Room:</span>
-                    <span className="text-sm font-medium">{room?.roomNumber} - {room?.name}</span>
+                    <span className="text-sm font-medium">{room?.roomNumber || 'Split Stay'} - {room?.name || 'Multiple Rooms'}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
@@ -807,7 +665,7 @@ const CancellationsNoShows = () => {
               </div>
             )}
 
-            {type === 'no-show' && (
+            {type === 'no-shows' && (
               <div className="bg-orange-50 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-orange-900 mb-3">No-Show Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -864,8 +722,8 @@ const CancellationsNoShows = () => {
   };
 
   const BookingCard = ({ booking, type, onView, onCancel, onNoShow }) => {
-    const room = rooms.find(r => r.id === (booking.originalBooking?.roomId || booking.roomId));
-    const bookingData = booking.originalBooking || booking;
+    const room = booking.room || rooms.find(r => r.id === (booking.originalBookingId?.roomId || booking.roomId));
+    const bookingData = booking.originalBookingId || booking;
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -899,7 +757,7 @@ const CancellationsNoShows = () => {
               Cancelled
             </span>
           )}
-          {type === 'no-show' && (
+          {type === 'no-shows' && (
             <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               No-Show
             </span>
@@ -910,7 +768,7 @@ const CancellationsNoShows = () => {
           <div className="flex items-center space-x-2 text-sm">
             <Bed className="h-4 w-4 text-gray-500" />
             <span className="text-gray-600">Room:</span>
-            <span className="font-medium">{room?.roomNumber} - {room?.name}</span>
+            <span className="font-medium">{room?.roomNumber || 'Split Stay'} - {room?.name || 'Multiple Rooms'}</span>
           </div>
           <div className="flex items-center space-x-2 text-sm">
             <Calendar className="h-4 w-4 text-gray-500" />
@@ -946,7 +804,7 @@ const CancellationsNoShows = () => {
           </div>
         )}
 
-        {type === 'no-show' && (
+        {type === 'no-shows' && (
           <div className="mb-3 p-2 bg-orange-50 rounded border-l-4 border-orange-400">
             <div className="text-sm text-orange-800">
               <span className="font-medium">Contact attempts:</span>
@@ -958,7 +816,7 @@ const CancellationsNoShows = () => {
         <div className="flex justify-between items-center">
           <div className="text-xs text-gray-500">
             {type === 'cancelled' && `Cancelled: ${moment(booking.cancellationDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
-            {type === 'no-show' && `No-show: ${moment(booking.noShowDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
+            {type === 'no-shows' && `No-show: ${moment(booking.noShowDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
             {type === 'active' && `Check-in: ${moment(bookingData.checkInDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
           </div>
           <button
@@ -1058,13 +916,17 @@ const CancellationsNoShows = () => {
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Messages */}
       {error && (
-        <div className="px-6 py-4">
-          <div className="bg-red-100 text-red-700 p-3 rounded-lg flex items-center space-x-2">
-            <AlertCircle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
+        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg">
+          <AlertCircle className="h-4 w-4 inline mr-2" />
+          <span>{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">
+          <CheckCircle className="h-4 w-4 inline mr-2" />
+          <span>{success}</span>
         </div>
       )}
 
@@ -1137,9 +999,9 @@ const CancellationsNoShows = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredData.map((item) => (
                 <BookingCard
-                  key={item.id || item.originalBooking?.id}
+                  key={item.id || item.originalBookingId?.id}
                   booking={item}
-                  type={view === 'active' ? 'active' : view === 'cancelled' ? 'cancelled' : 'no-show'}
+                  type={view === 'active' ? 'active' : view === 'cancelled' ? 'cancelled' : 'no-shows'}
                   onView={(booking, type) => {
                     setSelectedBooking(booking);
                     setShowDetailsModal(type);

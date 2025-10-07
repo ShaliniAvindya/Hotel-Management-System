@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 import {
   Plus,
   Edit,
@@ -14,18 +15,15 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-  Star,
-  Heart,
-  Gift,
-  Users,
-  Phone,
-  Mail,
-  RefreshCw,
-  Eye,
   MessageSquare,
   Home,
-  Utensils
+  Utensils,
+  Users,
+  Gift,
+  RefreshCw,
+  Eye,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../apiconfig';
 
 const SpecialRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -39,6 +37,8 @@ const SpecialRequests = () => {
   const [editingRequest, setEditingRequest] = useState(null);
   const [showRequestDetails, setShowRequestDetails] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Request types
   const requestTypes = [
@@ -49,7 +49,7 @@ const SpecialRequests = () => {
     { id: 'accessibility', name: 'Accessibility', icon: Users },
     { id: 'arrival', name: 'Arrival/Departure', icon: Clock },
     { id: 'housekeeping', name: 'Housekeeping', icon: Home },
-    { id: 'other', name: 'Other', icon: MessageSquare }
+    { id: 'other', name: 'Other', icon: MessageSquare },
   ];
 
   const requestStatuses = [
@@ -57,127 +57,28 @@ const SpecialRequests = () => {
     { id: 'pending', name: 'Pending', color: 'yellow' },
     { id: 'in_progress', name: 'In Progress', color: 'blue' },
     { id: 'completed', name: 'Completed', color: 'green' },
-    { id: 'cancelled', name: 'Cancelled', color: 'red' }
+    { id: 'cancelled', name: 'Cancelled', color: 'red' },
   ];
 
-
-  // Sample data
   useEffect(() => {
-    const sampleRooms = [
-      { id: 'R001', roomNumber: '101', type: 'single', name: 'Deluxe Single Room', capacity: 1, maxCapacity: 2, basePrice: 120, floor: 1 },
-      { id: 'R002', roomNumber: '201', type: 'double', name: 'Premium Double Room', capacity: 2, maxCapacity: 3, basePrice: 180, floor: 2 },
-      { id: 'R003', roomNumber: '301', type: 'suite', name: 'Executive Suite', capacity: 4, maxCapacity: 6, basePrice: 350, floor: 3 },
-      { id: 'R004', roomNumber: '102', type: 'single', name: 'Standard Single Room', capacity: 1, maxCapacity: 2, basePrice: 100, floor: 1 },
-      { id: 'R005', roomNumber: '202', type: 'double', name: 'Deluxe Double Room', capacity: 2, maxCapacity: 3, basePrice: 200, floor: 2 },
-      { id: 'R006', roomNumber: '302', type: 'suite', name: 'Family Suite', capacity: 4, maxCapacity: 6, basePrice: 320, floor: 3 }
-    ];
-    setRooms(sampleRooms);
+    const fetchData = async () => {
+      try {
+        const [roomsResponse, bookingsResponse, requestsResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/rooms`),
+          axios.get(`${API_BASE_URL}/bookings`),
+          axios.get(`${API_BASE_URL}/specialrequests`),
+        ]);
 
-    // Sample bookings
-    const today = new Date();
-    const sampleBookings = [
-      {
-        id: 'B001',
-        bookingReference: 'HTL2024001',
-        guestName: 'John Smith',
-        guestEmail: 'john.smith@email.com',
-        roomId: 'R001',
-        checkInDate: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'confirmed'
-      },
-      {
-        id: 'B002',
-        bookingReference: 'HTL2024002',
-        guestName: 'Sarah Johnson',
-        guestEmail: 'sarah.j@email.com',
-        roomId: 'R002',
-        checkInDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'confirmed'
-      },
-      {
-        id: 'B003',
-        bookingReference: 'HTL2024003',
-        guestName: 'Mike Davis',
-        guestEmail: 'mike.davis@email.com',
-        roomId: 'R003',
-        checkInDate: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        checkOutDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'checked-in'
+        setRooms(roomsResponse.data);
+        setBookings(bookingsResponse.data);
+        setRequests(requestsResponse.data);
+        setFilteredRequests(requestsResponse.data);
+      } catch (err) {
+        setError('Failed to fetch data from the server');
+        setTimeout(() => setError(''), 3000);
       }
-    ];
-    setBookings(sampleBookings);
-
-    // Sample special requests
-    const sampleRequests = [
-      {
-        id: 'SR001',
-        bookingId: 'B001',
-        guestName: 'John Smith',
-        roomNumber: '101',
-        type: 'arrival',
-        title: 'Late Check-in',
-        description: 'Guest will arrive around 11 PM due to delayed flight. Please ensure front desk is informed.',
-        priority: 'medium',
-        status: 'pending',
-        requestDate: new Date().toISOString(),
-        dueDate: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'Front Office',
-        notes: '',
-        createdBy: 'Reception'
-      },
-      {
-        id: 'SR002',
-        bookingId: 'B002',
-        guestName: 'Sarah Johnson',
-        roomNumber: '201',
-        type: 'celebration',
-        title: 'Anniversary Setup',
-        description: ' 10th wedding anniversary. Please arrange rose petals, champagne, and chocolates in room.',
-        priority: 'high',
-        status: 'in_progress',
-        requestDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        dueDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'Housekeeping',
-        notes: 'Champagne ordered, roses confirmed',
-        createdBy: 'Guest Services'
-      },
-      {
-        id: 'SR003',
-        bookingId: 'B003',
-        guestName: 'Mike Davis',
-        roomNumber: '301',
-        type: 'dietary',
-        title: 'Gluten-Free Requirements',
-        description: 'Guest has celiac disease. All meals and minibar items should be gluten-free.',
-        priority: 'high',
-        status: 'completed',
-        requestDate: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-        dueDate: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'Food & Beverage',
-        notes: 'Kitchen notified, special minibar stocked',
-        createdBy: 'Reception'
-      },
-      {
-        id: 'SR004',
-        bookingId: 'B001',
-        guestName: 'John Smith',
-        roomNumber: '101',
-        type: 'housekeeping',
-        title: 'Extra Pillows',
-        description: 'Guest requested 2 additional pillows and extra towels.',
-        priority: 'low',
-        status: 'pending',
-        requestDate: new Date().toISOString(),
-        dueDate: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'Housekeeping',
-        notes: '',
-        createdBy: 'Front Office'
-      }
-    ];
-    setRequests(sampleRequests);
-    setFilteredRequests(sampleRequests);
+    };
+    fetchData();
   }, []);
 
   // Filter requests
@@ -205,31 +106,58 @@ const SpecialRequests = () => {
     setFilteredRequests(filtered);
   }, [requests, searchQuery, statusFilter, typeFilter]);
 
-  const handleAddRequest = (requestData) => {
-    const newRequest = {
-      ...requestData,
-      id: `SR${String(requests.length + 1).padStart(3, '0')}`,
-      requestDate: new Date().toISOString(),
-      createdBy: 'Staff'
-    };
-    setRequests([...requests, newRequest]);
-    setShowRequestForm(false);
+  const handleAddRequest = async (requestData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/specialrequests`, requestData);
+      setRequests((prev) => [...prev, response.data]);
+      setSuccess('Special request created successfully');
+      setTimeout(() => {
+        setShowRequestForm(false);
+        setSuccess('');
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create special request');
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
-  const handleEditRequest = (requestData) => {
-    setRequests(requests.map((request) => (request.id === requestData.id ? requestData : request)));
-    setEditingRequest(null);
-    setShowRequestForm(false);
+  const handleEditRequest = async (requestData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/specialrequests/${requestData.id}`, requestData);
+      setRequests((prev) => prev.map((request) => (request.id === requestData.id ? response.data : request)));
+      setSuccess('Special request updated successfully');
+      setTimeout(() => {
+        setEditingRequest(null);
+        setShowRequestForm(false);
+        setSuccess('');
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update special request');
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
-  const handleDeleteRequest = (requestId) => {
+  const handleDeleteRequest = async (requestId) => {
     if (window.confirm('Are you sure you want to delete this request?')) {
-      setRequests(requests.filter((request) => request.id !== requestId));
+      try {
+        await axios.delete(`${API_BASE_URL}/specialrequests/${requestId}`);
+        setRequests(requests.filter((request) => request.id !== requestId));
+        setSuccess('Special request deleted successfully');
+        setTimeout(() => {
+          setShowRequestDetails(false);
+          setSelectedRequest(null);
+          setSuccess('');
+          window.location.reload();
+        }, 2000);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to delete special request');
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
   const getStatusColor = (status) => {
-    const statusConfig = requestStatuses.find(s => s.id === status);
+    const statusConfig = requestStatuses.find((s) => s.id === status);
     return statusConfig ? statusConfig.color : 'gray';
   };
 
@@ -245,55 +173,87 @@ const SpecialRequests = () => {
         status: 'pending',
         dueDate: '',
         assignedTo: 'Front Office',
-        notes: ''
+        notes: '',
       }
     );
+    const [formError, setFormError] = useState('');
 
     const handleBookingChange = (bookingId) => {
-      const selectedBooking = bookings.find(b => b.id === bookingId);
-      const selectedRoom = rooms.find(r => r.id === selectedBooking?.roomId);
-      
+      const selectedBooking = bookings.find((b) => b.id === bookingId);
+      const selectedRoom = selectedBooking?.roomId
+        ? rooms.find((r) => r.id === selectedBooking.roomId)
+        : null;
+
       setFormData({
         ...formData,
         bookingId,
         guestName: selectedBooking?.guestName || '',
-        roomNumber: selectedRoom?.roomNumber || ''
+        roomNumber:
+          selectedBooking?.splitStays?.length > 0
+            ? 'Multiple Rooms'
+            : selectedRoom?.roomNumber || '',
       });
     };
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (!formData.title.trim() || !formData.description.trim()) {
-        alert('Please fill in all required fields');
+      if (!formData.title.trim() || !formData.description.trim() || !formData.bookingId) {
+        setFormError('Please fill in all required fields');
         return;
       }
-      onSave(formData);
+      onSave({ ...formData, id: request?.id });
+      setFormError('');
     };
 
-    const modalContent = (
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+    return createPortal(
+      <div
+        className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-labelledby="request-form-title"
+      >
         <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 id="request-form-title" className="text-xl font-semibold text-gray-900">
               {request ? 'Edit Special Request' : 'Add New Special Request'}
             </h2>
             <button
               onClick={onCancel}
               className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              aria-label="Close form"
             >
               <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {formError && (
+              <div className="bg-red-100 text-red-700 p-3 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4" />
+                <span>{formError}</span>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-100 text-green-700 p-3 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>{success}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Booking Reference</label>
+                <label
+                  htmlFor="bookingId"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Booking Reference *
+                </label>
                 <select
+                  id="bookingId"
                   value={formData.bookingId}
                   onChange={(e) => handleBookingChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  aria-required="true"
                 >
                   <option value="">Select booking...</option>
                   {bookings.map((booking) => (
@@ -304,8 +264,14 @@ const SpecialRequests = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name</label>
+                <label
+                  htmlFor="guestName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Guest Name
+                </label>
                 <input
+                  id="guestName"
                   type="text"
                   value={formData.guestName}
                   readOnly
@@ -313,8 +279,14 @@ const SpecialRequests = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Room Number</label>
+                <label
+                  htmlFor="roomNumber"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Room Number
+                </label>
                 <input
+                  id="roomNumber"
                   type="text"
                   value={formData.roomNumber}
                   readOnly
@@ -322,73 +294,120 @@ const SpecialRequests = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Request Type</label>
+                <label
+                  htmlFor="type"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Request Type
+                </label>
                 <select
+                  id="type"
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {requestTypes.filter(t => t.id !== 'all').map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
+                  {requestTypes
+                    .filter((t) => t.id !== 'all')
+                    .map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Title *
+              </label>
               <input
+                id="title"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                aria-required="true"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Description *
+              </label>
               <textarea
+                id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Provide detailed information about the special request..."
                 required
+                aria-required="true"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Status
+                </label>
                 <select
+                  id="status"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {requestStatuses.filter(s => s.id !== 'all').map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
+                  {requestStatuses
+                    .filter((s) => s.id !== 'all')
+                    .map((status) => (
+                      <option key={status.id} value={status.id}>
+                        {status.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label
+                  htmlFor="dueDate"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Due Date
+                </label>
                 <input
+                  id="dueDate"
                   type="datetime-local"
                   value={formData.dueDate ? formData.dueDate.slice(0, 16) : ''}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dueDate: e.target.value ? new Date(e.target.value).toISOString() : '',
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+              <label
+                htmlFor="assignedTo"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Assigned To
+              </label>
               <select
+                id="assignedTo"
                 value={formData.assignedTo}
                 onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -403,8 +422,14 @@ const SpecialRequests = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Staff Notes</label>
+              <label
+                htmlFor="notes"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Staff Notes
+              </label>
               <textarea
+                id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
@@ -418,12 +443,14 @@ const SpecialRequests = () => {
                 type="button"
                 onClick={onCancel}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                aria-label="Cancel form"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                aria-label={request ? 'Update request' : 'Create request'}
               >
                 <Save className="h-4 w-4" />
                 <span>{request ? 'Update Request' : 'Create Request'}</span>
@@ -431,18 +458,21 @@ const SpecialRequests = () => {
             </div>
           </form>
         </div>
-      </div>
+      </div>,
+      document.body
     );
-
-    return createPortal(modalContent, document.body);
   };
 
   const RequestDetails = ({ request, onClose, onEdit, onDelete }) => {
-    const statusConfig = requestStatuses.find(s => s.id === request.status);
-    const typeConfig = requestTypes.find(t => t.id === request.type);
+    const statusConfig = requestStatuses.find((s) => s.id === request.status);
+    const typeConfig = requestTypes.find((t) => t.id === request.type);
 
-    const modalContent = (
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+    return createPortal(
+      <div
+        className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-labelledby="request-details-title"
+      >
         <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
             <div className="flex items-center space-x-3">
@@ -450,33 +480,43 @@ const SpecialRequests = () => {
                 <MessageSquare className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{request.title}</h2>
-                <p className="text-sm text-gray-600">{request.guestName} - Room {request.roomNumber}</p>
+                <h2 id="request-details-title" className="text-xl font-semibold text-gray-900">
+                  {request.title}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {request.guestName} - Room {request.roomNumber}
+                </p>
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              aria-label="Close details"
             >
               <X className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-lg p-3">
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Status</h3>
-                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                  statusConfig?.color === 'green' ? 'bg-green-100 text-green-800' :
-                  statusConfig?.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                  statusConfig?.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                  statusConfig?.color === 'red' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                    statusConfig?.color === 'green'
+                      ? 'bg-green-100 text-green-800'
+                      : statusConfig?.color === 'blue'
+                      ? 'bg-blue-100 text-blue-800'
+                      : statusConfig?.color === 'yellow'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : statusConfig?.color === 'red'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
                   {statusConfig?.name}
                 </span>
               </div>
-              {/* Priority removed as per request */}
               <div className="bg-gray-50 rounded-lg p-3">
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Type</h3>
                 <div className="flex items-center space-x-2">
@@ -538,6 +578,7 @@ const SpecialRequests = () => {
               <button
                 onClick={() => onEdit(request)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                aria-label="Edit request"
               >
                 <Edit className="h-4 w-4" />
                 <span>Edit Request</span>
@@ -545,6 +586,7 @@ const SpecialRequests = () => {
               <button
                 onClick={() => onDelete(request.id)}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
+                aria-label="Delete request"
               >
                 <Trash2 className="h-4 w-4" />
                 <span>Delete</span>
@@ -552,31 +594,38 @@ const SpecialRequests = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
-
-    return createPortal(modalContent, document.body);
   };
 
   const RequestCard = ({ request, onView, onEdit, onDelete }) => {
-    const statusConfig = requestStatuses.find(s => s.id === request.status);
-    const typeConfig = requestTypes.find(t => t.id === request.type);
+    const statusConfig = requestStatuses.find((s) => s.id === request.status);
+    const typeConfig = requestTypes.find((t) => t.id === request.type);
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 text-base mb-1">{request.title}</h3>
-            <p className="text-sm text-gray-600">{request.guestName} - Room {request.roomNumber}</p>
+            <p className="text-sm text-gray-600">
+              {request.guestName} - Room {request.roomNumber}
+            </p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-              statusConfig?.color === 'green' ? 'bg-green-100 text-green-800' :
-              statusConfig?.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-              statusConfig?.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-              statusConfig?.color === 'red' ? 'bg-red-100 text-red-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
+            <span
+              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                statusConfig?.color === 'green'
+                  ? 'bg-green-100 text-green-800'
+                  : statusConfig?.color === 'blue'
+                  ? 'bg-blue-100 text-blue-800'
+                  : statusConfig?.color === 'yellow'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : statusConfig?.color === 'red'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
               {statusConfig?.name}
             </span>
           </div>
@@ -602,6 +651,7 @@ const SpecialRequests = () => {
             onClick={() => onView(request)}
             className="p-1 text-gray-400 hover:text-blue-600"
             title="View Details"
+            aria-label={`View details for ${request.title}`}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -609,6 +659,7 @@ const SpecialRequests = () => {
             onClick={() => onEdit(request)}
             className="p-1 text-gray-400 hover:text-blue-600"
             title="Edit Request"
+            aria-label={`Edit ${request.title}`}
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -616,6 +667,7 @@ const SpecialRequests = () => {
             onClick={() => onDelete(request.id)}
             className="p-1 text-gray-400 hover:text-red-600"
             title="Delete Request"
+            aria-label={`Delete ${request.title}`}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -626,6 +678,20 @@ const SpecialRequests = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Messages */}
+      {error && (
+        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg">
+          <AlertCircle className="h-4 w-4 inline mr-2" />
+          <span>{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">
+          <CheckCircle className="h-4 w-4 inline mr-2" />
+          <span>{success}</span>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="px-6 py-4 bg-white border-b border-gray-200">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
@@ -637,6 +703,7 @@ const SpecialRequests = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Search requests by guest name, title, description, or room number"
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -645,6 +712,7 @@ const SpecialRequests = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Filter by status"
             >
               {requestStatuses.map((status) => (
                 <option key={status.id} value={status.id}>
@@ -656,6 +724,7 @@ const SpecialRequests = () => {
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Filter by type"
             >
               {requestTypes.map((type) => (
                 <option key={type.id} value={type.id}>
@@ -664,9 +733,10 @@ const SpecialRequests = () => {
               ))}
             </select>
           </div>
-           <button
+          <button
             onClick={() => setShowRequestForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+            aria-label="Add new request"
           >
             <Plus className="h-4 w-4" />
             <span>Add New Request</span>
@@ -675,6 +745,7 @@ const SpecialRequests = () => {
             onClick={() => window.location.reload()}
             className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             title="Refresh"
+            aria-label="Refresh data"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -703,7 +774,7 @@ const SpecialRequests = () => {
               <div>
                 <p className="text-sm text-gray-600">Pending</p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {requests.filter(r => r.status === 'pending').length}
+                  {requests.filter((r) => r.status === 'pending').length}
                 </p>
               </div>
             </div>
@@ -716,7 +787,7 @@ const SpecialRequests = () => {
               <div>
                 <p className="text-sm text-gray-600">In Progress</p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {requests.filter(r => r.status === 'in_progress').length}
+                  {requests.filter((r) => r.status === 'in_progress').length}
                 </p>
               </div>
             </div>
@@ -729,7 +800,7 @@ const SpecialRequests = () => {
               <div>
                 <p className="text-sm text-gray-600">Completed</p>
                 <p className="text-xl font-semibold text-gray-900">
-                  {requests.filter(r => r.status === 'completed').length}
+                  {requests.filter((r) => r.status === 'completed').length}
                 </p>
               </div>
             </div>
@@ -750,6 +821,7 @@ const SpecialRequests = () => {
               <button
                 onClick={() => setShowRequestForm(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto"
+                aria-label="Add new request"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add New Request</span>

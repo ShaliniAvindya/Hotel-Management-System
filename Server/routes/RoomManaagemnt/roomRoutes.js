@@ -1,5 +1,5 @@
 const express = require('express');
-const Room = require('../models/Room');
+const Room = require('../../models/RoomManaagemnt/Room');
 
 const router = express.Router();
 
@@ -15,7 +15,6 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const roomData = req.body;
-    // Generate custom ID if not provided
     if (!roomData.id) {
       const lastRoom = await Room.findOne().sort({ createdAt: -1 });
       const lastId = lastRoom ? parseInt(lastRoom.id.slice(1)) : 0;
