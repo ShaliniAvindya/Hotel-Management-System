@@ -5,23 +5,23 @@ const cors = require('cors');
 require('dotenv').config();
 
 // --- IMPORT ROUTES ---
-const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes');
-const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
-const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
-const roomAvailabilityRoutes = require('./routes/RoomManaagemnt/roomAvailabilityRoutes');
-const staffMember = require('./routes/RoomManaagemnt/staffMemberRoutess');
-const bookingRoutes = require('./routes/ReservationManagement/bookingRoutes');
-const guestRoutes = require('./routes/ReservationManagement/guestRoutes');
-const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoutes');
-const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
-const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
-const billingRoutes = require('./routes/billingRoutes');
-const menuRoutes = require('./routes/Restaurant&BarManagement/menuRoutes');
-const orderRoutes = require('./routes/Restaurant&BarManagement/orderRoutes');
-const exportRoutes = require('./routes/exports');
-const settingsRoutes = require('./routes/settings');
-const authRoutes = require('./routes/auth');
-const usersRoutes = require('./routes/users');
+const roomRoutes = require('.../routes/RoomManaagemnt/roomRoutes');
+const roomRateRoutes = require('.../routes/RoomManaagemnt/roomRateRoutes');
+const maintenanceRoutes = require('../routes/RoomManaagemnt/maintenanceRoutes');
+const roomAvailabilityRoutes = require('../routes/RoomManaagemnt/roomAvailabilityRoutes');
+const staffMember = require('../routes/RoomManaagemnt/staffMemberRoutess');
+const bookingRoutes = require('../routes/ReservationManagement/bookingRoutes');
+const guestRoutes = require('../routes/ReservationManagement/guestRoutes');
+const checkInOutRoutes = require('../routes/ReservationManagement/checkInOutRoutes');
+const Cancellation = require('../routes/ReservationManagement/cancelRoutes');
+const specialRequestRoutes = require('../routes/ReservationManagement/specialRequestRoutes');
+const billingRoutes = require('../routes/billingRoutes');
+const menuRoutes = require('../routes/Restaurant&BarManagement/menuRoutes');
+const orderRoutes = require('../routes/Restaurant&BarManagement/orderRoutes');
+const exportRoutes = require('../routes/exports');
+const settingsRoutes = require('../routes/settings');
+const authRoutes = require('../routes/auth');
+const usersRoutes = require('../routes/users');
 
 // --- INITIALIZE APP ---
 const app = express();
