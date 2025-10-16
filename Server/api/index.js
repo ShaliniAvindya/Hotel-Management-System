@@ -5,8 +5,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 // --- IMPORT ROUTES ---
-const roomRoutes = require('.../routes/RoomManaagemnt/roomRoutes');
-const roomRateRoutes = require('.../routes/RoomManaagemnt/roomRateRoutes');
+const roomRoutes = require('../routes/RoomManaagemnt/roomRoutes');
+const roomRateRoutes = require('../routes/RoomManaagemnt/roomRateRoutes');
 const maintenanceRoutes = require('../routes/RoomManaagemnt/maintenanceRoutes');
 const roomAvailabilityRoutes = require('../routes/RoomManaagemnt/roomAvailabilityRoutes');
 const staffMember = require('../routes/RoomManaagemnt/staffMemberRoutess');
