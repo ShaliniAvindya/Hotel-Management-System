@@ -7,19 +7,33 @@ const ScrollRestoration = () => {
   useEffect(() => {
     // Scroll to top
     const scrollToTop = () => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'instant'
-      });
+      console.log('[ScrollRestoration] scrollToTop called for pathname:', pathname);
+      try {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'instant'
+        });
+      } catch (err) {
+        window.scrollTo(0, 0);
+      }
     };
-        scrollToTop();
 
-    // Handle page refresh
-    window.addEventListener('load', scrollToTop);
-    
+    console.log('[ScrollRestoration] pathname changed ->', pathname);
+    if (window.__modalOpen) {
+      console.log('[ScrollRestoration] skipping scroll because modal is open');
+    } else {
+      scrollToTop();
+    }
+
+    const onLoad = () => {
+      console.log('[ScrollRestoration] load event fired for', pathname);
+      scrollToTop();
+    };
+    window.addEventListener('load', onLoad);
+
     return () => {
-      window.removeEventListener('load', scrollToTop);
+      window.removeEventListener('load', onLoad);
     };
   }, [pathname]);
 

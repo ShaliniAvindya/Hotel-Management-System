@@ -133,21 +133,21 @@ const RestaurantBarManagement = () => {
       <div className={`flex-1 ${mainMargin} transition-all duration-300 overflow-auto`}>
         {/* Header with Restaurant/Bar Info */}
         <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between flex-wrap">
+              <div className="flex items-center space-x-3 sm:space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
                   className="lg:hidden text-gray-600 hover:text-gray-900"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-gradient-to-r from-orange-500 to-red-600 p-3 rounded-xl">
-                  <UtensilsCrossed className="h-8 w-8 text-white" />
+                <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 sm:p-3 rounded-xl flex-shrink-0">
+                  <UtensilsCrossed className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Restaurant & Bar Management</h1>
-                  <p className="text-gray-600">Complete F&B operations dashboard</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Restaurant & Bar Management</h1>
+                  <p className="text-sm sm:text-base text-gray-600">Complete F&B operations dashboard</p>
                 </div>
               </div>
               
@@ -157,8 +157,8 @@ const RestaurantBarManagement = () => {
 
         {/* Enhanced Tabs */}
         <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="px-6">
-            <nav className="flex space-x-1" aria-label="Tabs">
+          <div className="px-4 sm:px-6 overflow-x-auto">
+            <nav className="flex space-x-1 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -167,7 +167,7 @@ const RestaurantBarManagement = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`${getTabStyles(tab, isActive)} 
-                      flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm 
+                      flex items-center space-x-2 px-3 sm:px-4 py-3 sm:py-4 border-b-2 font-medium text-sm 
                       transition-all duration-200 rounded-t-lg group relative`}
                   >
                     <Icon className="h-4 w-4" />
@@ -186,7 +186,7 @@ const RestaurantBarManagement = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1">
+        <div className="flex-1 p-4 sm:p-6">
           {tabs.map((tab) => (
             activeTab === tab.id && (
               <div key={tab.id} className="animate-fadeIn">

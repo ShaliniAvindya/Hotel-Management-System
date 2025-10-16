@@ -15,7 +15,12 @@ const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoute
 const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
 const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
 const billingRoutes = require('./routes/billingRoutes');
-const restaurantBarAnalyticsRoutes = require('./routes/Restaurant&BarManagement/analyticsRoutes');
+const menuRoutes = require('./routes/Restaurant&BarManagement/menuRoutes');
+const orderRoutes = require('./routes/Restaurant&BarManagement/orderRoutes');
+const exportRoutes = require('./routes/exports');
+const settingsRoutes = require('./routes/settings');
+const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users');
 
 const app = express();
 
@@ -39,9 +44,14 @@ app.use('/api/guests', guestRoutes);
 app.use('/api/checkinout', checkInOutRoutes);
 app.use('/api/cancellations', Cancellation);
 app.use('/api/specialrequests', specialRequestRoutes);
-app.use('/api/restaurant-bar/analytics', restaurantBarAnalyticsRoutes);
 app.use('/api/billing', billingRoutes);
 
+app.use('/api/menu', menuRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/exports', exportRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

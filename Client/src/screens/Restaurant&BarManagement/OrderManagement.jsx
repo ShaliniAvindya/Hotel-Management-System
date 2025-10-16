@@ -39,6 +39,8 @@ import {
   Play,
   Star,
 } from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL } from '../../apiconfig';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -53,6 +55,7 @@ const OrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [userRole, setUserRole] = useState('front_office'); // front_office, kitchen, waiter
   const [showConfirmation, setShowConfirmation] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
 
   // Order types
   const orderTypes = [
@@ -73,42 +76,6 @@ const OrderManagement = () => {
     { id: 'cancelled', name: 'Cancelled', color: 'red', icon: XCircle },
   ];
 
-  // Sample menu items for order creation
-  const menuItems = [
-    {
-      id: 'MI001',
-      name: 'Grilled Chicken Caesar Salad',
-      price: 14.99,
-      category: 'salads',
-      prepTime: 15,
-      image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=100&h=100&fit=crop',
-    },
-    {
-      id: 'MI002',
-      name: 'Margherita Pizza',
-      price: 16.99,
-      category: 'mains',
-      prepTime: 25,
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=100&h=100&fit=crop',
-    },
-    {
-      id: 'MI003',
-      name: 'Chocolate Lava Cake',
-      price: 8.99,
-      category: 'desserts',
-      prepTime: 20,
-      image: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=100&h=100&fit=crop',
-    },
-    {
-      id: 'MI004',
-      name: 'Fresh Orange Juice',
-      price: 4.99,
-      category: 'beverages',
-      prepTime: 5,
-      image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100&h=100&fit=crop',
-    },
-  ];
-
   // Sample tables for dine-in
   const tables = [
     { id: 'T001', number: '1', capacity: 2, location: 'Main Dining' },
@@ -127,94 +94,30 @@ const OrderManagement = () => {
     { id: 'R301', number: '301', floor: 3, type: 'Presidential' },
   ];
 
-  // Sample orders data
   useEffect(() => {
-    const sampleOrders = [
-      {
-        id: 'ORD001',
-        type: 'dine_in',
-        status: 'preparing',
-        customerName: 'John Doe',
-        customerPhone: '+1 234 567 8900',
-        tableId: 'T002',
-        items: [
-          { id: 'MI002', name: 'Margherita Pizza', price: 16.99, quantity: 1, specialInstructions: 'Extra cheese' },
-          { id: 'MI004', name: 'Fresh Orange Juice', price: 4.99, quantity: 2, specialInstructions: 'No ice' },
-        ],
-        subtotal: 26.97,
-        tax: 2.70,
-        total: 29.67,
-        specialInstructions: 'Customer has nut allergy',
-        waiterName: 'Sarah Johnson',
-        createdAt: '2024-02-06T18:30:00Z',
-        updatedAt: '2024-02-06T19:00:00Z',
-        estimatedTime: 25,
-        priority: 'normal',
-      },
-      {
-        id: 'ORD002',
-        type: 'room_service',
-        status: 'new',
-        customerName: 'Alice Smith',
-        customerPhone: '+1 234 567 8901',
-        roomId: 'R201',
-        items: [
-          { id: 'MI001', name: 'Grilled Chicken Caesar Salad', price: 14.99, quantity: 1, specialInstructions: 'Dressing on the side' },
-          { id: 'MI003', name: 'Chocolate Lava Cake', price: 8.99, quantity: 1, specialInstructions: '' },
-        ],
-        subtotal: 23.98,
-        tax: 2.40,
-        total: 26.38,
-        specialInstructions: 'Room 201 - Please knock softly',
-        deliveryTime: '2024-02-06T20:00:00Z',
-        createdAt: '2024-02-06T19:15:00Z',
-        updatedAt: '2024-02-06T19:15:00Z',
-        estimatedTime: 20,
-        priority: 'normal',
-      },
-      {
-        id: 'ORD003',
-        type: 'takeaway',
-        status: 'ready',
-        customerName: 'Mike Brown',
-        customerPhone: '+1 234 567 8902',
-        items: [
-          { id: 'MI002', name: 'Margherita Pizza', price: 16.99, quantity: 2, specialInstructions: 'Well done' },
-        ],
-        subtotal: 33.98,
-        tax: 3.40,
-        total: 37.38,
-        specialInstructions: 'Customer will pick up at 7:30 PM',
-        pickupTime: '2024-02-06T19:30:00Z',
-        createdAt: '2024-02-06T18:45:00Z',
-        updatedAt: '2024-02-06T19:25:00Z',
-        estimatedTime: 25,
-        priority: 'high',
-      },
-      {
-        id: 'ORD004',
-        type: 'poolside',
-        status: 'served',
-        customerName: 'Emma Wilson',
-        customerPhone: '+1 234 567 8903',
-        locationDetails: 'Pool Area - Cabana 3',
-        items: [
-          { id: 'MI004', name: 'Fresh Orange Juice', price: 4.99, quantity: 3, specialInstructions: 'Extra ice' },
-          { id: 'MI001', name: 'Grilled Chicken Caesar Salad', price: 14.99, quantity: 1, specialInstructions: '' },
-        ],
-        subtotal: 29.96,
-        tax: 3.00,
-        total: 32.96,
-        specialInstructions: 'Poolside service - Cabana 3',
-        waiterName: 'David Martinez',
-        createdAt: '2024-02-06T17:00:00Z',
-        updatedAt: '2024-02-06T17:45:00Z',
-        estimatedTime: 20,
-        priority: 'normal',
-      },
-    ];
-    setOrders(sampleOrders);
-    setFilteredOrders(sampleOrders);
+    const fetchMenuItems = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/menu`);
+        setMenuItems(response.data);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      }
+    };
+    fetchMenuItems();
+  }, []);
+
+  // Fetch orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/orders`);
+        setOrders(response.data);
+        setFilteredOrders(response.data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    };
+    fetchOrders();
   }, []);
 
   // Filter orders
@@ -274,79 +177,93 @@ const OrderManagement = () => {
     }
   };
 
-  const handleAddOrder = (orderData) => {
-    const newOrder = {
-      ...orderData,
-      id: `ORD${String(orders.length + 1).padStart(3, '0')}`,
-      status: 'new',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      estimatedTime: orderData.items.reduce((max, item) => {
-        const menuItem = menuItems.find((mi) => mi.id === item.id);
-        return Math.max(max, menuItem?.prepTime || 0);
-      }, 0),
-    };
-    setOrders([...orders, newOrder]);
-    setShowOrderForm(false);
+  const handleAddOrder = async (orderData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/orders`, {
+        ...orderData,
+        id: `ORD${String(orders.length + 1).padStart(3, '0')}`,
+        status: 'new',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        estimatedTime: orderData.items.reduce((max, item) => {
+          const menuItem = menuItems.find((mi) => mi.id === item.id);
+          return Math.max(max, menuItem?.preparationTime || 0);
+        }, 0),
+      });
+      setOrders([...orders, response.data]);
+      setShowOrderForm(false);
+    } catch (error) {
+      console.error('Error adding order:', error);
+    }
   };
 
-  const handleEditOrder = (orderData) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderData.id
-          ? {
-              ...orderData,
-              updatedAt: new Date().toISOString(),
-              estimatedTime: orderData.items.reduce((max, item) => {
-                const menuItem = menuItems.find((mi) => mi.id === item.id);
-                return Math.max(max, menuItem?.prepTime || 0);
-              }, 0),
-            }
-          : order
-      )
-    );
-    setEditingOrder(null);
-    setShowOrderForm(false);
+  const handleEditOrder = async (orderData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/orders/${orderData._id}`, {
+        ...orderData,
+        updatedAt: new Date().toISOString(),
+        estimatedTime: orderData.items.reduce((max, item) => {
+          const menuItem = menuItems.find((mi) => mi.id === item.id);
+          return Math.max(max, menuItem?.preparationTime || 0);
+        }, 0),
+      });
+      setOrders(orders.map((order) => (order._id === orderData._id ? response.data : order)));
+      setEditingOrder(null);
+      setShowOrderForm(false);
+    } catch (error) {
+      console.error('Error editing order:', error);
+    }
   };
 
   const handleDeleteOrder = (orderId) => {
     setShowConfirmation({
       title: 'Delete Order',
       message: `Are you sure you want to delete order ${orderId}? This action cannot be undone.`,
-      onConfirm: () => {
-        setOrders(orders.filter((order) => order.id !== orderId));
-        setShowConfirmation(null);
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/orders/${orderId}`);
+          setOrders(orders.filter((order) => order._id !== orderId));
+          setShowConfirmation(null);
+        } catch (error) {
+          console.error('Error deleting order:', error);
+        }
       },
       onCancel: () => setShowConfirmation(null),
     });
   };
 
   const handleStatusChange = (orderId, newStatus) => {
-    const order = orders.find((o) => o.id === orderId);
+    const order = orders.find((o) => o._id === orderId);
     if (newStatus === 'cancelled') {
       setShowConfirmation({
         title: 'Cancel Order',
         message: `Are you sure you want to cancel order ${orderId}? This action cannot be undone.`,
-        onConfirm: () => {
-          setOrders(
-            orders.map((order) =>
-              order.id === orderId
-                ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
-                : order
-            )
-          );
-          setShowConfirmation(null);
+        onConfirm: async () => {
+          try {
+            const response = await axios.put(`${API_BASE_URL}/orders/${orderId}`, {
+              status: newStatus,
+              updatedAt: new Date().toISOString(),
+            });
+            setOrders(orders.map((or) => (or._id === orderId ? response.data : or)));
+            setShowConfirmation(null);
+          } catch (error) {
+            console.error('Error changing status:', error);
+          }
         },
         onCancel: () => setShowConfirmation(null),
       });
     } else {
-      setOrders(
-        orders.map((order) =>
-          order.id === orderId
-            ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
-            : order
-        )
-      );
+      (async () => {
+        try {
+          const response = await axios.put(`${API_BASE_URL}/orders/${orderId}`, {
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+          });
+          setOrders(orders.map((or) => (or._id === orderId ? response.data : or)));
+        } catch (error) {
+          console.error('Error changing status:', error);
+        }
+      })();
     }
   };
 
@@ -500,10 +417,10 @@ const OrderManagement = () => {
     const orderType = orderTypes.find((ot) => ot.id === formData.type);
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
-            <h2 className="text-2xl font-bold text-gray-900">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl animate-slide-up">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
               {order ? 'Edit Order' : 'Create New Order'}
             </h2>
             <button
@@ -514,11 +431,11 @@ const OrderManagement = () => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
             {/* Order Type & Customer Info */}
             <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Order Type *</label>
                   <select
@@ -628,7 +545,7 @@ const OrderManagement = () => {
             {/* Menu Items */}
             <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Items</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 {menuItems.map((item) => (
                   <div
                     key={item.id}
@@ -636,7 +553,7 @@ const OrderManagement = () => {
                   >
                     <div className="flex items-center space-x-3">
                       <img
-                        src={item.image}
+                        src={item.images[0] || 'https://placehold.co/100x100'}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded-lg"
                       />
@@ -768,15 +685,15 @@ const OrderManagement = () => {
     const OrderTypeIcon = getOrderTypeIcon(order.type);
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <OrderTypeIcon className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Order {order.id}</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Order {order.id}</h2>
                 <p className="text-sm text-gray-600">
                   {getOrderTypeName(order.type)} • {order.customerName}
                 </p>
@@ -790,9 +707,9 @@ const OrderManagement = () => {
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             {/* Status & Priority */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
@@ -921,10 +838,10 @@ const OrderManagement = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-medium text-gray-900">{item.name}</h4>
-                        <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
-                          <span className="text-sm text-gray-600">${item.price.toFixed(2)} each</span>
-                          <span className="text-sm font-medium text-gray-900">
+                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                          <span>Qty: {item.quantity}</span>
+                          <span>${item.price.toFixed(2)} each</span>
+                          <span className="font-medium text-gray-900">
                             ${(item.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -1015,7 +932,7 @@ const OrderManagement = () => {
           <div className="flex items-center justify-between">
             <div className="relative">
               <span
-                className={`px-3 py-1 rounded-full text-sm font-medium border cursor-pointer ${getStatusColor(
+                className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
                   order.status
                 )}`}
                 onClick={() => setShowStatusDropdown(!showStatusDropdown)}
@@ -1259,9 +1176,9 @@ const OrderManagement = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
+      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-wrap gap-4">
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">View as:</label>
               <select
@@ -1278,7 +1195,7 @@ const OrderManagement = () => {
 
           {/* Search and Filters */}
           <div className="flex items-center space-x-4 flex-wrap gap-4">
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
               />
@@ -1287,18 +1204,18 @@ const OrderManagement = () => {
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Filter
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
               />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-8 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
                 <option value="all">All Types</option>
                 {orderTypes.map((type) => (
@@ -1309,14 +1226,14 @@ const OrderManagement = () => {
               </select>
             </div>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Filter
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
               />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-8 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
                 <option value="all">All Status</option>
                 {orderStatuses.map((status) => (
@@ -1377,8 +1294,8 @@ const OrderManagement = () => {
       </div>
 
       {/* Orders Display */}
-      <div className="p-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="p-4 sm:p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
           {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -1405,7 +1322,7 @@ const OrderManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOrders.map((order) => (
                 <OrderCard
-                  key={order.id}
+                  key={order._id}
                   order={order}
                   onView={(order) => {
                     setSelectedOrder(order);
@@ -1421,7 +1338,7 @@ const OrderManagement = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-max">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Order</th>
@@ -1438,7 +1355,7 @@ const OrderManagement = () => {
                 <tbody>
                   {filteredOrders.map((order) => (
                     <OrderListItem
-                      key={order.id}
+                      key={order._id}
                       order={order}
                       onView={(order) => {
                         setSelectedOrder(order);
