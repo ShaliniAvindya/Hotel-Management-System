@@ -19,7 +19,7 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const res = await api.post(`${API_BASE_URL}/auth/login`, { email, password });
       const { token, user } = res.data;
       if (!token) {
         setError('No token returned from server');
