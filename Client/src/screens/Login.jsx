@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../components/context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { API_BASE_URL } from '../apiconfig';
 
 const Login = () => {
   const { api, login } = useContext(AuthContext);
@@ -19,7 +18,7 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.post(`${API_BASE_URL}/auth/login`, { email, password });
+      const res = await api.post(`/auth/login`, { email, password });
       const { token, user } = res.data;
       if (!token) {
         setError('No token returned from server');
