@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../components/context/AuthContext';
 import { 
   Settings, 
   Users, 
@@ -63,6 +64,8 @@ import {
   Menu
 } from 'lucide-react';
 import Sidebar from '../screens/Sidebar'; // Adjust path if needed, e.g., '../components/Sidebar'
+import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../apiconfig';
 
 const RestaurantSettings = () => {
   const [activeSection, setActiveSection] = useState('general');
@@ -73,55 +76,42 @@ const RestaurantSettings = () => {
     sms: false,
     desktop: true
   });
+  const [notificationTypes, setNotificationTypes] = useState({
+    reservations: true,
+    walkins: true,
+    orders: true,
+    inventory: true,
+    payments: false,
+    reviews: true,
+    staff: false
+  });
   const [darkMode, setDarkMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoBackup, setAutoBackup] = useState(true);
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [isEditing, setIsEditing] = useState(null);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'staff' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'staff', password: '', isAdmin: false });
   const [showAddUser, setShowAddUser] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Alex Chef', email: 'alex@bellavista.com', role: 'admin', status: 'active', lastLogin: '2025-07-13' },
-    { id: 2, name: 'Sarah Manager', email: 'sarah@bellavista.com', role: 'manager', status: 'active', lastLogin: '2025-07-12' },
-    { id: 3, name: 'Mike Waiter', email: 'mike@bellavista.com', role: 'staff', status: 'active', lastLogin: '2025-07-13' },
-    { id: 4, name: 'Emma Kitchen', email: 'emma@bellavista.com', role: 'kitchen', status: 'inactive', lastLogin: '2025-07-10' }
-  ]);
-
-  const [restaurantInfo, setRestaurantInfo] = useState({
-    name: 'Bella Vista Restaurant & Bar',
-    address: '123 Downtown Street, City Center',
-    phone: '+1 (555) 123-4567',
-    email: 'info@bellavista.com',
-    website: 'www.bellavista.com',
-    description: 'Fine dining restaurant with authentic Italian cuisine',
-    cuisine: 'Italian',
-    capacity: 45,
-    operatingHours: {
-      monday: { open: '11:00', close: '22:00', closed: false },
-      tuesday: { open: '11:00', close: '22:00', closed: false },
-      wednesday: { open: '11:00', close: '22:00', closed: false },
-      thursday: { open: '11:00', close: '22:00', closed: false },
-      friday: { open: '11:00', close: '23:00', closed: false },
-      saturday: { open: '10:00', close: '23:00', closed: false },
-      sunday: { open: '10:00', close: '21:00', closed: false }
+  const [users, setUsers] = useState([]);
+  const { api } = useContext(AuthContext);
+  const [refreshing, setRefreshing] = useState(false);
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get(`${API_BASE_URL}/users`);
+      setUsers(res.data);
+      return res.data;
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      throw err;
     }
-  });
+  };
 
-  const [systemPreferences, setSystemPreferences] = useState({
-    currency: 'USD',
-    timezone: 'America/New_York',
-    dateFormat: 'MM/DD/YYYY',
-    timeFormat: '12h',
-    language: 'en',
-    taxRate: 8.5,
-    serviceCharge: 15,
-    reservationDuration: 120,
-    maxPartySize: 12,
-    advanceBookingDays: 30
-  });
+  const [restaurantInfo, setRestaurantInfo] = useState(null);
+
+  const [systemPreferences, setSystemPreferences] = useState(null);
 
   const settingSections = [
     { id: 'general', label: 'General Settings', icon: Settings },
@@ -139,272 +129,341 @@ const RestaurantSettings = () => {
     kitchen: 'bg-orange-100 text-orange-800'
   };
 
-  const roleIcons = {
-    admin: Crown,
-    manager: UserCheck,
-    staff: User,
-    kitchen: ChefHat
-  };
 
-  const handleSave = () => {
-    console.log('Settings saved');
-  };
+  const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  const [editUser, setEditUser] = useState(null);
 
-  const handleAddUser = () => {
-    if (newUser.name && newUser.email) {
-      setUsers([...users, {
-        id: users.length + 1,
-        ...newUser,
-        status: 'active',
-        lastLogin: new Date().toISOString().split('T')[0]
-      }]);
-      setNewUser({ name: '', email: '', role: 'staff' });
-      setShowAddUser(false);
+  const handleSave = async () => {
+    try {
+      await api.put(`${API_BASE_URL}/settings/restaurant`, restaurantInfo);
+      await api.put(`${API_BASE_URL}/settings/system`, systemPreferences);
+      setToastMsg('Settings saved successfully!');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    } catch (err) {
+      setToastMsg('Error saving settings.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+      console.error('Error saving settings:', err);
+    }
+  };
+  const fetchSettings = async () => {
+    try {
+      const [restaurantRes, systemRes] = await Promise.all([
+        api.get(`${API_BASE_URL}/settings/restaurant`),
+        api.get(`${API_BASE_URL}/settings/system`),
+      ]);
+      const defaultRestaurant = {
+        name: '', address: '', phone: '', email: '', website: '', description: '', cuisine: '', capacity: 0,
+        operatingHours: {
+          monday: { open: '', close: '', closed: false },
+          tuesday: { open: '', close: '', closed: false },
+          wednesday: { open: '', close: '', closed: false },
+          thursday: { open: '', close: '', closed: false },
+          friday: { open: '', close: '', closed: false },
+          saturday: { open: '', close: '', closed: false },
+          sunday: { open: '', close: '', closed: false }
+        }
+      };
+      const defaultSystem = {
+        currency: '', timezone: '', dateFormat: '', timeFormat: '', language: '', taxRate: 0, serviceCharge: 0,
+        reservationDuration: 0, maxPartySize: 0, advanceBookingDays: 0
+      };
+      setRestaurantInfo({ ...defaultRestaurant, ...(restaurantRes.data || {}) });
+      setSystemPreferences({ ...defaultSystem, ...(systemRes.data || {}) });
+      return { restaurant: restaurantRes.data, system: systemRes.data };
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+      throw err;
     }
   };
 
-  const handleDeleteUser = (userId) => {
-    setUsers(users.filter(user => user.id !== userId));
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        await Promise.all([fetchUsers(), fetchSettings()]);
+      } catch (err) {
+      }
+    })();
+    return () => { mounted = false; };
+  }, [api]);
+
+  const handleAddUser = async () => {
+    if (newUser.name && newUser.email && newUser.password) {
+      try {
+        // use admin create endpoint
+        const payload = { name: newUser.name, email: newUser.email, password: newUser.password, role: newUser.role, isAdmin: !!newUser.isAdmin };
+        const res = await api.post(`${API_BASE_URL}/users`, payload);
+        const created = res.data.user || res.data;
+        setUsers(prev => [...(prev || []), created]);
+        setNewUser({ name: '', email: '', role: 'staff', password: '', isAdmin: false });
+        setShowAddUser(false);
+        toast.success('User created');
+      } catch (err) {
+        console.error('Error adding user:', err);
+        const msg = err.response?.data?.error || err.message || 'Failed to create user';
+        toast.error(msg);
+      }
+    } else {
+      toast.error('Please fill name, email and password');
+    }
   };
 
-  const toggleUserStatus = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' }
-        : user
-    ));
+  const handleDeleteUser = async (userId) => {
+    setConfirmDelete({ open: true, userId });
+  };
+
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, userId: null });
+
+  const confirmDeleteNow = async () => {
+    const userId = confirmDelete.userId;
+    try {
+      await api.delete(`${API_BASE_URL}/users/${userId}`);
+      setUsers(users.filter(user => user._id !== userId));
+      toast.success('User deleted');
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      const msg = err.response?.data?.error || err.message || 'Failed to delete user';
+      toast.error(msg);
+    } finally {
+      setConfirmDelete({ open: false, userId: null });
+    }
+  };
+
+  const toggleUserStatus = async (userId) => {
+    try {
+      const user = users.find(u => u._id === userId);
+      const updatedFields = { status: user.status === 'active' ? 'inactive' : 'active', isActive: !(user.isActive === false) };
+      const res = await api.patch(`${API_BASE_URL}/users/${userId}`, updatedFields);
+      const updated = res.data.user || res.data;
+      setUsers(users.map(u => u._id === userId ? updated : u));
+      toast.success('User status updated');
+    } catch (err) {
+      console.error('Error toggling user status:', err);
+      const msg = err.response?.data?.error || err.message || 'Failed to update status';
+      toast.error(msg);
+    }
+  };
+
+  const openEditModal = (user) => {
+    setEditUser({ ...user });
+  };
+
+  const closeEditModal = () => setEditUser(null);
+
+  const handleEditSave = async () => {
+    if (!editUser) return;
+    try {
+      const payload = { status: editUser.status, isActive: editUser.isActive, lastLogin: editUser.lastLogin };
+      const res = await api.patch(`${API_BASE_URL}/users/${editUser._id}`, payload);
+      const updated = res.data.user || res.data;
+      setUsers(users.map(u => u._id === updated._id ? updated : u));
+      toast.success('User updated');
+      closeEditModal();
+    } catch (err) {
+      console.error('Error saving edit:', err);
+      const msg = err.response?.data?.error || err.message || 'Failed to save user';
+      toast.error(msg);
+    }
   };
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">System Preferences</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-            <select 
-              value={systemPreferences.currency}
-              onChange={(e) => setSystemPreferences({...systemPreferences, currency: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </select>
+      {systemPreferences ? (
+        <>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">System Preferences</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                <select 
+                  value={systemPreferences.currency}
+                  onChange={(e) => setSystemPreferences({...systemPreferences, currency: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="USD">USD ($)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                <select 
+                  value={systemPreferences.timezone}
+                  onChange={(e) => setSystemPreferences({...systemPreferences, timezone: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="America/New_York">Eastern Time</option>
+                  <option value="America/Chicago">Central Time</option>
+                  <option value="America/Denver">Mountain Time</option>
+                  <option value="America/Los_Angeles">Pacific Time</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
+                <select 
+                  value={systemPreferences.dateFormat}
+                  onChange={(e) => setSystemPreferences({...systemPreferences, dateFormat: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Time Format</label>
+                <select 
+                  value={systemPreferences.timeFormat}
+                  onChange={(e) => setSystemPreferences({...systemPreferences, timeFormat: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="12h">12 Hour</option>
+                  <option value="24h">24 Hour</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
-            <select 
-              value={systemPreferences.timezone}
-              onChange={(e) => setSystemPreferences({...systemPreferences, timezone: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="America/New_York">Eastern Time</option>
-              <option value="America/Chicago">Central Time</option>
-              <option value="America/Denver">Mountain Time</option>
-              <option value="America/Los_Angeles">Pacific Time</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
-            <select 
-              value={systemPreferences.dateFormat}
-              onChange={(e) => setSystemPreferences({...systemPreferences, dateFormat: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Time Format</label>
-            <select 
-              value={systemPreferences.timeFormat}
-              onChange={(e) => setSystemPreferences({...systemPreferences, timeFormat: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="12h">12 Hour</option>
-              <option value="24h">24 Hour</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tax Rate (%)</label>
-            <input
-              type="number"
-              step="0.1"
-              value={systemPreferences.taxRate}
-              onChange={(e) => setSystemPreferences({...systemPreferences, taxRate: parseFloat(e.target.value)})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Service Charge (%)</label>
-            <input
-              type="number"
-              step="0.1"
-              value={systemPreferences.serviceCharge}
-              onChange={(e) => setSystemPreferences({...systemPreferences, serviceCharge: parseFloat(e.target.value)})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Reservation Duration (minutes)</label>
-            <input
-              type="number"
-              value={systemPreferences.reservationDuration}
-              onChange={(e) => setSystemPreferences({...systemPreferences, reservationDuration: parseInt(e.target.value)})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Max Party Size</label>
-            <input
-              type="number"
-              value={systemPreferences.maxPartySize}
-              onChange={(e) => setSystemPreferences({...systemPreferences, maxPartySize: parseInt(e.target.value)})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
+        </>
+      ) : (
+        <div>Loading system preferences...</div>
+      )}
     </div>
   );
 
   const renderRestaurantInfo = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Restaurant Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Restaurant Name</label>
-            <input
-              type="text"
-              value={restaurantInfo.name}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, name: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-            <input
-              type="text"
-              value={restaurantInfo.address}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, address: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-            <input
-              type="tel"
-              value={restaurantInfo.phone}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, phone: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              value={restaurantInfo.email}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, email: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-            <input
-              type="url"
-              value={restaurantInfo.website}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, website: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Cuisine Type</label>
-            <input
-              type="text"
-              value={restaurantInfo.cuisine}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, cuisine: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              value={restaurantInfo.description}
-              onChange={(e) => setRestaurantInfo({...restaurantInfo, description: e.target.value})}
-              rows={3}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Operating Hours</h3>
-        <div className="space-y-4">
-          {Object.entries(restaurantInfo.operatingHours).map(([day, hours]) => (
-            <div key={day} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-4">
-                <div className="w-24">
-                  <span className="text-sm font-medium text-gray-900 capitalize">{day}</span>
-                </div>
-                <button
-                  onClick={() => setRestaurantInfo({
-                    ...restaurantInfo,
-                    operatingHours: {
-                      ...restaurantInfo.operatingHours,
-                      [day]: { ...hours, closed: !hours.closed }
-                    }
-                  })}
-                  className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
-                    hours.closed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                  }`}
-                >
-                  {hours.closed ? 'Closed' : 'Open'}
-                </button>
+      {restaurantInfo ? (
+        <>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Restaurant Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Restaurant Name</label>
+                <input
+                  type="text"
+                  value={restaurantInfo.name}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, name: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
-              {!hours.closed && (
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="time"
-                    value={hours.open}
-                    onChange={(e) => setRestaurantInfo({
-                      ...restaurantInfo,
-                      operatingHours: {
-                        ...restaurantInfo.operatingHours,
-                        [day]: { ...hours, open: e.target.value }
-                      }
-                    })}
-                    className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <span className="text-gray-500">to</span>
-                  <input
-                    type="time"
-                    value={hours.close}
-                    onChange={(e) => setRestaurantInfo({
-                      ...restaurantInfo,
-                      operatingHours: {
-                        ...restaurantInfo.operatingHours,
-                        [day]: { ...hours, close: e.target.value }
-                      }
-                    })}
-                    className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              )}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <input
+                  type="text"
+                  value={restaurantInfo.address}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, address: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <input
+                  type="tel"
+                  value={restaurantInfo.phone}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, phone: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={restaurantInfo.email}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, email: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <input
+                  type="url"
+                  value={restaurantInfo.website}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, website: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cuisine Type</label>
+                <input
+                  type="text"
+                  value={restaurantInfo.cuisine}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, cuisine: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={restaurantInfo.description}
+                  onChange={(e) => setRestaurantInfo({...restaurantInfo, description: e.target.value})}
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Operating Hours</h3>
+            <div className="space-y-4">
+              {Object.entries(restaurantInfo.operatingHours).map(([day, hours]) => (
+                <div key={day} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24">
+                      <span className="text-sm font-medium text-gray-900 capitalize">{day}</span>
+                    </div>
+                    <button
+                      onClick={() => setRestaurantInfo({
+                        ...restaurantInfo,
+                        operatingHours: {
+                          ...restaurantInfo.operatingHours,
+                          [day]: { ...hours, closed: !hours.closed }
+                        }
+                      })}
+                      className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        hours.closed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}
+                    >
+                      {hours.closed ? 'Closed' : 'Open'}
+                    </button>
+                  </div>
+                  {!hours.closed && (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="time"
+                        value={hours.open}
+                        onChange={(e) => setRestaurantInfo({
+                          ...restaurantInfo,
+                          operatingHours: {
+                            ...restaurantInfo.operatingHours,
+                            [day]: { ...hours, open: e.target.value }
+                          }
+                        })}
+                        className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <input
+                        type="time"
+                        value={hours.close}
+                        onChange={(e) => setRestaurantInfo({
+                          ...restaurantInfo,
+                          operatingHours: {
+                            ...restaurantInfo.operatingHours,
+                            [day]: { ...hours, close: e.target.value }
+                          }
+                        })}
+                        className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div>Loading restaurant info...</div>
+      )}
     </div>
   );
 
@@ -440,6 +499,17 @@ const RestaurantSettings = () => {
                 onChange={(e) => setNewUser({...newUser, email: e.target.value})}
                 className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <input
+                type="password"
+                placeholder="Password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <div className="flex items-center space-x-2 p-2">
+                <input type="checkbox" id="isAdmin" checked={!!newUser.isAdmin} onChange={(e) => setNewUser({...newUser, isAdmin: e.target.checked})} />
+                <label htmlFor="isAdmin" className="text-sm">Is Admin</label>
+              </div>
               <select
                 value={newUser.role}
                 onChange={(e) => setNewUser({...newUser, role: e.target.value})}
@@ -483,9 +553,8 @@ const RestaurantSettings = () => {
             </thead>
             <tbody>
               {users.map((user) => {
-                const RoleIcon = roleIcons[user.role];
                 return (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
                         <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -501,7 +570,6 @@ const RestaurantSettings = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
-                        <RoleIcon className="h-4 w-4 text-gray-600" />
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${roleColors[user.role]}`}>
                           {user.role}
                         </span>
@@ -509,7 +577,7 @@ const RestaurantSettings = () => {
                     </td>
                     <td className="py-4 px-4">
                       <button
-                        onClick={() => toggleUserStatus(user.id)}
+                        onClick={() => toggleUserStatus(user._id)}
                         className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                           user.status === 'active' 
                             ? 'bg-green-100 text-green-800' 
@@ -524,11 +592,11 @@ const RestaurantSettings = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
-                        <button className="p-1 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded">
+                        <button onClick={() => openEditModal(user)} className="p-1 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded">
                           <Edit3 className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleDeleteUser(user._id)}
                           className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -542,6 +610,67 @@ const RestaurantSettings = () => {
           </table>
         </div>
       </div>
+      {/* Edit user modal */}
+      {editUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input type="text" value={editUser.name || ''} onChange={(e) => setEditUser({...editUser, name: e.target.value})} className="w-full p-2 border rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" value={editUser.email || ''} onChange={(e) => setEditUser({...editUser, email: e.target.value})} className="w-full p-2 border rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <select value={editUser.role || 'staff'} onChange={(e) => setEditUser({...editUser, role: e.target.value})} className="w-full p-2 border rounded">
+                  <option value="guest">Guest</option>
+                  <option value="staff">Staff</option>
+                  <option value="kitchen">Kitchen</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select value={editUser.status || 'active'} onChange={(e) => setEditUser({...editUser, status: e.target.value})} className="w-full p-2 border rounded">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Is Active</label>
+                <input type="checkbox" checked={!!editUser.isActive} onChange={(e) => setEditUser({...editUser, isActive: e.target.checked})} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Last Login (ISO)</label>
+                <input type="text" value={editUser.lastLogin || ''} onChange={(e) => setEditUser({...editUser, lastLogin: e.target.value})} className="w-full p-2 border rounded" />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button onClick={() => setEditUser(null)} className="px-4 py-2 rounded bg-gray-200">Cancel</button>
+                <button onClick={handleEditSave} className="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete confirmation modal */}
+      {confirmDelete.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-60">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-2">Confirm delete</h3>
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <div className="flex items-center justify-between">
+              <button onClick={() => setConfirmDelete({ open: false, userId: null })} className="px-4 py-2 rounded bg-gray-200">Cancel</button>
+              <button onClick={confirmDeleteNow} className="px-4 py-2 rounded bg-red-600 text-white">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -550,82 +679,72 @@ const RestaurantSettings = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Settings</h3>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-medium text-gray-900">Two-Factor Authentication</h4>
-              <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-            </div>
-            <button
-              onClick={() => setTwoFactorAuth(!twoFactorAuth)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                twoFactorAuth ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-medium text-gray-900">Auto Backup</h4>
-              <p className="text-sm text-gray-600">Automatically backup your data daily</p>
-            </div>
-            <button
-              onClick={() => setAutoBackup(!autoBackup)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                autoBackup ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                autoBackup ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
-
           <div className="border-t pt-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-4">Change Password</h4>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                <input
-                  type="password"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                <input
-                  type="password"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Update Password
-              </button>
+              <ChangePasswordForm />
             </div>
           </div>
         </div>
       </div>
     </div>
   );
+
+  // Change password form component
+  function ChangePasswordForm() {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loadingPwd, setLoadingPwd] = useState(false);
+
+    const submit = async () => {
+      if (!currentPassword || !newPassword || !confirmPassword) return toast.error('Fill all password fields');
+      if (newPassword !== confirmPassword) return toast.error('New passwords do not match');
+      setLoadingPwd(true);
+      try {
+        const res = await api.post(`${API_BASE_URL}/auth/change-password`, { currentPassword, newPassword });
+        toast.success(res.data.message || 'Password changed');
+        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      } catch (err) {
+        console.error('Change password error', err);
+        const msg = err.response?.data?.error || err.message || 'Failed to change password';
+        toast.error(msg);
+      } finally { setLoadingPwd(false); }
+    };
+
+    return (
+      <div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div><br/>
+        <button disabled={loadingPwd} onClick={submit} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          {loadingPwd ? 'Updating...' : 'Update Password'}
+        </button>
+      </div>
+    );
+  }
 
   const renderNotifications = () => (
     <div className="space-y-6">
@@ -651,23 +770,6 @@ const RestaurantSettings = () => {
 
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900">Push Notifications</h4>
-              <p className="text-sm text-gray-600">Receive push notifications on your device</p>
-            </div>
-            <button
-              onClick={() => setNotifications({...notifications, push: !notifications.push})}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifications.push ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                notifications.push ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
               <h4 className="text-sm font-medium text-gray-900">SMS Notifications</h4>
               <p className="text-sm text-gray-600">Receive important alerts via SMS</p>
             </div>
@@ -682,50 +784,37 @@ const RestaurantSettings = () => {
               }`} />
             </button>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-medium text-gray-900">Desktop Notifications</h4>
-              <p className="text-sm text-gray-600">Show desktop notifications</p>
-            </div>
-            <button
-              onClick={() => setNotifications({...notifications, desktop: !notifications.desktop})}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifications.desktop ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                notifications.desktop ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 mb-4">Notification Types</h4>
           <div className="space-y-3">
-            {[
-              { id: 'reservations', label: 'New Reservations', enabled: true },
-              { id: 'walkins', label: 'Walk-in Customers', enabled: true },
-              { id: 'orders', label: 'New Orders', enabled: true },
-              { id: 'inventory', label: 'Low Stock Alerts', enabled: true },
-              { id: 'payments', label: 'Payment Confirmations', enabled: false },
-              { id: 'reviews', label: 'Customer Reviews', enabled: true },
-              { id: 'staff', label: 'Staff Updates', enabled: false }
-            ].map(notification => (
-              <div key={notification.id} className="flex items-center justify-between py-2">
-                <span className="text-sm text-gray-900">{notification.label}</span>
-                <button
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    notification.enabled ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                    notification.enabled ? 'translate-x-5' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-            ))}
+            {Object.entries(notificationTypes).map(([id, enabled]) => {
+              const labels = {
+                reservations: 'New Reservations',
+                walkins: 'Walk-in Customers',
+                orders: 'New Orders',
+                inventory: 'Low Stock Alerts',
+                payments: 'Payment Confirmations',
+                reviews: 'Customer Reviews',
+                staff: 'Staff Updates'
+              };
+              return (
+                <div key={id} className="flex items-center justify-between py-2">
+                  <span className="text-sm text-gray-900">{labels[id] || id}</span>
+                  <button
+                    onClick={() => { setNotificationTypes(prev => ({ ...prev, [id]: !prev[id] })); toast.success(`${labels[id] || id} ${!enabled ? 'enabled' : 'disabled'}`); }}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      enabled ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      enabled ? 'translate-x-5' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -776,14 +865,6 @@ const RestaurantSettings = () => {
             <RefreshCw className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium text-gray-900">Check for Updates</span>
           </button>
-          <button className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-            <Download className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-gray-900">Export Data</span>
-          </button>
-          <button className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-            <Upload className="h-5 w-5 text-purple-600" />
-            <span className="text-sm font-medium text-gray-900">Import Data</span>
-          </button>
           <button className="flex items-center space-x-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
             <HardDrive className="h-5 w-5 text-orange-600" />
             <span className="text-sm font-medium text-gray-900">Clear Cache</span>
@@ -818,10 +899,17 @@ const RestaurantSettings = () => {
         setSidebarMinimized={setSidebarMinimized}
       />
       <div className={`${mainMargin} transition-all duration-300 min-h-screen bg-gray-50`}>
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed top-6 right-6 z-50 flex items-center bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg animate-fade-in">
+            <CheckCircle className="h-5 w-5 mr-2" />
+            <span>{toastMsg}</span>
+          </div>
+        )}
         {/* Header */}
         <div className="p-6">
           <div className="mb-8">
-            <div className="flex items-center space-x-4 mb-4">
+            <div className="flex items-center space-x-4 mb-4 w-full">
               <button
                 onClick={() => {
                   console.log('Opening sidebar');
@@ -831,7 +919,9 @@ const RestaurantSettings = () => {
               >
                 <Menu size={24} />
               </button>
-              <div className="flex items-center space-x-4">
+
+              {/* Title block takes available space */}
+              <div className="flex items-center space-x-4 flex-1">
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-xl">
                   <Settings className="h-8 w-8 text-white" />
                 </div>
@@ -839,6 +929,28 @@ const RestaurantSettings = () => {
                   <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
                   <p className="text-gray-600">Manage your restaurant system preferences</p>
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      setRefreshing(true);
+                      await Promise.all([fetchUsers(), fetchSettings()]);
+                      toast.success('Refreshed data');
+                    } catch (err) {
+                      const msg = err.response?.data?.error || err.message || 'Failed to refresh';
+                      toast.error(msg);
+                    } finally {
+                      setRefreshing(false);
+                    }
+                  }}
+                  disabled={refreshing}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm ${refreshing ? 'opacity-60 cursor-wait' : ''}`}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </button>
               </div>
             </div>
           </div>

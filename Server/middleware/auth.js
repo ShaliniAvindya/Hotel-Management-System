@@ -36,7 +36,7 @@ const auth = (req, res, next) => {
 
 const adminAuth = (req, res, next) => {
   auth(req, res, () => {
-    if (!req.user.isAdmin) {
+    if (!req.user.isAdmin && req.user.role !== 'admin') {
       return res.status(403).json({
         message: 'Access denied. Admin privileges required.',
         details: 'User is not an admin',

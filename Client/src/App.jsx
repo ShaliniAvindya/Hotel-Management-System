@@ -3,20 +3,19 @@ import { Routes, Route, Outlet } from 'react-router-dom';
 import ScrollRestoration from './components/ScrollRestoration';
 import { AuthProvider } from './components/context/AuthContext';
 import HomeScreen from './screens/HomeScreen';
+import Login from './screens/Login';
+import Register from './screens/Register';
 import BillingInvoice from './screens/BillingInvoice';
-// import CustomerFeedback from './screens/CustomerFeedback';
-// import InventoryStockManage from './screens/InventoryStockManage';
-// import KitchenDisplay from './screens/KitchenDisplay';
-// import LoyaltyPrograms from './screens/LoyaltyPrograms';
-// import MenuManagement from './screens/MenuManagement';
-// import POSsystem from './screens/POSsystem';
-import RestaurantAnalytics from './screens/RestaurantAnalytics';
 import Settings from './screens/Settings';
-// import StaffManagement from './screens/StaffManagement';
+import ProtectedRoute from './components/ProtectedRoute';
 import ReservationManagement from './screens/ReservationManagement/ReservationManagement';
-// import WalkinManagement from './screens/WalkinManagement';
 import RoomManagement from './screens/RoomManaagemnt/RoomManagement';
 import RestaurantBarManagement from './screens/Restaurant&BarManagement/RestaurantBarManagement';
+import RestaurantAnalytics from './screens/RestaurantAnalytics';
+import { useContext } from 'react';
+import { AuthContext } from './components/context/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 const Layout = () => {
   return (
@@ -27,29 +26,28 @@ const Layout = () => {
 };
 
 const App = () => {
+  const Redirector = () => {
+    const { user, loading } = useContext(AuthContext);
+    if (loading) return null; 
+    return user ? <Navigate to="/" replace /> : <Navigate to="/login" replace />;
+  };
   return (
     <AuthProvider>
       <div className="App">
+        <Toaster position="top-right" />
         <ScrollRestoration />
         <Routes>
           <Route element={<Layout />}>
             {/* Public Routes */}
-            <Route path="/" element={<HomeScreen />} />
-            <Route path="/billing-invoice" element={<BillingInvoice />} />
-            {/* <Route path="/customer-feedback" element={<CustomerFeedback />} />
-            <Route path="/inventory-stock-manage" element={<InventoryStockManage />} />
-            <Route path="/kitchen-display" element={<KitchenDisplay />} />
-            <Route path="/loyalty-programs" element={<LoyaltyPrograms />} />
-            <Route path="/menu-management" element={<MenuManagement />} />
-            <Route path="/pos-system" element={<POSsystem />} /> */}
-            <Route path="/analytics-reports" element={<RestaurantAnalytics />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* <Route path="/staff-management" element={<StaffManagement />} /> */}
-            <Route path="/reservation-management" element={<ReservationManagement />} />
-            {/* <Route path="/walkin-management" element={<WalkinManagement />} /> */}
-            {/* Room Management Route */}
-            <Route path="/room-management" element={<RoomManagement />} />
-            <Route path="/restaurant-bar-management" element={<RestaurantBarManagement />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
+            <Route path="/billing-invoice" element={<ProtectedRoute><BillingInvoice /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/reservation-management" element={<ProtectedRoute><ReservationManagement /></ProtectedRoute>} />
+            <Route path="/room-management" element={<ProtectedRoute><RoomManagement /></ProtectedRoute>} />
+            <Route path="/restaurant-bar-management" element={<ProtectedRoute><RestaurantBarManagement /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><RestaurantAnalytics /></ProtectedRoute>} />
           </Route>
         </Routes>
       </div>

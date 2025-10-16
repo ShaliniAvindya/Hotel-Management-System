@@ -39,6 +39,8 @@ import {
   Award,
   TrendingUp,
 } from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL } from '../../apiconfig';
 
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -88,150 +90,17 @@ const MenuManagement = () => {
     { id: 'late_night', name: 'Late Night' },
   ];
 
-  // Sample menu items
   useEffect(() => {
-    const sampleItems = [
-      {
-        id: 'MI001',
-        name: 'Grilled Chicken Caesar Salad',
-        description: 'Fresh romaine lettuce with grilled chicken, parmesan cheese, croutons, and caesar dressing.',
-        category: 'salads',
-        price: 14.99,
-        portionSize: '300g',
-        availability: 'all_day',
-        preparationTime: 15,
-        dietaryTags: ['protein_rich', 'gluten_free'],
-        ingredients: ['Chicken breast', 'Romaine lettuce', 'Parmesan cheese', 'Croutons', 'Caesar dressing'],
-        allergens: ['Dairy', 'Gluten'],
-        calories: 420,
-        isActive: true,
-        isSpecial: false,
-        popularity: 4.5,
-        images: ['https://images.unsplash.com/photo-1546793665-c74683f339c1?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z',
-        chef: 'Maria Rodriguez',
-        cost: 6.50,
-        margin: 56.7,
-      },
-      {
-        id: 'MI002',
-        name: 'Margherita Pizza',
-        description: 'Classic Italian pizza with fresh mozzarella, tomato sauce, and fresh basil leaves.',
-        category: 'mains',
-        price: 16.99,
-        portionSize: '12 inch',
-        availability: 'all_day',
-        preparationTime: 25,
-        dietaryTags: ['vegetarian'],
-        ingredients: ['Pizza dough', 'Mozzarella cheese', 'Tomato sauce', 'Fresh basil', 'Olive oil'],
-        allergens: ['Dairy', 'Gluten'],
-        calories: 650,
-        isActive: true,
-        isSpecial: true,
-        popularity: 4.8,
-        images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-10T14:00:00Z',
-        updatedAt: '2024-01-20T09:00:00Z',
-        chef: 'Giovanni Rossi',
-        cost: 7.25,
-        margin: 57.3,
-      },
-      {
-        id: 'MI003',
-        name: 'Chocolate Lava Cake',
-        description: 'Warm chocolate cake with molten center, served with vanilla ice cream.',
-        category: 'desserts',
-        price: 8.99,
-        portionSize: '150g',
-        availability: 'dinner',
-        preparationTime: 20,
-        dietaryTags: ['vegetarian'],
-        ingredients: ['Dark chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour', 'Vanilla ice cream'],
-        allergens: ['Dairy', 'Eggs', 'Gluten'],
-        calories: 480,
-        isActive: true,
-        isSpecial: true,
-        popularity: 4.9,
-        images: ['https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-05T16:00:00Z',
-        updatedAt: '2024-01-18T11:00:00Z',
-        chef: 'Claire Dubois',
-        cost: 3.20,
-        margin: 64.4,
-      },
-      {
-        id: 'MI004',
-        name: 'Fresh Orange Juice',
-        description: 'Freshly squeezed orange juice, served chilled.',
-        category: 'beverages',
-        price: 4.99,
-        portionSize: '250ml',
-        availability: 'breakfast',
-        preparationTime: 5,
-        dietaryTags: ['vegan', 'gluten_free', 'dairy_free'],
-        ingredients: ['Fresh oranges'],
-        allergens: [],
-        calories: 110,
-        isActive: true,
-        isSpecial: false,
-        popularity: 4.2,
-        images: ['https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-12T08:00:00Z',
-        updatedAt: '2024-01-12T08:00:00Z',
-        chef: 'Kitchen Staff',
-        cost: 1.50,
-        margin: 69.9,
-      },
-      {
-        id: 'MI005',
-        name: 'Spicy Thai Curry',
-        description: 'Authentic Thai red curry with vegetables and jasmine rice.',
-        category: 'mains',
-        price: 18.99,
-        portionSize: '350g',
-        availability: 'lunch',
-        preparationTime: 30,
-        dietaryTags: ['vegan', 'spicy', 'gluten_free'],
-        ingredients: ['Red curry paste', 'Coconut milk', 'Mixed vegetables', 'Jasmine rice', 'Thai basil'],
-        allergens: [],
-        calories: 520,
-        isActive: false,
-        isSpecial: false,
-        popularity: 4.3,
-        images: ['https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-08T12:00:00Z',
-        updatedAt: '2024-01-22T15:00:00Z',
-        chef: 'Somchai Patel',
-        cost: 8.75,
-        margin: 53.9,
-      },
-      {
-        id: 'MI006',
-        name: 'House Special Combo',
-        description: 'Grilled salmon, roasted vegetables, and garlic mashed potatoes.',
-        category: 'combos',
-        price: 24.99,
-        portionSize: '450g',
-        availability: 'dinner',
-        preparationTime: 35,
-        dietaryTags: ['gluten_free', 'protein_rich'],
-        ingredients: ['Atlantic salmon', 'Mixed vegetables', 'Potatoes', 'Garlic', 'Herbs'],
-        allergens: ['Fish'],
-        calories: 680,
-        isActive: true,
-        isSpecial: true,
-        popularity: 4.7,
-        images: ['https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&h=300&fit=crop'],
-        createdAt: '2024-01-01T18:00:00Z',
-        updatedAt: '2024-01-25T10:00:00Z',
-        chef: 'James Thompson',
-        cost: 12.50,
-        margin: 50.0,
-      },
-    ];
-    setMenuItems(sampleItems);
-    setFilteredItems(sampleItems);
+    const fetchMenuItems = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/menu`);
+        setMenuItems(response.data);
+        setFilteredItems(response.data);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      }
+    };
+    fetchMenuItems();
   }, []);
 
   // Filter items
@@ -301,77 +170,88 @@ const MenuManagement = () => {
     }
   };
 
-  const handleAddItem = (itemData) => {
-    const newItem = {
-      ...itemData,
-      id: `MI${String(menuItems.length + 1).padStart(3, '0')}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      popularity: 0,
-      margin: itemData.price > 0 ? ((itemData.price - itemData.cost) / itemData.price * 100) : 0,
-    };
-    setMenuItems([...menuItems, newItem]);
-    setShowItemForm(false);
+  const handleAddItem = async (itemData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/menu`, {
+        ...itemData,
+        id: `MI${String(menuItems.length + 1).padStart(3, '0')}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        popularity: 0,
+        margin: itemData.price > 0 ? ((itemData.price - itemData.cost) / itemData.price * 100).toFixed(1) : 0,
+      });
+      setMenuItems([...menuItems, response.data]);
+      setShowItemForm(false);
+    } catch (error) {
+      console.error('Error adding menu item:', error);
+    }
   };
 
-  const handleEditItem = (itemData) => {
-    const updatedItem = {
-      ...itemData,
-      updatedAt: new Date().toISOString(),
-      margin: itemData.price > 0 ? ((itemData.price - itemData.cost) / itemData.price * 100) : 0,
-    };
-    setMenuItems(menuItems.map((item) => (item.id === itemData.id ? updatedItem : item)));
-    setEditingItem(null);
-    setShowItemForm(false);
+  const handleEditItem = async (itemData) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/menu/${itemData._id}`, {
+        ...itemData,
+        updatedAt: new Date().toISOString(),
+        margin: itemData.price > 0 ? ((itemData.price - itemData.cost) / itemData.price * 100).toFixed(1) : 0,
+      });
+      setMenuItems(menuItems.map((item) => (item._id === itemData._id ? response.data : item)));
+      setEditingItem(null);
+      setShowItemForm(false);
+    } catch (error) {
+      console.error('Error editing menu item:', error);
+    }
   };
 
   const handleDeleteItem = (itemId) => {
     setShowConfirmation({
       title: 'Delete Menu Item',
       message: `Are you sure you want to delete this menu item? This action cannot be undone.`,
-      onConfirm: () => {
-        setMenuItems(menuItems.filter((item) => item.id !== itemId));
-        setShowConfirmation(null);
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/menu/${itemId}`);
+          setMenuItems(menuItems.filter((item) => item._id !== itemId));
+          setShowConfirmation(null);
+        } catch (error) {
+          console.error('Error deleting menu item:', error);
+        }
       },
       onCancel: () => setShowConfirmation(null),
     });
   };
 
   const handleToggleActive = (itemId) => {
-    const item = menuItems.find((item) => item.id === itemId);
+    const item = menuItems.find((item) => item._id === itemId);
     setShowConfirmation({
       title: item.isActive ? 'Deactivate Menu Item' : 'Activate Menu Item',
       message: `Are you sure you want to ${item.isActive ? 'deactivate' : 'activate'} "${item.name}"?`,
-      onConfirm: () => {
-        setMenuItems(
-          menuItems.map((item) =>
-            item.id === itemId
-              ? { ...item, isActive: !item.isActive, updatedAt: new Date().toISOString() }
-              : item
-          )
-        );
-        setShowConfirmation(null);
+      onConfirm: async () => {
+        try {
+          const response = await axios.put(`${API_BASE_URL}/menu/${itemId}`, { isActive: !item.isActive, updatedAt: new Date().toISOString() });
+          setMenuItems(menuItems.map((it) => (it._id === itemId ? response.data : it)));
+          setShowConfirmation(null);
+        } catch (error) {
+          console.error('Error toggling active status:', error);
+        }
       },
       onCancel: () => setShowConfirmation(null),
     });
   };
 
   const handleToggleSpecial = (itemId) => {
-    const item = menuItems.find((item) => item.id === itemId);
+    const item = menuItems.find((item) => item._id === itemId);
     setShowConfirmation({
       title: item.isSpecial ? 'Remove Special Status' : 'Mark as Special',
       message: `Are you sure you want to ${
         item.isSpecial ? 'remove the special status from' : 'mark as special'
       } "${item.name}"?`,
-      onConfirm: () => {
-        setMenuItems(
-          menuItems.map((item) =>
-            item.id === itemId
-              ? { ...item, isSpecial: !item.isSpecial, updatedAt: new Date().toISOString() }
-              : item
-          )
-        );
-        setShowConfirmation(null);
+      onConfirm: async () => {
+        try {
+          const response = await axios.put(`${API_BASE_URL}/menu/${itemId}`, { isSpecial: !item.isSpecial, updatedAt: new Date().toISOString() });
+          setMenuItems(menuItems.map((it) => (it._id === itemId ? response.data : it)));
+          setShowConfirmation(null);
+        } catch (error) {
+          console.error('Error toggling special status:', error);
+        }
       },
       onCancel: () => setShowConfirmation(null),
     });
@@ -473,17 +353,23 @@ const MenuManagement = () => {
       setFormData({ ...formData, allergens: updated });
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
       const files = Array.from(e.target.files);
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const newUrl = event.target.result;
+      for (const file of files) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('image', file);
+        try {
+          const response = await axios.post(
+            'https://api.imgbb.com/1/upload?key=4e08e03047ee0d48610586ad270e2b39',
+            formDataUpload
+          );
+          const newUrl = response.data.data.url;
           setImageUrls((prev) => [...prev, newUrl]);
           setFormData((prev) => ({ ...prev, images: [...prev.images, newUrl] }));
-        };
-        reader.readAsDataURL(file);
-      });
+        } catch (error) {
+          console.error('Error uploading image:', error);
+        }
+      }
     };
 
     const removeImage = (index) => {
@@ -964,7 +850,7 @@ const MenuManagement = () => {
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">Margin:</span>
-                        <span className="text-sm font-medium">{item.margin.toFixed(1)}%</span>
+                        <span className="text-sm font-medium">{item.margin}%</span>
                       </div>
                     </>
                   )}
@@ -1094,7 +980,7 @@ const MenuManagement = () => {
                 <span>Edit Item</span>
               </button>
               <button
-                onClick={() => onDelete(item.id)}
+                onClick={() => onDelete(item._id)}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2 transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
@@ -1151,7 +1037,7 @@ const MenuManagement = () => {
             <div className="text-right">
               <div className="text-lg font-bold text-gray-900">${item.price.toFixed(2)}</div>
               {item.cost > 0 && (
-                <div className="text-xs text-gray-500">{item.margin.toFixed(0)}% margin</div>
+                <div className="text-xs text-gray-500">{item.margin}% margin</div>
               )}
             </div>
           </div>
@@ -1190,7 +1076,7 @@ const MenuManagement = () => {
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div className="flex items-center space-x-1">
               <button
-                onClick={() => onToggleActive(item.id)}
+                onClick={() => onToggleActive(item._id)}
                 className={`p-1 rounded ${
                   item.isActive ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
                 } transition-colors`}
@@ -1199,7 +1085,7 @@ const MenuManagement = () => {
                 <CheckCircle className="h-4 w-4" />
               </button>
               <button
-                onClick={() => onToggleSpecial(item.id)}
+                onClick={() => onToggleSpecial(item._id)}
                 className={`p-1 rounded ${
                   item.isSpecial ? 'text-yellow-600 hover:bg-yellow-50' : 'text-gray-400 hover:bg-gray-50'
                 } transition-colors`}
@@ -1224,7 +1110,7 @@ const MenuManagement = () => {
                 <Edit className="h-4 w-4" />
               </button>
               <button
-                onClick={() => onDelete(item.id)}
+                onClick={() => onDelete(item._id)}
                 className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
                 title="Delete Item"
               >
@@ -1322,7 +1208,7 @@ const MenuManagement = () => {
         <td className="py-4 px-4">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => onToggleActive(item.id)}
+              onClick={() => onToggleActive(item._id)}
               className={`p-1 rounded ${
                 item.isActive ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
               } transition-colors`}
@@ -1345,7 +1231,7 @@ const MenuManagement = () => {
               <Edit className="h-4 w-4" />
             </button>
             <button
-              onClick={() => onDelete(item.id)}
+              onClick={() => onDelete(item._id)}
               className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
               title="Delete"
             >
@@ -1482,7 +1368,7 @@ const MenuManagement = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredItems.map((item) => (
               <MenuItemCard
-                key={item.id}
+                key={item._id}
                 item={item}
                 onView={(item) => {
                   setSelectedItem(item);
@@ -1516,7 +1402,7 @@ const MenuManagement = () => {
               <tbody className="divide-y divide-gray-200">
                 {filteredItems.map((item) => (
                   <MenuItemListItem
-                    key={item.id}
+                    key={item._id}
                     item={item}
                     onView={(item) => {
                       setSelectedItem(item);

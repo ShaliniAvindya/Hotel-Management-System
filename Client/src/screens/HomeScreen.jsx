@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import {
@@ -38,9 +38,20 @@ import {
   ChevronRight,
   Zap,
 } from 'lucide-react';
+import { Chart, registerables } from 'chart.js/auto';
+Chart.register(...registerables);
+import { AuthContext } from '../components/context/AuthContext';
+import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../apiconfig';
 
 const Homescreen = () => {
   const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ bookings: [], rooms: [], menu: [] });
+  const [suggestionsVisible, setSuggestionsVisible] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState([
     { id: 1, type: 'check-in', message: 'Room 201 ready for early check-in', time: '10 min ago', path: '/reservation-management' },
@@ -49,39 +60,146 @@ const Homescreen = () => {
   ]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
+  const [roomsData, setRoomsData] = useState([]);
+  const [bookingsData, setBookingsData] = useState([]);
+  const [ordersData, setOrdersData] = useState([]);
+  const [paymentsData, setPaymentsData] = useState([]);
+  const [maintenanceData, setMaintenanceData] = useState([]);
+  const [staffData, setStaffData] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [dataError, setDataError] = useState(null);
 
-  const dashboardStats = {
-    rooms: {
-      total: 50,
-      occupied: 32,
-      available: 15,
-      maintenance: 2,
-      cleaning: 1
-    },
-    bookings: {
-      today: 8,
-      tomorrow: 12,
-      thisWeek: 45,
-      checkingIn: 5,
-      checkingOut: 7
-    },
-    restaurant: {
-      activeOrders: 12,
-      pendingOrders: 4,
-      todayRevenue: 2850,
-      tablesOccupied: 8
-    },
-    revenue: {
-      today: 15600,
-      thisMonth: 245000,
-      occupancyRate: 64
-    }
-  };
+  const bookingsChartRef = useRef(null);
+  const revenueChartRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const base = API_BASE_URL;
+    setLoadingData(true);
+    setDataError(null);
+
+    Promise.all([
+      fetch(`${base}/rooms`).then((r) => r.json()),
+      fetch(`${base}/bookings`).then((r) => r.json()),
+      fetch(`${base}/orders`).then((r) => r.json()),
+      fetch(`${base}/billing/payments`).then((r) => r.json()).catch(() => []),
+      fetch(`${base}/roomMaintenance`).then((r) => r.json()).catch(() => []),
+      fetch(`${base}/staffMembers`).then((r) => r.json()).catch(() => [])
+    ])
+      .then(([rooms, bookings, orders, payments, maintenance, staff]) => {
+        setRoomsData(Array.isArray(rooms) ? rooms : []);
+        setBookingsData(Array.isArray(bookings) ? bookings : []);
+        setOrdersData(Array.isArray(orders) ? orders : []);
+        setPaymentsData(Array.isArray(payments) ? payments : []);
+        setMaintenanceData(Array.isArray(maintenance) ? maintenance : []);
+        setStaffData(Array.isArray(staff) ? staff : []);
+      })
+      .catch((err) => setDataError(err.message || 'Failed to load data'))
+      .finally(() => setLoadingData(false));
+  }, []);
+
+  // helper: safe number coercion
+  const safeNumber = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const totalRooms = roomsData.length;
+  const occupiedRooms = roomsData.filter((r) => r.isOccupied || r.status === 'occupied').length;
+  const availableRooms = totalRooms - occupiedRooms;
+  const todaysDateISO = new Date().toISOString().slice(0, 10);
+  const todaysBookings = bookingsData.filter((b) => b.checkInDate?.slice?.(0, 10) === todaysDateISO).length;
+  const activeOrders = ordersData.filter((o) => !o.completed && o.status !== 'cancelled').length;
+  const pendingMaintenance = maintenanceData.filter((m) => !m.resolved).length;
+  const staffCount = staffData.length;
+
+  const revenueFromPayments = paymentsData.reduce((s, p) => s + safeNumber(p.amount || p.total || p.value), 0);
+  const revenueFromOrders = ordersData.reduce((s, o) => s + safeNumber(o.total || o.amount || o.grandTotal), 0);
+  const revenueCollected = revenueFromPayments + revenueFromOrders;
+
+  // bookings time series (last 30 days)
+  const recentDays = 30;
+  const bookingsByDayMap = {};
+  for (let i = recentDays - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    bookingsByDayMap[key] = 0;
+  }
+  bookingsData.forEach((b) => {
+    const k = b.createdAt?.slice?.(0, 10) || b.checkInDate?.slice?.(0, 10);
+    if (k && bookingsByDayMap.hasOwnProperty(k)) bookingsByDayMap[k] += 1;
+  });
+  const bookingsLabels = Object.keys(bookingsByDayMap).map((k) => k.slice(5)); // MM-DD
+  const bookingsValues = Object.values(bookingsByDayMap);
+
+  const revenueSplit = [
+    { label: 'Payments', value: revenueFromPayments },
+    { label: 'Orders', value: revenueFromOrders }
+  ];
+
+  const resolveRoomLabel = (booking) => {
+    const rid = booking.roomId || booking.room || booking.roomNumber || booking.room_id || booking.roomId?.toString?.();
+    if (!rid) return booking.roomNumber || booking.room || '—';
+    const room = roomsData.find(r => r.id === rid || r._id === rid || r.roomNumber === rid || String(r.id) === String(rid));
+    if (room) {
+      if (room.roomNumber && room.name) return `${room.roomNumber} — ${room.name}`;
+      if (room.roomNumber) return room.roomNumber;
+      if (room.name) return room.name;
+    }
+    return booking.roomNumber || booking.room || rid || '—';
+  };
+
+  // draw charts when data changes
+  useEffect(() => {
+    const bCtx = bookingsChartRef.current?.getContext?.('2d');
+    let bookingsChart;
+    if (bCtx) {
+      bookingsChart = new Chart(bCtx, {
+        type: 'line',
+        data: {
+          labels: bookingsLabels,
+          datasets: [{
+            label: 'Bookings',
+            data: bookingsValues,
+            borderColor: '#2563EB',
+            backgroundColor: 'rgba(37,99,235,0.08)',
+            tension: 0.25,
+            pointRadius: 2,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { ticks: { maxRotation: 0, maxTicksLimit: 8 } }, y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const rCtx = revenueChartRef.current?.getContext?.('2d');
+    let revenueChart;
+    if (rCtx) {
+      revenueChart = new Chart(rCtx, {
+        type: 'doughnut',
+        data: {
+          labels: revenueSplit.map((r) => r.label),
+          datasets: [{ data: revenueSplit.map((r) => r.value), backgroundColor: ['#10B981', '#F59E0B'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    return () => {
+      bookingsChart?.destroy();
+      revenueChart?.destroy();
+    };
+  }, [bookingsLabels.join(','), bookingsValues.join(','), revenueFromPayments, revenueFromOrders]);
 
   const QuickActionCard = ({ icon: Icon, title, description, path, color = "blue" }) => (
     <button
@@ -102,18 +220,15 @@ const Homescreen = () => {
     </button>
   );
 
-  const StatCard = ({ icon: Icon, title, value, subtitle, color = "blue", trend }) => (
-    <div className="group bg-white p-6 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+  const StatCard = ({ title, value, subtitle, color = "blue", trend }) => (
+    <div className={`group p-6 rounded-2xl relative overflow-hidden bg-${color}-50 border border-${color}-200 hover:shadow-md`}>
       <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-${color}-100 to-transparent opacity-30 rounded-bl-full`}></div>
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900 mb-1 group-hover:scale-105 transition-transform duration-300">{value}</p>
+            <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
             {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-          </div>
-          <div className={`p-4 bg-gradient-to-br from-${color}-100 to-${color}-50 rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300`}>
-            <Icon className={`h-7 w-7 text-${color}-600`} />
           </div>
         </div>
         {trend && (
@@ -165,8 +280,8 @@ const Homescreen = () => {
         onClick={() => navigate(notification.path)}
         className="group flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-xl w-full text-left transition-all duration-200 hover:-translate-y-0.5"
       >
-        <div className={`p-2 bg-${color}-100 rounded-lg group-hover:scale-110 transition-transform duration-200`}>
-          <Icon className={`h-4 w-4 text-${color}-600`} />
+        <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform duration-200`}>
+          <Icon className={`h-4 w-4 `} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 mb-1 group-hover:text-gray-800">{notification.message}</p>
@@ -203,7 +318,7 @@ const Homescreen = () => {
                   <Menu size={24} />
                 </button>
                 <div className="flex items-center space-x-4">
-                  <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
+                  <div className="bg-blue-600 p-4 rounded-2xl shadow-lg">
                     <ChefHat className="h-8 w-8 text-white" />
                   </div>
                   <div>
@@ -214,36 +329,86 @@ const Homescreen = () => {
               </div>
               
               <div className="flex items-center space-x-6">
-                <div className="relative hidden md:block">
+                <div className="relative hidden md:block" ref={searchRef}>
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search reservations, tables, menu..."
                     className="pl-12 pr-6 py-3 w-96 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200 text-sm"
-                    onChange={(e) => console.log('Search:', e.target.value)}
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setSuggestionsVisible(!!e.target.value); }}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        await runSearch(searchQuery);
+                      }
+                    }}
                   />
+
+                  {suggestionsVisible && (
+                    <div className="absolute left-0 mt-2 w-96 bg-white border border-gray-200 rounded-xl shadow-lg z-40">
+                      <div className="p-3 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-700">Search results for "{searchQuery}"</div>
+                          <div className="text-xs text-gray-400">{searchLoading ? 'Searching...' : ''}</div>
+                        </div>
+                      </div>
+                      {/* category tabs that mirror sidebar sections */}
+                      <div className="px-3 py-2 border-b border-gray-100">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => { navigate(`/reservation-management?q=${encodeURIComponent(searchQuery)}`); setSuggestionsVisible(false); }}
+                            className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          >
+                            Reservations
+                          </button>
+                          <button
+                            onClick={() => { navigate(`/room-management?q=${encodeURIComponent(searchQuery)}`); setSuggestionsVisible(false); }}
+                            className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          >
+                            Rooms / Tables
+                          </button>
+                          <button
+                            onClick={() => { navigate(`/restaurant-bar-management?q=${encodeURIComponent(searchQuery)}`); setSuggestionsVisible(false); }}
+                            className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          >
+                            Menu
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 border-t border-gray-100 flex items-center justify-between">
+                        <button onClick={() => { runSearch(searchQuery); }} className="text-sm text-blue-600"></button>
+                        <button onClick={() => { setSuggestionsVisible(false); setSearchQuery(''); }} className="text-sm text-gray-500">Close</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <button className="relative p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-2xl transition-all duration-200">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {notifications.length}
-                    </span>
-                  </button>
-                  <button className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-2xl transition-all duration-200">
+                  <button onClick={() => { navigate('/settings'); setSuggestionsVisible(false); }} className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-2xl transition-all duration-200">
                     <Settings className="h-5 w-5" />
                   </button>
                 </div>
                 
                 <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
                   <div className="text-right hidden md:block">
-                    <p className="text-sm font-semibold text-gray-900">Alex Chef</p>
-                    <p className="text-xs text-gray-600">Restaurant Manager</p>
+                    <p className="text-sm font-semibold text-gray-900">{user?.name || 'Guest'}</p>
+                    <p className="text-xs text-gray-600">{user?.role ? (user.role === 'admin' ? 'Administrator' : user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Guest'}</p>
                   </div>
-                  <div className="h-10 w-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm font-bold">AC</span>
+                  <div className="h-10 w-10 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-white text-sm font-bold">{(user?.name || 'G').split(' ').map(n => n[0]).slice(0,2).join('')}</span>
                   </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      toast('Logged out');
+                      navigate('/login');
+                    }}
+                    className="ml-4 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md hover:bg-red-100"
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
             </div>
@@ -253,329 +418,160 @@ const Homescreen = () => {
         <div className="p-8 space-y-8">
           {/* Enhanced Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              icon={Bed}
-              title="Room Occupancy"
-              value={`${dashboardStats.rooms.occupied}/${dashboardStats.rooms.total}`}
-              subtitle={`${dashboardStats.revenue.occupancyRate}% occupied`}
-              color="blue"
-              trend="+5% from last week"
-            />
-            <StatCard
-              icon={CalendarIcon}
-              title="Today's Bookings"
-              value={dashboardStats.bookings.today}
-              subtitle={`${dashboardStats.bookings.checkingIn} check-ins, ${dashboardStats.bookings.checkingOut} check-outs`}
-              color="green"
-            />
-            <StatCard
-              icon={DollarSign}
-              title="Today's Revenue"
-              value={`$${dashboardStats.revenue.today.toLocaleString()}`}
-              subtitle="Rooms + F&B"
-              color="emerald"
-              trend="+12% from yesterday"
-            />
-            <StatCard
-              icon={Utensils}
-              title="Restaurant Orders"
-              value={dashboardStats.restaurant.activeOrders}
-              subtitle={`${dashboardStats.restaurant.pendingOrders} pending`}
-              color="orange"
-            />
+            <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms/totalRooms)*100) : 0}% occupied`} color="blue" />
+            <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${bookingsData.filter(b => b.checkInDate)?.length || 0} total bookings`} color="green" />
+            <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} color="red" />
+            <StatCard title="Active Orders" value={activeOrders} subtitle={`${ordersData.length} total orders`} color="orange" />
           </div>
 
-          {/* Enhanced Dashboard Sections */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Room Status Overview */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-xl">
-                    <Activity className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Room Status</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Room Status</h2>
                 </div>
-                <button 
-                  onClick={() => navigate('/room-management')}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
-                >
+                <button onClick={() => navigate('/room-management')} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200">
                   <Eye className="h-5 w-5" />
                 </button>
               </div>
-              <div className="space-y-4">
-                <RoomStatusIndicator status="occupied" count={dashboardStats.rooms.occupied} color="red" />
-                <RoomStatusIndicator status="available" count={dashboardStats.rooms.available} color="green" />
-                <RoomStatusIndicator status="cleaning" count={dashboardStats.rooms.cleaning} color="yellow" />
-                <RoomStatusIndicator status="maintenance" count={dashboardStats.rooms.maintenance} color="orange" />
+              <div className="space-y-3">
+                <RoomStatusIndicator status="occupied" count={occupiedRooms} color="red" />
+                <RoomStatusIndicator status="available" count={availableRooms} color="green" />
+                <RoomStatusIndicator status="cleaning" count={roomsData.filter(r => r.status === 'cleaning' || r.needsCleaning).length} color="yellow" />
+                <RoomStatusIndicator status="maintenance" count={roomsData.filter(r => r.status === 'maintenance' || r.needsMaintenance).length} color="orange" />
               </div>
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Ready for guests</span>
-                  <span className="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
-                    {dashboardStats.rooms.available} rooms
-                  </span>
-                </div>
+              <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600">
+                Ready for guests: <span className="font-semibold text-green-600">{availableRooms} rooms</span>
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="p-2 bg-orange-100 rounded-xl">
-                  <Zap className="h-5 w-5 text-orange-600" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">Quick Actions</h2>
-              </div>
-              <div className="space-y-4">
-                <QuickActionCard
-                  icon={Plus}
-                  title="New Booking"
-                  description="Create walk-in reservation"
-                  path="/reservation-management"
-                  color="blue"
-                />
-                <QuickActionCard
-                  icon={CheckCircle}
-                  title="Check-in Guest"
-                  description="Process guest arrival"
-                  path="/reservation-management"
-                  color="green"
-                />
-                <QuickActionCard
-                  icon={ShoppingCart}
-                  title="New Order"
-                  description="Restaurant/Room service"
-                  path="/restaurant-bar-management"
-                  color="orange"
-                />
-                <QuickActionCard
-                  icon={Wrench}
-                  title="Report Issue"
-                  description="Room maintenance request"
-                  path="/room-management"
-                  color="red"
-                />
-              </div>
-            </div>
-
-            {/* Enhanced Notifications */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-red-100 rounded-xl">
-                    <Bell className="h-5 w-5 text-red-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
-                </div>
-                <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-sm">
-                  {notifications.length} new
-                </span>
-              </div>
-              <div className="space-y-2">
-                {notifications.map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} />
-                ))}
-              </div>
-              <button className="mt-6 w-full text-center py-3 text-sm text-blue-600 hover:text-blue-800 font-semibold border border-blue-200 rounded-xl hover:bg-blue-50 transition-all duration-200">
-                View all notifications
-              </button>
-            </div>
-          </div>
-
-          {/* Enhanced Activity Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Today's Check-ins */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-xl">
-                    <Users className="h-5 w-5 text-green-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Today's Check-ins</h2>
-                </div>
-                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">
-                  {dashboardStats.bookings.checkingIn} pending
-                </span>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { name: 'John Smith', room: '201', time: '2:00 PM', status: 'confirmed' },
-                  { name: 'Sarah Johnson', room: '305', time: '3:30 PM', status: 'pending' },
-                  { name: 'Mike Davis', room: '102', time: '4:15 PM', status: 'confirmed' }
-                ].map((checkin, index) => (
-                  <div key={index} className="group flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all duration-200">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-200">
-                        <Users className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{checkin.name}</p>
-                        <p className="text-sm text-gray-600 flex items-center">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          Room {checkin.room} • {checkin.time}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`px-3 py-2 text-xs font-bold rounded-xl ${
-                      checkin.status === 'confirmed' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {checkin.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => navigate('/reservation-management')}
-                className="mt-6 w-full text-center py-3 text-sm text-blue-600 hover:text-blue-800 font-semibold border border-blue-200 rounded-xl hover:bg-blue-50 transition-all duration-200"
-              >
-                View All Check-ins
-              </button>
             </div>
 
             {/* Restaurant Activity */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-100 rounded-xl">
-                    <ChefHat className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Restaurant Activity</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Restaurant Activity</h2>
                 </div>
-                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">
-                  Live updates
-                </span>
+                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">Live</span>
               </div>
-              <div className="space-y-4">
-                <button
-                  onClick={() => navigate('/restaurant-bar-management')}
-                  className="group flex items-center justify-between w-full text-left p-4 bg-orange-50 rounded-2xl hover:bg-orange-100 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-4">
-                    <ChefHat className="h-6 w-6 text-orange-600 group-hover:scale-110 transition-transform duration-200" />
-                    <div>
-                      <p className="font-semibold text-gray-900">Kitchen Orders</p>
-                      <p className="text-sm text-gray-600">4 orders in queue</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-orange-200 text-orange-800 text-xs font-bold px-3 py-1 rounded-xl">Active</span>
-                    <ChevronRight className="h-4 w-4 text-orange-600" />
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/restaurant-bar-management')}
-                  className="group flex items-center justify-between w-full text-left p-4 bg-purple-50 rounded-2xl hover:bg-purple-100 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Wine className="h-6 w-6 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
-                    <div>
-                      <p className="font-semibold text-gray-900">Bar Service</p>
-                      <p className="text-sm text-gray-600">Table 5 - 2 cocktails</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-purple-200 text-purple-800 text-xs font-bold px-3 py-1 rounded-xl">Preparing</span>
-                    <ChevronRight className="h-4 w-4 text-purple-600" />
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/restaurant-bar-management')}
-                  className="group flex items-center justify-between w-full text-left p-4 bg-green-50 rounded-2xl hover:bg-green-100 transition-all duration-200"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Coffee className="h-6 w-6 text-green-600 group-hover:scale-110 transition-transform duration-200" />
-                    <div>
-                      <p className="font-semibold text-gray-900">Room Service</p>
-                      <p className="text-sm text-gray-600">Room 203 - Breakfast</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-green-200 text-green-800 text-xs font-bold px-3 py-1 rounded-xl">Ready</span>
-                    <ChevronRight className="h-4 w-4 text-green-600" />
-                  </div>
-                </button>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-center justify-between"><span>Active Orders</span><strong>{activeOrders}</strong></div>
+                <div className="flex items-center justify-between"><span>Pending Orders</span><strong>{ordersData.filter(o => o.status === 'pending').length}</strong></div>
+                <div className="flex items-center justify-between"><span>Tables Occupied</span><strong>{ordersData.filter(o => o.table).map(o=>o.table).length}</strong></div>
+                <div className="mt-3 text-sm text-gray-600">Today's F&B Revenue: <span className="font-semibold text-gray-900">${ordersData.reduce((s,o)=>s+safeNumber(o.total||o.amount),0).toLocaleString()}</span></div>
               </div>
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Today's F&B Revenue:</span>
-                  <span className="font-bold text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
-                    ${dashboardStats.restaurant.todayRevenue.toLocaleString()}
-                  </span>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button onClick={() => navigate('/restaurant-bar-management')} className="w-full text-left p-3 text-sm bg-orange-50 rounded-xl">Open Restaurant Panel</button>
+              </div>
+            </div>
+
+            {/* Notifications (maintenance / cleaning) */}
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <h2 className="text-lg font-bold text-gray-900">Notifications</h2>
+                </div>
+                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">{maintenanceData.length} maintenance</span>
+              </div>
+              <div className="space-y-2 max-h-56 overflow-auto">
+                {maintenanceData.length ? (
+                  maintenanceData.slice(0, 8).map((m) => (
+                    <div key={m._id || m.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-xl">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{m.title || m.issue || 'Maintenance request'}</p>
+                        <p className="text-xs text-gray-500">Room: {m.room || m.roomNumber || '—'} • {m.createdAt ? new Date(m.createdAt).toLocaleString() : (m.time || '—')}</p>
+                      </div>
+                      <div className="text-xs text-gray-500">{m.status || (m.resolved ? 'resolved' : 'pending')}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">No maintenance notifications</div>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button onClick={() => navigate('/room-management')} className="w-full text-left p-3 text-sm bg-blue-50 rounded-xl">View maintenance</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Bookings chart (wider) */}
+            <div className="xl:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">Bookings (last {recentDays} days)</h2>
+                <div className="text-sm text-gray-500">Updated just now</div>
+              </div>
+              <div style={{height: 260}}>
+                <canvas ref={bookingsChartRef} />
+              </div>
+            </div>
+
+            {/* Revenue split & quick summary */}
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Breakdown</h3>
+              <div style={{height: 220}}>
+                <canvas ref={revenueChartRef} />
+              </div>
+              <div className="mt-4 space-y-2 text-sm text-gray-700">
+                <div className="flex items-center justify-between">
+                  <span>Payments</span>
+                  <span className="font-semibold">${revenueFromPayments.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Orders</span>
+                  <span className="font-semibold">${revenueFromOrders.toLocaleString()}</span>
+                </div>
+                <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-sm">
+                  <span className="font-medium">Total</span>
+                  <span className="font-bold">${revenueCollected.toLocaleString()}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Enhanced Navigation Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <button
-              onClick={() => navigate('/room-management')}
-              className="group bg-white rounded-2xl border border-gray-100 p-8 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                  <Bed className="h-8 w-8 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Room Management</h3>
-                  <p className="text-sm text-gray-600">Manage rooms & bookings</p>
-                </div>
+          {/* Recent Bookings & Operational summary */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Recent Bookings</h3>
+                <button onClick={() => navigate('/reservation-management')} className="text-sm text-blue-600">View all</button>
               </div>
-            </button>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-gray-600">
+                    <tr>
+                      <th className="pb-2">Guest</th>
+                      <th className="pb-2">Room</th>
+                      <th className="pb-2">Check-in</th>
+                      <th className="pb-2">Check-out</th>
+                      <th className="pb-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookingsData.slice(0, 10).map((b) => (
+                      <tr key={b._id || b.id} className="border-t border-gray-100">
+                        <td className="py-3">{b.guestName || b.guest?.name || '—'}</td>
+                        <td className="py-3">{resolveRoomLabel(b)}</td>
+                        <td className="py-3">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '—'}</td>
+                        <td className="py-3">{b.checkOutDate ? new Date(b.checkOutDate).toLocaleDateString() : '—'}</td>
+                        <td className="py-3">{b.status || 'booked'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-            <button
-              onClick={() => navigate('/reservation-management')}
-              className="group bg-white rounded-2xl border border-gray-100 p-8 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="p-4 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                  <Calendar className="h-8 w-8 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Reservations</h3>
-                  <p className="text-sm text-gray-600">View booking calendar</p>
-                </div>
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Operational Summary</h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-center justify-between"><span>Occupied Rooms</span><strong>{occupiedRooms}</strong></div>
+                <div className="flex items-center justify-between"><span>Available Rooms</span><strong>{availableRooms}</strong></div>
+                <div className="flex items-center justify-between"><span>Pending Maintenance</span><strong>{pendingMaintenance}</strong></div>
+                <div className="flex items-center justify-between"><span>Staff on Roster</span><strong>{staffCount}</strong></div>
+                <div className="flex items-center justify-between"><span>Active Orders</span><strong>{activeOrders}</strong></div>
               </div>
-            </button>
-
-            <button
-              onClick={() => navigate('/restaurant-bar-management')}
-              className="group bg-white rounded-2xl border border-gray-100 p-8 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="p-4 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                  <Utensils className="h-8 w-8 text-orange-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Restaurant</h3>
-                  <p className="text-sm text-gray-600">Menu & order management</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => navigate('/billing-management')}
-              className="group bg-white rounded-2xl border border-gray-100 p-8 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex flex-col items-center text-center space-y-4">
-                <div className="p-4 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                  <DollarSign className="h-8 w-8 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Billing</h3>
-                  <p className="text-sm text-gray-600">Manage invoices & payments</p>
-                </div>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
       </div>

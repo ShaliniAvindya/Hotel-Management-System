@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../components/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home,
@@ -15,6 +16,7 @@ import {
   BarChart3,
   Settings,
   ChefHat,
+  LogOut,
   ChevronRight,
   ChevronLeft,
   X,
@@ -23,16 +25,20 @@ import {
 const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useContext(AuthContext);
 
-  const sidebarItems = [
+  let sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
     { id: 'room', label: 'Rooms', icon: Home, path: '/room-management' },
     { id: 'reservations', label: 'Reservations', icon: Calendar, path: '/reservation-management' },
     { id: 'restaurant-bar', label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar-management' },
     { id: 'billing', label: 'Billing & Invoice', icon: FileText, path: '/billing-invoice' },
-    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, path: '/analytics-reports' },
+    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, path: '/analytics' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
+  if (user) {
+    sidebarItems.push({ id: 'logout', label: 'Logout', icon: LogOut, path: '/logout' });
+  }
 
   const sidebarWidth = sidebarMinimized ? 'w-16' : 'w-64';
 
@@ -74,6 +80,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
             <button
               key={item.id}
               onClick={() => {
+                if (item.id === 'logout') {
+                  logout();
+                  navigate('/login');
+                  setSidebarOpen(false);
+                  setSidebarMinimized(true);
+                  return;
+                }
                 navigate(item.path);
                 setSidebarOpen(false);
                 setSidebarMinimized(true); // Minimize sidebar after selecting a tab
@@ -92,6 +105,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
             </button>
           );
         })}
+        {!user && (
+          <div className="mt-4 px-4">
+            <button onClick={() => navigate('/login')} className="w-full text-left text-gray-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-md mb-2">Login</button>
+            <button onClick={() => navigate('/register')} className="w-full text-left text-gray-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-md">Register</button>
+          </div>
+        )}
+        
       </nav>
     </div>
   );
