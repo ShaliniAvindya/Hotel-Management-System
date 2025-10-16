@@ -31,7 +31,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
-      'https://your-frontend-domain.com', // ✅ Add your deployed frontend URL here
+      'https://hotel-management-system-seven-woad.vercel.app', // ✅ Add your deployed frontend URL here
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
