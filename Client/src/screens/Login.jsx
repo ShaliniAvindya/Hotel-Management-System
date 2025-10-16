@@ -18,7 +18,7 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.post(`/auth/login`, { email, password });
+      const res = await api.post(`https://hotel-management-system-q26a.vercel.app/api/auth/login`, { email, password });
       const { token, user } = res.data;
       if (!token) {
         setError('No token returned from server');
