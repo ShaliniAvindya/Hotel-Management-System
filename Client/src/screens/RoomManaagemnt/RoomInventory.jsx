@@ -118,6 +118,7 @@ const RoomInventory = () => {
     }
   };
 
+  // Fetch rates
   const fetchRates = async () => {
     try {
       const response = await axios.get(RATES_API_BASE_URL);
