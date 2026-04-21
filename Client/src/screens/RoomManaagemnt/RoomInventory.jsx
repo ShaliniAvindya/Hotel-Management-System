@@ -885,10 +885,10 @@ const RoomInventory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Filters and Controls */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col items-start justify-between space-y-4">
+      <div className="px-4 sm:px-6 py-4">
+        <div className="hotel-panel p-4 flex flex-col items-start justify-between space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
@@ -897,7 +897,7 @@ const RoomInventory = () => {
                 placeholder="Search rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="hotel-input w-full pl-10 pr-4 py-2 text-sm sm:text-base"
               />
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto">
@@ -905,7 +905,7 @@ const RoomInventory = () => {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                className="hotel-input w-full sm:w-auto px-3 py-2 text-sm sm:text-base"
               >
                 <option value="all">All Types</option>
                 {roomTypes.map((type) => (
@@ -917,30 +917,30 @@ const RoomInventory = () => {
             </div>
             <button
               onClick={() => setShowRoomForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
+              className="hotel-button-primary px-4 py-2 flex items-center space-x-2 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="text-sm sm:text-base">Add New Room</span>
             </button>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
+                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-gray-600'}`}
               >
                 <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
+                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-gray-600'}`}
               >
                 <List className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
             <button
               onClick={fetchRooms}
-              className="p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              className="p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-[#fffaf0] rounded-lg"
             >
               <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
@@ -950,7 +950,7 @@ const RoomInventory = () => {
 
       {/* Room Display */}
       <div className="p-4 sm:p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="hotel-card p-4 sm:p-6">
           {filteredRooms.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <Home className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
@@ -962,7 +962,7 @@ const RoomInventory = () => {
               </p>
               <button
                 onClick={() => setShowRoomForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto w-full sm:w-auto"
+                className="hotel-button-primary px-4 py-2 flex items-center space-x-2 mx-auto w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="text-sm sm:text-base">Add New Room</span>

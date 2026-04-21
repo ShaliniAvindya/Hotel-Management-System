@@ -1,22 +1,23 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import ScrollRestoration from './components/ScrollRestoration';
 import { AuthProvider } from './components/context/AuthContext';
-import HomeScreen from './screens/HomeScreen';
-import Login from './screens/Login';
-import Register from './screens/Register';
-import BillingInvoice from './screens/BillingInvoice';
-import Settings from './screens/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
-import ReservationManagement from './screens/ReservationManagement/ReservationManagement';
-import RoomManagement from './screens/RoomManaagemnt/RoomManagement';
-import RestaurantBarManagement from './screens/Restaurant&BarManagement/RestaurantBarManagement';
-import RestaurantAnalytics from './screens/RestaurantAnalytics';
-import SpaAndWellnessManagement from './screens/SpaAndWellness/SpaAndWellnessManagement';
 import { useContext } from 'react';
 import { AuthContext } from './components/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+const HomeScreen = lazy(() => import('./screens/HomeScreen'));
+const Login = lazy(() => import('./screens/Login'));
+const Register = lazy(() => import('./screens/Register'));
+const BillingInvoice = lazy(() => import('./screens/BillingInvoice'));
+const Settings = lazy(() => import('./screens/Settings'));
+const ReservationManagement = lazy(() => import('./screens/ReservationManagement/ReservationManagement'));
+const RoomManagement = lazy(() => import('./screens/RoomManaagemnt/RoomManagement'));
+const RestaurantBarManagement = lazy(() => import('./screens/Restaurant&BarManagement/RestaurantBarManagement'));
+const RestaurantAnalytics = lazy(() => import('./screens/RestaurantAnalytics'));
+const SpaAndWellnessManagement = lazy(() => import('./screens/SpaAndWellness/SpaAndWellnessManagement'));
 
 const Layout = () => {
   return (
@@ -37,21 +38,33 @@ const App = () => {
       <div className="App">
         <Toaster position="top-right" />
         <ScrollRestoration />
-        <Routes>
-          <Route element={<Layout />}>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-            <Route path="/billing-invoice" element={<ProtectedRoute><BillingInvoice /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/reservation-management" element={<ProtectedRoute><ReservationManagement /></ProtectedRoute>} />
-            <Route path="/room-management" element={<ProtectedRoute><RoomManagement /></ProtectedRoute>} />
-            <Route path="/restaurant-bar-management" element={<ProtectedRoute><RestaurantBarManagement /></ProtectedRoute>} />
-            <Route path="/spa-wellness" element={<ProtectedRoute><SpaAndWellnessManagement /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><RestaurantAnalytics /></ProtectedRoute>} />
-          </Route>
-        </Routes>
+        <Suspense
+          fallback={
+            <div className="hotel-page grid min-h-screen place-items-center p-6">
+              <div className="hotel-card w-full max-w-sm p-6">
+                <div className="hotel-skeleton h-5 w-32 rounded mb-5"></div>
+                <div className="hotel-skeleton h-10 w-full rounded mb-3"></div>
+                <div className="hotel-skeleton h-3 w-48 rounded"></div>
+              </div>
+            </div>
+          }
+        >
+          <Routes>
+            <Route element={<Layout />}>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
+              <Route path="/billing-invoice" element={<ProtectedRoute><BillingInvoice /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/reservation-management" element={<ProtectedRoute><ReservationManagement /></ProtectedRoute>} />
+              <Route path="/room-management" element={<ProtectedRoute><RoomManagement /></ProtectedRoute>} />
+              <Route path="/restaurant-bar-management" element={<ProtectedRoute><RestaurantBarManagement /></ProtectedRoute>} />
+              <Route path="/spa-wellness" element={<ProtectedRoute><SpaAndWellnessManagement /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><RestaurantAnalytics /></ProtectedRoute>} />
+            </Route>
+          </Routes>
+        </Suspense>
       </div>
     </AuthProvider>
   );

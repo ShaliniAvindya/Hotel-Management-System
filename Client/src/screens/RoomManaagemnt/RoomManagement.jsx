@@ -118,21 +118,15 @@ const RoomManagement = () => {
   ];
 
   const getTabStyles = (tab, isActive) => {
-    const colorMap = {
-      blue: isActive ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300',
-      green: isActive ? 'border-green-500 text-green-600 bg-green-50' : 'border-transparent text-gray-500 hover:text-green-600 hover:border-green-300',
-      yellow: isActive ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-yellow-600 hover:border-yellow-300',
-      purple: isActive ? 'border-purple-500 text-purple-600 bg-purple-50' : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-300',
-      orange: isActive ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-transparent text-gray-500 hover:text-orange-600 hover:border-orange-300',
-      red: isActive ? 'border-red-500 text-red-600 bg-red-50' : 'border-transparent text-gray-500 hover:text-red-600 hover:border-red-300',
-    };
-    return colorMap[tab.color];
+    return isActive
+      ? 'bg-[#0f2742] text-white border-[#c9a24a] shadow-sm'
+      : 'bg-white text-slate-600 border-slate-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]';
   };
 
-  const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
+  const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="hotel-page flex">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -141,33 +135,33 @@ const RoomManagement = () => {
       />
 
       <div className={`flex-1 ${mainMargin} transition-all duration-300`}>
-               {/* Header with Tabs */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
+        <div className="bg-white/88 backdrop-blur-xl shadow-sm border-b border-slate-200 sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900"
+                  className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-slate-100"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
+                <div className="bg-[#0f2742] p-3 rounded-lg shadow-lg">
                   <Home className="h-8 w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Room Management</h1>
-                  <p className="text-gray-600">Comprehensive room management dashboard</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#9a7624] font-semibold">Rooms Division</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#172033]">Room Management</h1>
+                  <p className="text-gray-600">Inventory, rates, housekeeping status and maintenance control.</p>
                 </div>
               </div>
+              <div className="grid grid-cols-2 sm:flex gap-2 text-sm">
+                <button onClick={() => setActiveTab('inventory')} className="hotel-button-primary px-4 py-2">Manage Rooms</button>
+                <button onClick={() => setActiveTab('status')} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-[#fffaf0] text-slate-700">Room Status</button>
+              </div>
             </div>
-            </div>
-        </div>
-
-        {/* Enhanced Tabs */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-5">
-          <div className="px-6">
-            <nav className="flex space-x-1" aria-label="Tabs">
+          </div>
+          <div className="px-4 sm:px-6 pb-4 overflow-x-auto">
+            <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -176,11 +170,10 @@ const RoomManagement = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`${getTabStyles(tab, isActive)} 
-                      flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm 
-                      transition-all duration-200 rounded-t-lg`}
+                      hotel-tab flex items-center space-x-2 px-4 py-3 border font-medium text-sm`}
                   >
                     <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
@@ -202,7 +195,7 @@ const RoomManagement = () => {
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-[#0f2742]/45 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}

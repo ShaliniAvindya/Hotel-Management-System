@@ -5,14 +5,120 @@
 
 html, body {
   height: 100%; 
-  /* background-color: white;  */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background: #f6f8fb;
+  color: #172033;
+  font-family: Inter, Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  min-height: 100%;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+  :root {
+    --hotel-ink: #172033;
+    --hotel-navy: #0f2742;
+    --hotel-navy-soft: #173b63;
+    --hotel-gold: #c9a24a;
+    --hotel-gold-soft: #f6edd6;
+    --hotel-surface: #ffffff;
+    --hotel-muted: #667085;
+    --hotel-border: #e5e9f0;
+    --hotel-page: #f6f8fb;
+  }
+
+  button, input, select, textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: rgba(201, 162, 74, 0.28);
+  }
+}
+
+@layer components {
+  .hotel-page {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(201, 162, 74, 0.12), transparent 34rem),
+      linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+  }
+
+  .hotel-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 18px 45px rgba(15, 39, 66, 0.08);
+  }
+
+  .hotel-panel {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(15, 39, 66, 0.06);
+  }
+
+  .hotel-button-primary {
+    background: linear-gradient(135deg, var(--hotel-navy), var(--hotel-navy-soft));
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 22px rgba(15, 39, 66, 0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  }
+
+  .hotel-button-primary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow: 0 14px 28px rgba(15, 39, 66, 0.22);
+  }
+
+  .hotel-input {
+    border: 1px solid var(--hotel-border);
+    background: #fff;
+    border-radius: 8px;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .hotel-input:focus {
+    border-color: var(--hotel-gold);
+    box-shadow: 0 0 0 4px rgba(201, 162, 74, 0.16);
+    outline: none;
+  }
+
+  .hotel-tab {
+    border-radius: 8px;
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  }
+
+  .hotel-tab:hover {
+    transform: translateY(-1px);
+  }
+
+  .hotel-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #e9eef5;
+  }
+
+  .hotel-skeleton::after {
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    animation: hotel-shimmer 1.4s infinite;
+    content: "";
+  }
+
+  @keyframes hotel-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
 }

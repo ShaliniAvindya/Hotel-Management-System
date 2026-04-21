@@ -35,26 +35,26 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
   const checkOutDate = new Date(booking.checkOutDate);
   const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
-  const getStatusColor = (status) => {
+  const getStatusClasses = (status) => {
     switch (status) {
-      case 'confirmed': return 'blue';
-      case 'checked-in': return 'green';
-      case 'checked-out': return 'gray';
-      case 'cancelled': return 'red';
-      case 'no-show': return 'orange';
-      default: return 'gray';
+      case 'confirmed': return 'bg-[#f6edd6] text-[#8a681b] border-[#ead8a8]';
+      case 'checked-in': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'checked-out': return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'no-show': return 'bg-orange-50 text-orange-700 border-orange-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="hotel-card p-4 hover:-translate-y-1 transition-all duration-200">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-gray-900 text-lg">{`${booking.firstName} ${booking.lastName || ''}`}</h3>
           <p className="text-sm text-gray-600">{booking.bookingReference}</p>
           <p className="text-sm text-gray-600">Guest ID: {booking.guestId || 'N/A'}</p>
         </div>
-        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${getStatusColor(booking.status)}-100 text-${getStatusColor(booking.status)}-800`}>
+        <span className={`inline-flex px-2.5 py-1 rounded-lg border text-xs font-semibold ${getStatusClasses(booking.status)}`}>
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>
       </div>
@@ -87,7 +87,7 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
       </div>
 
       {booking.splitStays?.length > 0 && (
-        <div className="mb-3 p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
+        <div className="mb-3 p-2 bg-[#fffaf0] rounded-lg border-l-4 border-[#c9a24a]">
           <div className="flex items-center space-x-1 text-sm text-yellow-800">
             <Split className="h-4 w-4" />
             <span className="font-medium">Split Stay ({booking.splitStays.length} segments)</span>
@@ -102,21 +102,21 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onView(booking)}
-            className="p-1 text-gray-400 hover:text-blue-600"
+            className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg"
             title="View Details"
           >
             <Eye className="h-4 w-4" />
           </button>
           <button
             onClick={() => onEdit(booking)}
-            className="p-1 text-gray-400 hover:text-blue-600"
+            className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg"
             title="Modify Booking"
           >
             <Edit className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(booking.id)}
-            className="p-1 text-gray-400 hover:text-red-600"
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
             title="Cancel Booking"
           >
             <XCircle className="h-4 w-4" />
@@ -126,6 +126,27 @@ const BookingCard = React.memo(({ booking, onView, onEdit, onDelete }) => {
     </div>
   );
 });
+
+const getBookingStatusStyle = (status, variant = 'badge') => {
+  const badgeStyles = {
+    confirmed: 'bg-[#f6edd6] text-[#8a681b] border-[#ead8a8]',
+    'checked-in': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'checked-out': 'bg-slate-100 text-slate-700 border-slate-200',
+    cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+    'no-show': 'bg-orange-50 text-orange-700 border-orange-200',
+  };
+
+  const blockStyles = {
+    confirmed: 'bg-[#0f2742] text-white',
+    'checked-in': 'bg-emerald-600 text-white',
+    'checked-out': 'bg-slate-500 text-white',
+    cancelled: 'bg-rose-600 text-white',
+    'no-show': 'bg-orange-500 text-white',
+  };
+
+  const styles = variant === 'block' ? blockStyles : badgeStyles;
+  return styles[status] || styles.confirmed;
+};
 
 const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingData, setSuccess, setError }) => {
   const formatDateForInput = (date) => {
@@ -628,7 +649,7 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              className="hotel-button-primary px-4 py-2 flex items-center space-x-2"
             >
               <Save className="h-4 w-4" />
               <span>{booking ? 'Update Booking' : 'Create Booking'}</span>
@@ -644,20 +665,20 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
 const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
   const room = rooms.find(r => r.id === booking.roomId);
   const statusConfig = {
-    confirmed: { name: 'Confirmed', color: 'blue' },
-    'checked-in': { name: 'Checked In', color: 'green' },
-    'checked-out': { name: 'Checked Out', color: 'gray' },
-    cancelled: { name: 'Cancelled', color: 'red' },
-    'no-show': { name: 'No Show', color: 'orange' }
-  }[booking.status] || { name: booking.status, color: 'gray' };
+    confirmed: { name: 'Confirmed' },
+    'checked-in': { name: 'Checked In' },
+    'checked-out': { name: 'Checked Out' },
+    cancelled: { name: 'Cancelled' },
+    'no-show': { name: 'No Show' }
+  }[booking.status] || { name: booking.status };
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-[#f8fafc]">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Calendar className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-[#0f2742] rounded-lg">
+              <Calendar className="h-6 w-6 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{booking.bookingReference}</h2>
@@ -675,9 +696,9 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
 
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-slate-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Status</h3>
-              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium bg-${statusConfig.color}-100 text-${statusConfig.color}-800`}>
+              <span className={`inline-flex px-2.5 py-1 rounded-lg border text-xs font-semibold ${getBookingStatusStyle(booking.status)}`}>
                 {statusConfig.name}
               </span>
             </div>
@@ -832,7 +853,6 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
       </div>
       {dates.map((date, dateIndex) => {
         const booking = getBookingForRoomAndDate(room.id, date);
-        const statusConfig = booking ? bookingStatuses.find(s => s.id === booking.status) || { color: 'gray' } : null;
         const isFirstDay = booking && (
           booking.checkInDate === date.toISOString().split('T')[0] ||
           booking.splitStays.some(stay => stay.checkIn === date.toISOString().split('T')[0])
@@ -849,12 +869,12 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
           <div
             key={dateIndex}
             className={`p-2 h-20 cursor-pointer transition-colors ${
-              booking ? 'relative' : 'hover:bg-blue-50'
+              booking ? 'relative' : 'hover:bg-[#fffaf0]'
             } ${isWeekend(date) ? 'bg-red-50' : ''}`}
             onClick={() => booking ? onBookingClick(booking) : onCellClick(room.id, date)}
           >
             {booking ? (
-              <div className={`h-full rounded px-2 py-1 bg-${statusConfig.color}-500 text-white text-xs`}>
+              <div className={`h-full rounded-lg px-2 py-1 text-xs ${getBookingStatusStyle(booking.status, 'block')}`}>
                 <div className="font-medium truncate">{`${booking.firstName} ${booking.lastName || ''}`}</div>
                 <div className="truncate opacity-90">{booking.bookingReference}</div>
                 <div className="flex items-center space-x-1 mt-1">
@@ -1116,7 +1136,7 @@ const BookingCalendar = () => {
   const dates = getDateRange();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {createPortal(
         <div className="fixed top-6 right-6 z-[100]">
           {(success || formSuccess) && (
@@ -1149,14 +1169,14 @@ const BookingCalendar = () => {
       )}
 
       {/* View Toggle and Filters */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
+      <div className="px-4 sm:px-6 py-4">
+        <div className="hotel-panel p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setView('list')}
                 className={`px-3 py-1 rounded-md text-sm ${
-                  view === 'list' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
+                  view === 'list' ? 'bg-white shadow-sm font-medium text-[#0f2742]' : 'text-gray-600'
                 }`}
               >
                 Booking List
@@ -1164,7 +1184,7 @@ const BookingCalendar = () => {
               <button
                 onClick={() => setView('calendar')}
                 className={`px-3 py-1 rounded-md text-sm ${
-                  view === 'calendar' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
+                  view === 'calendar' ? 'bg-white shadow-sm font-medium text-[#0f2742]' : 'text-gray-600'
                 }`}
               >
                 Reservation Calendar
@@ -1177,7 +1197,7 @@ const BookingCalendar = () => {
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="hotel-input px-3 py-2"
                 >
                   {bookingStatuses.map((status) => (
                     <option key={status.id} value={status.id}>
@@ -1191,7 +1211,7 @@ const BookingCalendar = () => {
                   <select
                     value={filters.roomType}
                     onChange={(e) => setFilters({ ...filters, roomType: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="hotel-input px-3 py-2"
                   >
                     {roomTypes.map((type) => (
                       <option key={type.id} value={type.id}>
@@ -1204,7 +1224,7 @@ const BookingCalendar = () => {
             </div>
             <button
               onClick={() => setShowBookingForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              className="hotel-button-primary px-4 py-2 flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
               <span>New Booking</span>
@@ -1216,7 +1236,7 @@ const BookingCalendar = () => {
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-slate-100 rounded-lg"
               title="Refresh"
             >
               <RefreshCw className="h-4 w-4" />
@@ -1245,15 +1265,15 @@ const BookingCalendar = () => {
             </div>
             <button
               onClick={goToToday}
-              className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+              className="px-3 py-1 text-sm bg-[#f6edd6] text-[#8a681b] rounded-lg hover:bg-[#ead8a8]"
             >
               Today
             </button>
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('week')}
                 className={`px-3 py-1 rounded-md text-sm ${
-                  viewMode === 'week' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
+                  viewMode === 'week' ? 'bg-white shadow-sm font-medium text-[#0f2742]' : 'text-gray-600'
                 }`}
               >
                 Week
@@ -1261,7 +1281,7 @@ const BookingCalendar = () => {
               <button
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1 rounded-md text-sm ${
-                  viewMode === 'month' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
+                  viewMode === 'month' ? 'bg-white shadow-sm font-medium text-[#0f2742]' : 'text-gray-600'
                 }`}
               >
                 2 Weeks
@@ -1273,12 +1293,12 @@ const BookingCalendar = () => {
 
       {/* Legend for Calendar */}
       {view === 'calendar' && (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="mx-4 sm:mx-6 hotel-panel px-4 py-3">
           <div className="flex items-center space-x-6">
             <span className="text-sm font-medium text-gray-700">Legend:</span>
             {bookingStatuses.filter(s => s.id !== 'all').map((status) => (
               <div key={status.id} className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full bg-${status.color}-500`}></div>
+                <div className={`w-3 h-3 rounded-full ${getBookingStatusStyle(status.id, 'block').split(' ')[0]}`}></div>
                 <span className="text-sm text-gray-600">{status.name}</span>
               </div>
             ))}
@@ -1291,13 +1311,13 @@ const BookingCalendar = () => {
       )}
 
       {/* Main Content */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         {view === 'list' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="hotel-card p-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Calendar className="h-5 w-5 text-blue-600" />
+                <div className="p-2 bg-[#0f2742] rounded-lg">
+                  <Calendar className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Bookings</p>
@@ -1305,7 +1325,7 @@ const BookingCalendar = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="hotel-card p-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
@@ -1318,7 +1338,7 @@ const BookingCalendar = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="hotel-card p-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-yellow-100 rounded-lg">
                   <Clock className="h-5 w-5 text-yellow-600" />
@@ -1331,7 +1351,7 @@ const BookingCalendar = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="hotel-card p-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-red-100 rounded-lg">
                   <AlertCircle className="h-5 w-5 text-red-600" />
@@ -1348,7 +1368,7 @@ const BookingCalendar = () => {
         )}
 
         {view === 'list' ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="hotel-card p-6">
             {filteredBookings.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -1360,7 +1380,7 @@ const BookingCalendar = () => {
                 </p>
                 <button
                   onClick={() => setShowBookingForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto"
+                  className="hotel-button-primary px-4 py-2 flex items-center space-x-2 mx-auto"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create New Booking</span>
@@ -1387,7 +1407,7 @@ const BookingCalendar = () => {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="hotel-card overflow-hidden">
             <div className="border-b border-gray-200 bg-gray-50">
               <div className="grid grid-cols-8 divide-x divide-gray-200">
                 <div className="p-3">
