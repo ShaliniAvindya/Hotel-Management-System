@@ -9,7 +9,7 @@ const router = express.Router();
 // Get all
 router.get('/', async (req, res) => {
   try {
-    const requests = await SpecialRequest.find();
+    const requests = await SpecialRequest.find().sort({ requestDate: -1 }).lean();
     res.json(requests);
   } catch (err) {
     try {
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const request = await SpecialRequest.findOne({ id: req.params.id });
+    const request = await SpecialRequest.findOne({ id: req.params.id }).lean();
     if (!request) return res.status(404).json({ message: 'Special request not found' });
     res.json(request);
   } catch (err) {
@@ -41,12 +41,12 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { bookingId, type, title, description, status, dueDate, assignedTo, notes } = req.body;
-    const booking = await Booking.findOne({ id: bookingId });
+    const booking = await Booking.findOne({ id: bookingId }).select('guestName roomId splitStays').lean();
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
     let roomNumber = '';
     if (booking.roomId) {
-      const room = await Room.findOne({ id: booking.roomId });
+      const room = await Room.findOne({ id: booking.roomId }).select('roomNumber').lean();
       if (!room) return res.status(404).json({ message: 'Room not found' });
       roomNumber = room.roomNumber;
     } else if (booking.splitStays.length > 0) {
@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
         (stay) => stay.checkIn.toISOString().split('T')[0] <= today && stay.checkOut.toISOString().split('T')[0] >= today
       );
       if (currentStay) {
-        const room = await Room.findOne({ id: currentStay.roomId });
+        const room = await Room.findOne({ id: currentStay.roomId }).select('roomNumber').lean();
         if (!room) return res.status(404).json({ message: 'Room not found for split stay' });
         roomNumber = room.roomNumber;
       } else {
@@ -91,12 +91,12 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { bookingId, type, title, description, status, dueDate, assignedTo, notes } = req.body;
-    const booking = await Booking.findOne({ id: bookingId });
+    const booking = await Booking.findOne({ id: bookingId }).select('guestName roomId splitStays').lean();
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
     let roomNumber = '';
     if (booking.roomId) {
-      const room = await Room.findOne({ id: booking.roomId });
+      const room = await Room.findOne({ id: booking.roomId }).select('roomNumber').lean();
       if (!room) return res.status(404).json({ message: 'Room not found' });
       roomNumber = room.roomNumber;
     } else if (booking.splitStays.length > 0) {
@@ -105,7 +105,7 @@ router.put('/:id', async (req, res) => {
         (stay) => stay.checkIn.toISOString().split('T')[0] <= today && stay.checkOut.toISOString().split('T')[0] >= today
       );
       if (currentStay) {
-        const room = await Room.findOne({ id: currentStay.roomId });
+        const room = await Room.findOne({ id: currentStay.roomId }).select('roomNumber').lean();
         if (!room) return res.status(404).json({ message: 'Room not found for split stay' });
         roomNumber = room.roomNumber;
       } else {

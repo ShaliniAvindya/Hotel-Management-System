@@ -19,4 +19,7 @@ const roomAvailabilitySchema = new mongoose.Schema({
   availability: [availabilityEntrySchema],
 }, { timestamps: true });
 
+roomAvailabilitySchema.index({ createdAt: -1 });
+roomAvailabilitySchema.index({ 'availability.date': 1 });
+
 module.exports = mongoose.model('roomAvailability', roomAvailabilitySchema, 'roomAvailability');

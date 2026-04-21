@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 // Get all room rates
 router.get('/', async (req, res) => {
   try {
-    const rates = await RoomRates.find();
+    const rates = await RoomRates.find().sort({ createdAt: -1 }).lean();
     res.json(rates);
   } catch (error) {
     console.error('Error fetching room rates:', error);
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const rate = await RoomRates.findById(req.params.id);
+    const rate = await RoomRates.findById(req.params.id).lean();
     if (!rate) {
       return res.status(404).json({ message: 'Rate not found' });
     }

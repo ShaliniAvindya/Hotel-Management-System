@@ -31,4 +31,9 @@ const cancellationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+cancellationSchema.index({ createdAt: -1 });
+cancellationSchema.index({ originalBookingId: 1 });
+cancellationSchema.index({ status: 1, createdAt: -1 });
+cancellationSchema.index({ type: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Cancellation', cancellationSchema);

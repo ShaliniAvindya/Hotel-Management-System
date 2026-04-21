@@ -25,6 +25,10 @@ const invoiceSchema = new mongoose.Schema({
   items: [invoiceItemSchema],
 }, { timestamps: true });
 
+invoiceSchema.index({ createdAt: -1 });
+invoiceSchema.index({ reservationId: 1 });
+invoiceSchema.index({ status: 1, dueDate: 1 });
+
 const paymentSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   reservationId: { type: String, required: true },
@@ -48,6 +52,10 @@ const paymentSchema = new mongoose.Schema({
   reference: { type: String, default: '' },
   notes: { type: String, default: '' },
 }, { timestamps: true });
+
+paymentSchema.index({ createdAt: -1 });
+paymentSchema.index({ reservationId: 1, createdAt: -1 });
+paymentSchema.index({ status: 1, date: -1 });
 
 module.exports = {
   Invoice: mongoose.model('Invoice', invoiceSchema),

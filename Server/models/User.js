@@ -18,4 +18,8 @@ UserSchema.methods.toJSON = function() {
   return obj;
 };
 
+UserSchema.index({ role: 1, status: 1 });
+UserSchema.index({ isActive: 1, createdAt: -1 });
+UserSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('User', UserSchema);

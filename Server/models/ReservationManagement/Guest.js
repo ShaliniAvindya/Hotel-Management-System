@@ -40,4 +40,8 @@ const guestSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
+guestSchema.index({ createdDate: -1 });
+guestSchema.index({ status: 1, createdDate: -1 });
+guestSchema.index({ lastStay: -1 });
+
 module.exports = mongoose.model('Guest', guestSchema);

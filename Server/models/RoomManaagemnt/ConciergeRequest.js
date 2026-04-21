@@ -34,4 +34,9 @@ const conciergeRequestSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+conciergeRequestSchema.index({ createdAt: -1 });
+conciergeRequestSchema.index({ status: 1, createdAt: -1 });
+conciergeRequestSchema.index({ roomNumber: 1, createdAt: -1 });
+conciergeRequestSchema.index({ guestId: 1 });
+
 module.exports = mongoose.model('ConciergeRequest', conciergeRequestSchema);

@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const staff = await StaffMember.find().sort({ name: 1 });
+    const staff = await StaffMember.find().sort({ name: 1 }).lean();
     res.json(staff);
   } catch (err) {
     console.error('Error fetching staff members:', err);
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const staff = await StaffMember.findOne({ id: req.params.id });
+    const staff = await StaffMember.findOne({ id: req.params.id }).lean();
     if (!staff) return res.status(404).json({ message: 'Staff member not found' });
     res.json(staff);
   } catch (err) {
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
   try {
     const staffData = req.body;
     if (!staffData.id) {
-      const lastStaff = await StaffMember.findOne().sort({ createdAt: -1 });
+      const lastStaff = await StaffMember.findOne().sort({ createdAt: -1 }).select('id').lean();
       const lastId = lastStaff ? parseInt(lastStaff.id.slice(2)) : 0;
       staffData.id = `SM${String(lastId + 1).padStart(3, '0')}`;
     }

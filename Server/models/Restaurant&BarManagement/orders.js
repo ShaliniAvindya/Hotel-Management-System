@@ -29,6 +29,11 @@ const orderSchema = new mongoose.Schema({
   deliveryTime: { type: Date },
 });
 
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ roomId: 1 });
+orderSchema.index({ tableId: 1 });
+
 const Order = mongoose.model('Order', orderSchema);
 
 module.exports = Order;

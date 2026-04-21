@@ -9,7 +9,7 @@ const router = express.Router();
 // Get all bookings
 router.get('/', async (req, res) => {
   try {
-    const bookings = await Booking.find().sort({ createdAt: -1 });
+    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -25,14 +25,11 @@ router.post('/', async (req, res) => {
     }
 
     if (!bookingData.id) {
-      const allIds = await Booking.find({}, { id: 1, _id: 0 });
-      let maxIdNum = 0;
-      allIds.forEach(b => {
-        if (b.id && /^B\d+$/.test(b.id)) {
-          const num = parseInt(b.id.slice(1));
-          if (num > maxIdNum) maxIdNum = num;
-        }
-      });
+      const [{ maxIdNum = 0 } = {}] = await Booking.aggregate([
+        { $match: { id: /^B\d+$/ } },
+        { $project: { idNum: { $toInt: { $substrBytes: ['$id', 1, { $subtract: [{ $strLenBytes: '$id' }, 1] }] } } } },
+        { $group: { _id: null, maxIdNum: { $max: '$idNum' } } },
+      ]);
       bookingData.id = `B${String(maxIdNum + 1).padStart(3, '0')}`;
     }
     if (!bookingData.bookingReference) {
@@ -65,7 +62,7 @@ router.post('/', async (req, res) => {
         stayHistory: [{
           id: bookingData.id,
           roomId: bookingData.roomId,
-          roomNumber: (await Room.findOne({ id: bookingData.roomId }))?.roomNumber || '',
+          roomNumber: (await Room.findOne({ id: bookingData.roomId }).select('roomNumber').lean())?.roomNumber || '',
           checkIn: bookingData.checkInDate,
           checkOut: bookingData.checkOutDate,
           amount: bookingData.totalAmount || 0,
@@ -73,14 +70,11 @@ router.post('/', async (req, res) => {
         }],
         createdDate: new Date(),
       };
-      const allGuestIds = await Guest.find({}, { id: 1, _id: 0 });
-      let maxGuestIdNum = 0;
-      allGuestIds.forEach(g => {
-        if (g.id && /^G\d+$/.test(g.id)) {
-          const num = parseInt(g.id.slice(1));
-          if (num > maxGuestIdNum) maxGuestIdNum = num;
-        }
-      });
+      const [{ maxGuestIdNum = 0 } = {}] = await Guest.aggregate([
+        { $match: { id: /^G\d+$/ } },
+        { $project: { idNum: { $toInt: { $substrBytes: ['$id', 1, { $subtract: [{ $strLenBytes: '$id' }, 1] }] } } } },
+        { $group: { _id: null, maxGuestIdNum: { $max: '$idNum' } } },
+      ]);
       newGuestData.id = `G${String(maxGuestIdNum + 1).padStart(3, '0')}`;
       try {
         guest = new Guest(newGuestData);
@@ -99,7 +93,7 @@ router.post('/', async (req, res) => {
       guest.stayHistory.push({
         id: bookingData.id,
         roomId: bookingData.roomId,
-        roomNumber: (await Room.findOne({ id: bookingData.roomId }))?.roomNumber || '',
+        roomNumber: (await Room.findOne({ id: bookingData.roomId }).select('roomNumber').lean())?.roomNumber || '',
         checkIn: bookingData.checkInDate,
         checkOut: bookingData.checkOutDate,
         amount: bookingData.totalAmount || 0,
@@ -117,13 +111,13 @@ router.post('/', async (req, res) => {
 
     // Validate room availability
     if (!bookingData.splitStays || bookingData.splitStays.length === 0) {
-      const room = await Room.findOne({ id: bookingData.roomId });
+      const room = await Room.findOne({ id: bookingData.roomId }).select('id').lean();
       if (!room) return res.status(404).json({ message: 'Room not found' });
       const isAvailable = await checkRoomAvailability(bookingData.roomId, bookingData.checkInDate, bookingData.checkOutDate);
       if (!isAvailable) return res.status(400).json({ message: 'Room is not available for the selected dates' });
     } else {
       for (const stay of bookingData.splitStays) {
-        const room = await Room.findOne({ id: stay.roomId });
+        const room = await Room.findOne({ id: stay.roomId }).select('id').lean();
         if (!room) return res.status(404).json({ message: `Room ${stay.roomId} not found` });
         const isAvailable = await checkRoomAvailability(stay.roomId, stay.checkIn, stay.checkOut);
         if (!isAvailable) return res.status(400).json({ message: `Room ${stay.roomId} is not available for the selected dates` });
@@ -176,7 +170,7 @@ router.put('/:id', async (req, res) => {
       const stayIndex = guest.stayHistory.findIndex(s => s.id === req.params.id);
       if (stayIndex !== -1) {
         const oldAmount = guest.stayHistory[stayIndex].amount;
-        const room = await Room.findOne({ id: bookingData.roomId });
+        const room = await Room.findOne({ id: bookingData.roomId }).select('roomNumber').lean();
         guest.totalSpent = guest.totalSpent - oldAmount + (bookingData.totalAmount || 0);
         guest.lastStay = bookingData.checkOutDate > guest.lastStay ? bookingData.checkOutDate : guest.lastStay;
         guest.stayHistory[stayIndex] = {
@@ -193,13 +187,13 @@ router.put('/:id', async (req, res) => {
     }
 
     if (!bookingData.splitStays || bookingData.splitStays.length === 0) {
-      const room = await Room.findOne({ id: bookingData.roomId });
+      const room = await Room.findOne({ id: bookingData.roomId }).select('id').lean();
       if (!room) return res.status(404).json({ message: 'Room not found' });
       const isAvailable = await checkRoomAvailability(bookingData.roomId, bookingData.checkInDate, bookingData.checkOutDate, req.params.id);
       if (!isAvailable) return res.status(400).json({ message: 'Room is not available for the selected dates' });
     } else {
       for (const stay of bookingData.splitStays) {
-        const room = await Room.findOne({ id: stay.roomId });
+        const room = await Room.findOne({ id: stay.roomId }).select('id').lean();
         if (!room) return res.status(404).json({ message: `Room ${stay.roomId} not found` });
         const isAvailable = await checkRoomAvailability(stay.roomId, stay.checkIn, stay.checkOut, req.params.id);
         if (!isAvailable) return res.status(400).json({ message: `Room ${stay.roomId} is not available for the selected dates` });
@@ -275,7 +269,7 @@ async function checkRoomAvailability(roomId, checkIn, checkOut, excludeBookingId
         }
       }
     ]
-  });
+  }).select('id roomId checkInDate checkOutDate splitStays').lean();
   return !bookings.some((booking) => {
     if (excludeBookingId && (booking.id === excludeBookingId || booking._id.toString() === excludeBookingId)) return false;
     if (booking.roomId === roomId) {
@@ -294,7 +288,7 @@ async function checkRoomAvailability(roomId, checkIn, checkOut, excludeBookingId
 
 async function updateRoomAvailabilityForBooking(booking) {
   const updateForRoom = async (roomId, checkIn, checkOut, status) => {
-    const availability = await RoomAvailability.findOne({ roomId });
+    const availability = await RoomAvailability.findOne({ roomId }).select('availability').lean();
     let availabilityData = availability ? availability.availability : [];
 
     let currentDate = new Date(checkIn);

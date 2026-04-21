@@ -38,4 +38,9 @@ const roomSchema = new mongoose.Schema({
   expectedCheckOut: { type: Date, default: null },
 }, { timestamps: true });
 
+roomSchema.index({ createdAt: -1 });
+roomSchema.index({ roomNumber: 1 });
+roomSchema.index({ type: 1, status: 1 });
+roomSchema.index({ occupancyStatus: 1, status: 1 });
+
 module.exports = mongoose.model('Room', roomSchema);

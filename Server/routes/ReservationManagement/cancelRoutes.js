@@ -57,7 +57,8 @@ router.get('/', async (req, res) => {
         model: 'Booking',
         select: 'id bookingReference guestName guestEmail guestPhone roomId checkInDate checkOutDate guests totalAmount splitStays'
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     
     res.json(cancellations);
   } catch (err) {

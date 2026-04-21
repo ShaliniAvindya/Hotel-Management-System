@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const rooms = await Room.find().sort({ createdAt: -1 });
+    const rooms = await Room.find().sort({ createdAt: -1 }).lean();
     res.json(rooms);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
   try {
     const roomData = req.body;
     if (!roomData.id) {
-      const lastRoom = await Room.findOne().sort({ createdAt: -1 });
+      const lastRoom = await Room.findOne().sort({ createdAt: -1 }).select('id').lean();
       const lastId = lastRoom ? parseInt(lastRoom.id.slice(1)) : 0;
       roomData.id = `R${String(lastId + 1).padStart(3, '0')}`;
     }
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const room = await Room.findOne({ id: req.params.id });
+    const room = await Room.findOne({ id: req.params.id }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json(room);
   } catch (err) {

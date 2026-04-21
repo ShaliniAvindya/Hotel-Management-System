@@ -9,7 +9,7 @@ const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString
 
 router.get('/services', async (req, res) => {
   try {
-    const services = await SpaService.find();
+    const services = await SpaService.find().sort({ createdAt: -1 }).lean();
     console.log('Fetched services:', services.length, 'Services');
     res.json(services);
   } catch (error) {
@@ -21,7 +21,7 @@ router.get('/services', async (req, res) => {
 // Get service by ID
 router.get('/services/:id', async (req, res) => {
   try {
-    const service = await SpaService.findById(req.params.id);
+    const service = await SpaService.findById(req.params.id).lean();
     if (!service) return res.status(404).json({ message: 'Service not found' });
     res.json(service);
   } catch (error) {
@@ -102,7 +102,7 @@ router.delete('/services/:id', auth, async (req, res) => {
 
 router.get('/therapists', async (req, res) => {
   try {
-    const therapists = await Therapist.find();
+    const therapists = await Therapist.find().sort({ name: 1 }).lean();
     res.json(therapists);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -111,7 +111,7 @@ router.get('/therapists', async (req, res) => {
 
 router.get('/therapists/:id', async (req, res) => {
   try {
-    const therapist = await Therapist.findById(req.params.id);
+    const therapist = await Therapist.findById(req.params.id).lean();
     if (!therapist) return res.status(404).json({ message: 'Therapist not found' });
     res.json(therapist);
   } catch (error) {
@@ -172,7 +172,7 @@ router.delete('/therapists/:id', auth, async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
   try {
-    const rooms = await SpaRoom.find();
+    const rooms = await SpaRoom.find().sort({ roomNumber: 1 }).lean();
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -181,7 +181,7 @@ router.get('/rooms', async (req, res) => {
 
 router.get('/rooms/:id', async (req, res) => {
   try {
-    const room = await SpaRoom.findById(req.params.id);
+    const room = await SpaRoom.findById(req.params.id).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json(room);
   } catch (error) {
@@ -240,7 +240,10 @@ router.delete('/rooms/:id', auth, async (req, res) => {
 
 router.get('/packages', async (req, res) => {
   try {
-    const packages = await SpaPackage.find().populate('services.serviceId');
+    const packages = await SpaPackage.find()
+      .populate('services.serviceId')
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(packages);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -249,7 +252,7 @@ router.get('/packages', async (req, res) => {
 
 router.get('/packages/:id', async (req, res) => {
   try {
-    const pkg = await SpaPackage.findById(req.params.id).populate('services.serviceId');
+    const pkg = await SpaPackage.findById(req.params.id).populate('services.serviceId').lean();
     if (!pkg) return res.status(404).json({ message: 'Package not found' });
     res.json(pkg);
   } catch (error) {
@@ -316,7 +319,9 @@ router.get('/appointments', async (req, res) => {
       .populate('service', 'serviceName basePrice')
       .populate('therapist', 'name hourlyRate')
       .populate('spaRoom', 'roomNumber hourlyRate')
-      .populate('package', 'packageName discountedPrice');
+      .populate('package', 'packageName discountedPrice')
+      .sort({ appointmentDate: -1, createdAt: -1 })
+      .lean();
     res.json(appointments);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -329,7 +334,8 @@ router.get('/appointments/:id', async (req, res) => {
       .populate('service', 'serviceName basePrice')
       .populate('therapist', 'name hourlyRate')
       .populate('spaRoom', 'roomNumber hourlyRate')
-      .populate('package', 'packageName discountedPrice');
+      .populate('package', 'packageName discountedPrice')
+      .lean();
     if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
     res.json(appointment);
   } catch (error) {
@@ -376,6 +382,7 @@ router.post('/appointments', auth, async (req, res) => {
       }
       
       const subtotal = newAppointment.servicePrice + newAppointment.therapistPrice + newAppointment.roomPrice;
+      const tax = subtotal * 0.10;
       const discountAmount = newAppointment.discount || 0;
       const total = subtotal + tax - discountAmount;
       
@@ -523,7 +530,9 @@ router.get('/billing', async (req, res) => {
   try {
     const billings = await SpaBilling.find()
       .populate('appointmentId', 'appointmentId guestName guestPhone guestEmail packageName therapistName serviceName')
-      .populate('guestId', 'name email phone');
+      .populate('guestId', 'name email phone')
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(billings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -535,7 +544,8 @@ router.get('/billing/:id', async (req, res) => {
   try {
     const billing = await SpaBilling.findById(req.params.id)
       .populate('appointmentId', 'appointmentId guestName guestPhone guestEmail packageName therapistName serviceName')
-      .populate('guestId', 'name email phone');
+      .populate('guestId', 'name email phone')
+      .lean();
     if (!billing) return res.status(404).json({ message: 'Billing record not found' });
     res.json(billing);
   } catch (error) {
@@ -548,7 +558,8 @@ router.get('/billing/appointment/:appointmentId', async (req, res) => {
   try {
     const billing = await SpaBilling.findOne({ appointmentId: req.params.appointmentId })
       .populate('appointmentId', 'appointmentId guestName guestPhone guestEmail')
-      .populate('guestId', 'firstName lastName email phone');
+      .populate('guestId', 'firstName lastName email phone')
+      .lean();
     if (!billing) return res.status(404).json({ message: 'Billing record not found for this appointment' });
     res.json(billing);
   } catch (error) {

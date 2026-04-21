@@ -42,6 +42,8 @@ const spaServiceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+spaServiceSchema.index({ category: 1, isActive: 1 });
+spaServiceSchema.index({ createdAt: -1 });
 
 // Therapist 
 const therapistSchema = new mongoose.Schema(
@@ -106,6 +108,8 @@ const therapistSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+therapistSchema.index({ isActive: 1, name: 1 });
+therapistSchema.index({ createdAt: -1 });
 
 // Spa Room 
 const spaRoomSchema = new mongoose.Schema(
@@ -144,6 +148,9 @@ const spaRoomSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+spaRoomSchema.index({ status: 1, isActive: 1 });
+spaRoomSchema.index({ roomType: 1, isActive: 1 });
+spaRoomSchema.index({ createdAt: -1 });
 
 // Spa Package 
 const spaPackageSchema = new mongoose.Schema(
@@ -211,6 +218,8 @@ const spaPackageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+spaPackageSchema.index({ isActive: 1, packageType: 1 });
+spaPackageSchema.index({ createdAt: -1 });
 
 // Spa Appointment 
 const spaAppointmentSchema = new mongoose.Schema(
@@ -316,6 +325,11 @@ const spaAppointmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+spaAppointmentSchema.index({ appointmentDate: -1, status: 1 });
+spaAppointmentSchema.index({ guestId: 1, appointmentDate: -1 });
+spaAppointmentSchema.index({ therapist: 1, appointmentDate: 1, startTime: 1 });
+spaAppointmentSchema.index({ spaRoom: 1, appointmentDate: 1, startTime: 1 });
+spaAppointmentSchema.index({ createdAt: -1 });
 
 // Spa Billing 
 const spaBillingSchema = new mongoose.Schema(
@@ -404,6 +418,10 @@ const spaBillingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+spaBillingSchema.index({ appointmentId: 1 });
+spaBillingSchema.index({ guestId: 1, createdAt: -1 });
+spaBillingSchema.index({ paymentStatus: 1, dueDate: 1 });
+spaBillingSchema.index({ createdAt: -1 });
 
 module.exports = {
   SpaService: mongoose.model('SpaService', spaServiceSchema),

@@ -21,7 +21,7 @@ const calculateInvoiceStatus = (total, paidAmount, dueDate) => {
 
 router.get('/invoices', async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ createdAt: -1 });
+    const invoices = await Invoice.find().sort({ createdAt: -1 }).lean();
     res.json(invoices);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -31,7 +31,7 @@ router.get('/invoices', async (req, res) => {
 router.post('/invoices', async (req, res) => {
   try {
     const invoiceData = req.body;
-    const booking = await Booking.findOne({ id: invoiceData.reservationId });
+    const booking = await Booking.findOne({ id: invoiceData.reservationId }).lean();
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
     invoiceData.issueDate = validateAndFormatDate(invoiceData.issueDate);
@@ -39,14 +39,11 @@ router.post('/invoices', async (req, res) => {
 
     // Generate unique invoice ID
     if (!invoiceData.id) {
-      const allIds = await Invoice.find({}, { id: 1, _id: 0 });
-      let maxIdNum = 0;
-      allIds.forEach(i => {
-        if (i.id && /^INV\d+$/.test(i.id)) {
-          const num = parseInt(i.id.slice(3));
-          if (num > maxIdNum) maxIdNum = num;
-        }
-      });
+      const [{ maxIdNum = 0 } = {}] = await Invoice.aggregate([
+        { $match: { id: /^INV\d+$/ } },
+        { $project: { idNum: { $toInt: { $substrBytes: ['$id', 3, { $subtract: [{ $strLenBytes: '$id' }, 3] }] } } } },
+        { $group: { _id: null, maxIdNum: { $max: '$idNum' } } },
+      ]);
       invoiceData.id = `INV${String(maxIdNum + 1).padStart(3, '0')}`;
     }
 
@@ -63,8 +60,10 @@ router.post('/invoices', async (req, res) => {
     const subtotal = booking.totalAmount + additionalCharges.reduce((sum, charge) => sum + charge.total, 0);
     const tax = subtotal * 0.1; 
     const total = subtotal + tax;
-    const paidAmount = (await Payment.find({ reservationId: invoiceData.reservationId }))
-      .reduce((sum, p) => sum + p.amount, 0);
+    const [{ paidAmount = 0 } = {}] = await Payment.aggregate([
+      { $match: { reservationId: invoiceData.reservationId } },
+      { $group: { _id: null, paidAmount: { $sum: '$amount' } } },
+    ]);
 
     invoiceData.items = [
       {
@@ -111,7 +110,7 @@ router.put('/invoices/:id', async (req, res) => {
 
 router.get('/payments', async (req, res) => {
   try {
-    const payments = await Payment.find().sort({ createdAt: -1 });
+    const payments = await Payment.find().sort({ createdAt: -1 }).lean();
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -122,20 +121,17 @@ router.get('/payments', async (req, res) => {
 router.post('/payments', async (req, res) => {
   try {
     const paymentData = req.body;
-    const booking = await Booking.findOne({ id: paymentData.reservationId });
+    const booking = await Booking.findOne({ id: paymentData.reservationId }).select('id').lean();
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     paymentData.date = validateAndFormatDate(paymentData.date);
 
     // Generate unique payment ID
     if (!paymentData.id) {
-      const allIds = await Payment.find({}, { id: 1, _id: 0 });
-      let maxIdNum = 0;
-      allIds.forEach(p => {
-        if (p.id && /^PAY\d+$/.test(p.id)) {
-          const num = parseInt(p.id.slice(3));
-          if (num > maxIdNum) maxIdNum = num;
-        }
-      });
+      const [{ maxIdNum = 0 } = {}] = await Payment.aggregate([
+        { $match: { id: /^PAY\d+$/ } },
+        { $project: { idNum: { $toInt: { $substrBytes: ['$id', 3, { $subtract: [{ $strLenBytes: '$id' }, 3] }] } } } },
+        { $group: { _id: null, maxIdNum: { $max: '$idNum' } } },
+      ]);
       paymentData.id = `PAY${String(maxIdNum + 1).padStart(3, '0')}`;
     }
     const payment = new Payment(paymentData);
@@ -144,8 +140,10 @@ router.post('/payments', async (req, res) => {
     // Update invoice
     const invoice = await Invoice.findOne({ reservationId: paymentData.reservationId });
     if (invoice) {
-      const totalPaid = (await Payment.find({ reservationId: paymentData.reservationId }))
-        .reduce((sum, p) => sum + p.amount, 0);
+      const [{ totalPaid = 0 } = {}] = await Payment.aggregate([
+        { $match: { reservationId: paymentData.reservationId } },
+        { $group: { _id: null, totalPaid: { $sum: '$amount' } } },
+      ]);
       const updatedFields = {
         paidAmount: totalPaid,
         status: calculateInvoiceStatus(invoice.total, totalPaid, invoice.dueDate),
@@ -158,8 +156,10 @@ router.post('/payments', async (req, res) => {
     }
 
     // Update booking's finalAmount
-    const totalPaid = (await Payment.find({ reservationId: paymentData.reservationId }))
-      .reduce((sum, p) => sum + p.amount, 0);
+    const [{ totalPaid = 0 } = {}] = await Payment.aggregate([
+      { $match: { reservationId: paymentData.reservationId } },
+      { $group: { _id: null, totalPaid: { $sum: '$amount' } } },
+    ]);
     await Booking.findOneAndUpdate(
       { id: paymentData.reservationId },
       { finalAmount: totalPaid },
@@ -174,7 +174,7 @@ router.post('/payments', async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
   try {
-    const rooms = await Room.find();
+    const rooms = await Room.find().lean();
     res.json(rooms);
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -6,7 +6,7 @@ const router = express.Router();
 // GET all
 router.get('/', async (req, res) => {
   try {
-    const tickets = await RoomMaintenance.find().sort({ createdAt: -1 });
+    const tickets = await RoomMaintenance.find().sort({ createdAt: -1 }).lean();
     res.json(tickets);
   } catch (err) {
     console.error('Error fetching maintenance tickets:', err);
@@ -26,7 +26,7 @@ router.get('/categories', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const ticket = await RoomMaintenance.findOne({ id: req.params.id });
+    const ticket = await RoomMaintenance.findOne({ id: req.params.id }).lean();
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
     res.json(ticket);
   } catch (err) {
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
     let newId;
     let attempts = 0;
     do {
-      const lastTicket = await RoomMaintenance.findOne().sort({ createdAt: -1 });
+      const lastTicket = await RoomMaintenance.findOne().sort({ createdAt: -1 }).select('id').lean();
       const lastId = lastTicket ? parseInt(lastTicket.id.slice(2)) : 0;
       newId = `MT${String(lastId + 1 + attempts).padStart(3, '0')}`;
       attempts++;

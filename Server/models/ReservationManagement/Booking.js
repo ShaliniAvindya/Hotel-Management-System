@@ -54,4 +54,10 @@ const bookingSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
+bookingSchema.index({ createdAt: -1 });
+bookingSchema.index({ status: 1, createdAt: -1 });
+bookingSchema.index({ guestId: 1 });
+bookingSchema.index({ roomId: 1, checkInDate: 1, checkOutDate: 1, status: 1 });
+bookingSchema.index({ 'splitStays.roomId': 1, 'splitStays.checkIn': 1, 'splitStays.checkOut': 1, status: 1 });
+
 module.exports = mongoose.model('Booking', bookingSchema);

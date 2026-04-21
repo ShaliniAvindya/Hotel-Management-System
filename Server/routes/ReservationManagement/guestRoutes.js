@@ -6,7 +6,7 @@ const router = express.Router();
 // Get all guests
 router.get('/', async (req, res) => {
   try {
-    const guests = await Guest.find().sort({ createdDate: -1 });
+    const guests = await Guest.find().sort({ createdDate: -1 }).lean();
     res.json(guests);
   } catch (err) {
     try {
@@ -29,14 +29,11 @@ router.post('/', async (req, res) => {
   try {
     const guestData = req.body;
     if (!guestData.id) {
-      const allIds = await Guest.find({}, { id: 1, _id: 0 });
-      let maxIdNum = 0;
-      allIds.forEach(g => {
-        if (g.id && /^G\d+$/.test(g.id)) {
-          const num = parseInt(g.id.slice(1));
-          if (num > maxIdNum) maxIdNum = num;
-        }
-      });
+      const [{ maxIdNum = 0 } = {}] = await Guest.aggregate([
+        { $match: { id: /^G\d+$/ } },
+        { $project: { idNum: { $toInt: { $substrBytes: ['$id', 1, { $subtract: [{ $strLenBytes: '$id' }, 1] }] } } } },
+        { $group: { _id: null, maxIdNum: { $max: '$idNum' } } },
+      ]);
       guestData.id = `G${String(maxIdNum + 1).padStart(3, '0')}`;
     }
     const existing = await Guest.findOne({ $or: [{ email: guestData.email }, { phone: guestData.phone }] });
@@ -52,7 +49,7 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const guest = await Guest.findOne({ id: req.params.id });
+    const guest = await Guest.findOne({ id: req.params.id }).lean();
     if (!guest) return res.status(404).json({ message: 'Guest not found' });
     res.json(guest);
   } catch (err) {

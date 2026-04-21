@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/requests', async (req, res) => {
   try {
-    const requests = await ConciergeRequest.find().sort({ createdAt: -1 });
+    const requests = await ConciergeRequest.find().sort({ createdAt: -1 }).lean();
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -16,7 +16,7 @@ router.get('/requests', async (req, res) => {
 
 router.get('/requests/status/:status', async (req, res) => {
   try {
-    const requests = await ConciergeRequest.find({ status: req.params.status }).sort({ createdAt: -1 });
+    const requests = await ConciergeRequest.find({ status: req.params.status }).sort({ createdAt: -1 }).lean();
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -26,7 +26,7 @@ router.get('/requests/status/:status', async (req, res) => {
 // Get concierge requests by room
 router.get('/requests/room/:roomNumber', async (req, res) => {
   try {
-    const requests = await ConciergeRequest.find({ roomNumber: req.params.roomNumber }).sort({ createdAt: -1 });
+    const requests = await ConciergeRequest.find({ roomNumber: req.params.roomNumber }).sort({ createdAt: -1 }).lean();
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -35,7 +35,7 @@ router.get('/requests/room/:roomNumber', async (req, res) => {
 
 router.get('/requests/:id', async (req, res) => {
   try {
-    const request = await ConciergeRequest.findOne({ id: req.params.id });
+    const request = await ConciergeRequest.findOne({ id: req.params.id }).lean();
     if (!request) return res.status(404).json({ message: 'Request not found' });
     res.json(request);
   } catch (err) {
@@ -48,7 +48,7 @@ router.post('/requests', async (req, res) => {
   try {
     const requestData = req.body;
     if (!requestData.id) {
-      const lastRequest = await ConciergeRequest.findOne().sort({ createdAt: -1 });
+      const lastRequest = await ConciergeRequest.findOne().sort({ createdAt: -1 }).select('id').lean();
       const lastId = lastRequest ? parseInt(lastRequest.id.slice(2)) : 0;
       requestData.id = `CR${String(lastId + 1).padStart(4, '0')}`;
     }

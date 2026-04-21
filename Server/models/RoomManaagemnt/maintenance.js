@@ -24,4 +24,8 @@ const roomMaintenanceSchema = new mongoose.Schema({
   scheduledEndDate: { type: String }, 
 }, { timestamps: true });
 
+roomMaintenanceSchema.index({ createdAt: -1 });
+roomMaintenanceSchema.index({ roomId: 1, status: 1 });
+roomMaintenanceSchema.index({ status: 1, priority: 1 });
+
 module.exports = mongoose.model('roomMaintenance', roomMaintenanceSchema, 'roomMaintenance');

@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const availabilities = await RoomAvailability.find().sort({ createdAt: -1 });
+    const availabilities = await RoomAvailability.find().sort({ createdAt: -1 }).lean();
     res.json(availabilities);
   } catch (err) {
     console.error('Error fetching room availabilities:', err);
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:roomId', async (req, res) => {
   try {
-    const availability = await RoomAvailability.findOne({ roomId: req.params.roomId });
+    const availability = await RoomAvailability.findOne({ roomId: req.params.roomId }).lean();
     if (!availability) return res.status(404).json({ message: 'Room availability not found' });
     res.json(availability);
   } catch (err) {

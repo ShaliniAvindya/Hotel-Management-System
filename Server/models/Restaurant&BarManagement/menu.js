@@ -24,6 +24,9 @@ const menuSchema = new mongoose.Schema({
   margin: { type: Number, default: 0 },
 });
 
+menuSchema.index({ category: 1, isActive: 1 });
+menuSchema.index({ isActive: 1, popularity: -1 });
+
 const Menu = mongoose.model('Menu', menuSchema);
 
 module.exports = Menu;

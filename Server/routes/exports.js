@@ -30,7 +30,10 @@ router.get('/analytics', async (req, res) => {
     // Stream Bookings header then rows
     res.write('Bookings\n');
     res.write('id,guest,roomId,checkInDate,checkOutDate,status,totalAmount,createdAt\n');
-    const bookingsCursor = Booking.find().cursor();
+    const bookingsCursor = Booking.find()
+      .select('id firstName lastName guestId roomId checkInDate checkOutDate status totalAmount createdAt')
+      .lean()
+      .cursor();
     for await (const b of bookingsCursor) {
       const line = [
         b.id || '',
@@ -48,7 +51,10 @@ router.get('/analytics', async (req, res) => {
 
     res.write('Orders\n');
     res.write('id,type,customerName,tableId,roomId,total,createdAt\n');
-    const ordersCursor = Order.find().cursor();
+    const ordersCursor = Order.find()
+      .select('id type customerName tableId roomId total createdAt')
+      .lean()
+      .cursor();
     for await (const o of ordersCursor) {
       const line = [o.id || '', o.type || '', o.customerName || '', o.tableId || '', o.roomId || '', o.total || '', o.createdAt ? new Date(o.createdAt).toISOString() : '']
         .map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';
@@ -59,7 +65,10 @@ router.get('/analytics', async (req, res) => {
     // Stream Payments
     res.write('Payments\n');
     res.write('id,reservationId,amount,type,method,status,date,reference\n');
-    const paymentsCursor = Payment.find().cursor();
+    const paymentsCursor = Payment.find()
+      .select('id reservationId amount type method status date reference')
+      .lean()
+      .cursor();
     for await (const p of paymentsCursor) {
       const line = [p.id || '', p.reservationId || '', p.amount || '', p.type || '', p.method || '', p.status || '', p.date ? new Date(p.date).toISOString() : '', p.reference || '']
         .map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';

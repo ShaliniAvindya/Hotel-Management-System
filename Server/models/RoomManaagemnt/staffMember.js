@@ -7,4 +7,7 @@ const staffMemberSchema = new mongoose.Schema({
   specialties: { type: [String], default: [] }
 }, { timestamps: true });
 
+staffMemberSchema.index({ name: 1 });
+staffMemberSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('roomStaff', staffMemberSchema, 'roomStaff');

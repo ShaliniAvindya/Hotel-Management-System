@@ -63,4 +63,9 @@ const roomRatesSchema = new mongoose.Schema({
   applicableRoomTypes: [{ type: String, enum: ['single', 'double', 'twin', 'triple', 'suite', 'presidential', 'villa', 'penthouse'] }],
 }, { timestamps: true });
 
+roomRatesSchema.index({ createdAt: -1 });
+roomRatesSchema.index({ rateType: 1, status: 1 });
+roomRatesSchema.index({ roomId: 1, rateType: 1 });
+roomRatesSchema.index({ roomType: 1, status: 1 });
+
 module.exports = mongoose.model('RoomRates', roomRatesSchema, 'roomRates');

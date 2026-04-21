@@ -4,7 +4,7 @@ const Menu = require('../../models/Restaurant&BarManagement/menu');
 
 router.get('/', async (req, res) => {
   try {
-    const items = await Menu.find();
+    const items = await Menu.find().sort({ category: 1, name: 1 }).lean();
     res.json(items);
   } catch (err) {
     res.status(500).json({ message: err.message });

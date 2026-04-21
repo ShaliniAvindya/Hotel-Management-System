@@ -28,4 +28,8 @@ const specialRequestSchema = new mongoose.Schema({
   requestDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
+specialRequestSchema.index({ bookingId: 1 });
+specialRequestSchema.index({ status: 1, dueDate: 1 });
+specialRequestSchema.index({ requestDate: -1 });
+
 module.exports = mongoose.model('SpecialRequest', specialRequestSchema);
