@@ -23,6 +23,7 @@ const settingsRoutes = require('./routes/settings');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const spaRoutes = require('./routes/SpaAndWellness');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

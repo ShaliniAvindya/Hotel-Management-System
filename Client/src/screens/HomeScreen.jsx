@@ -66,6 +66,7 @@ const Homescreen = () => {
   const [paymentsData, setPaymentsData] = useState([]);
   const [maintenanceData, setMaintenanceData] = useState([]);
   const [staffData, setStaffData] = useState([]);
+  const [dashboardSummary, setDashboardSummary] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
 
@@ -82,21 +83,19 @@ const Homescreen = () => {
     setLoadingData(true);
     setDataError(null);
 
-    Promise.all([
-      fetch(`${base}/rooms`).then((r) => r.json()),
-      fetch(`${base}/bookings`).then((r) => r.json()),
-      fetch(`${base}/orders`).then((r) => r.json()),
-      fetch(`${base}/billing/payments`).then((r) => r.json()).catch(() => []),
-      fetch(`${base}/roomMaintenance`).then((r) => r.json()).catch(() => []),
-      fetch(`${base}/staffMembers`).then((r) => r.json()).catch(() => [])
-    ])
-      .then(([rooms, bookings, orders, payments, maintenance, staff]) => {
-        setRoomsData(Array.isArray(rooms) ? rooms : []);
-        setBookingsData(Array.isArray(bookings) ? bookings : []);
-        setOrdersData(Array.isArray(orders) ? orders : []);
-        setPaymentsData(Array.isArray(payments) ? payments : []);
-        setMaintenanceData(Array.isArray(maintenance) ? maintenance : []);
-        setStaffData(Array.isArray(staff) ? staff : []);
+    fetch(`${base}/dashboard/summary`)
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load dashboard summary');
+        return r.json();
+      })
+      .then((summary) => {
+        setDashboardSummary(summary);
+        setRoomsData(Array.isArray(summary.rooms) ? summary.rooms : []);
+        setBookingsData(Array.isArray(summary.recentBookings) ? summary.recentBookings : []);
+        setOrdersData(Array.isArray(summary.recentOrders) ? summary.recentOrders : []);
+        setPaymentsData([]);
+        setMaintenanceData(Array.isArray(summary.recentMaintenance) ? summary.recentMaintenance : []);
+        setStaffData([]);
       })
       .catch((err) => setDataError(err.message || 'Failed to load data'))
       .finally(() => setLoadingData(false));
@@ -108,17 +107,17 @@ const Homescreen = () => {
     return Number.isFinite(n) ? n : 0;
   };
 
-  const totalRooms = roomsData.length;
-  const occupiedRooms = roomsData.filter((r) => r.isOccupied || r.status === 'occupied').length;
-  const availableRooms = totalRooms - occupiedRooms;
+  const totalRooms = dashboardSummary?.totalRooms ?? roomsData.length;
+  const occupiedRooms = dashboardSummary?.occupiedRooms ?? roomsData.filter((r) => r.isOccupied || r.status === 'occupied' || r.occupancyStatus === 'occupied').length;
+  const availableRooms = dashboardSummary?.availableRooms ?? totalRooms - occupiedRooms;
   const todaysDateISO = new Date().toISOString().slice(0, 10);
-  const todaysBookings = bookingsData.filter((b) => b.checkInDate?.slice?.(0, 10) === todaysDateISO).length;
-  const activeOrders = ordersData.filter((o) => !o.completed && o.status !== 'cancelled').length;
-  const pendingMaintenance = maintenanceData.filter((m) => !m.resolved).length;
-  const staffCount = staffData.length;
+  const todaysBookings = dashboardSummary?.todaysBookings ?? bookingsData.filter((b) => b.checkInDate?.slice?.(0, 10) === todaysDateISO).length;
+  const activeOrders = dashboardSummary?.activeOrders ?? ordersData.filter((o) => !o.completed && o.status !== 'cancelled').length;
+  const pendingMaintenance = dashboardSummary?.pendingMaintenance ?? maintenanceData.filter((m) => !m.resolved).length;
+  const staffCount = dashboardSummary?.staffCount ?? staffData.length;
 
-  const revenueFromPayments = paymentsData.reduce((s, p) => s + safeNumber(p.amount || p.total || p.value), 0);
-  const revenueFromOrders = ordersData.reduce((s, o) => s + safeNumber(o.total || o.amount || o.grandTotal), 0);
+  const revenueFromPayments = dashboardSummary?.revenueFromPayments ?? paymentsData.reduce((s, p) => s + safeNumber(p.amount || p.total || p.value), 0);
+  const revenueFromOrders = dashboardSummary?.revenueFromOrders ?? ordersData.reduce((s, o) => s + safeNumber(o.total || o.amount || o.grandTotal), 0);
   const revenueCollected = revenueFromPayments + revenueFromOrders;
 
   // bookings time series (last 30 days)
@@ -134,8 +133,8 @@ const Homescreen = () => {
     const k = b.createdAt?.slice?.(0, 10) || b.checkInDate?.slice?.(0, 10);
     if (k && bookingsByDayMap.hasOwnProperty(k)) bookingsByDayMap[k] += 1;
   });
-  const bookingsLabels = Object.keys(bookingsByDayMap).map((k) => k.slice(5)); // MM-DD
-  const bookingsValues = Object.values(bookingsByDayMap);
+  const bookingsLabels = dashboardSummary?.bookingsSeries?.map((item) => item.date.slice(5)) ?? Object.keys(bookingsByDayMap).map((k) => k.slice(5)); // MM-DD
+  const bookingsValues = dashboardSummary?.bookingsSeries?.map((item) => item.count) ?? Object.values(bookingsByDayMap);
 
   const revenueSplit = [
     { label: 'Payments', value: revenueFromPayments },
@@ -492,9 +491,9 @@ const Homescreen = () => {
           {/* Enhanced Key Metrics */}
           <div className={`${loadingData ? 'hidden' : 'grid'} grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6`}>
             <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms/totalRooms)*100) : 0}% occupied`} tone="navy" icon={Bed} />
-            <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${bookingsData.filter(b => b.checkInDate)?.length || 0} total bookings`} tone="emerald" icon={CalendarIcon} />
+            <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${dashboardSummary?.totalBookings ?? bookingsData.length} total bookings`} tone="emerald" icon={CalendarIcon} />
             <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} tone="gold" icon={DollarSign} />
-            <StatCard title="Active Orders" value={activeOrders} subtitle={`${ordersData.length} total orders`} tone="rose" icon={Utensils} />
+            <StatCard title="Active Orders" value={activeOrders} subtitle={`${dashboardSummary?.totalOrders ?? ordersData.length} total orders`} tone="rose" icon={Utensils} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -529,8 +528,8 @@ const Homescreen = () => {
               </div>
               <div className="space-y-3 text-sm text-gray-700">
                 <div className="flex items-center justify-between"><span>Active Orders</span><strong>{activeOrders}</strong></div>
-                <div className="flex items-center justify-between"><span>Pending Orders</span><strong>{ordersData.filter(o => o.status === 'pending').length}</strong></div>
-                <div className="flex items-center justify-between"><span>Tables Occupied</span><strong>{ordersData.filter(o => o.table).map(o=>o.table).length}</strong></div>
+                <div className="flex items-center justify-between"><span>Pending Orders</span><strong>{dashboardSummary?.pendingOrders ?? ordersData.filter(o => o.status === 'pending').length}</strong></div>
+                <div className="flex items-center justify-between"><span>Tables Occupied</span><strong>{ordersData.filter(o => o.table || o.tableId).map(o => o.table || o.tableId).length}</strong></div>
                 <div className="mt-3 text-sm text-gray-600">Today's F&B Revenue: <span className="font-semibold text-gray-900">${ordersData.reduce((s,o)=>s+safeNumber(o.total||o.amount),0).toLocaleString()}</span></div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-100">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import {
   Calendar,
   Users,
@@ -57,11 +57,11 @@ import {
   Bell
 } from 'lucide-react';
 import Sidebar from '../Sidebar';
-import BookingManagement from './BookingManagement';
-import GuestManagement from './GuestManagement';
-import CheckInOut from './CheckInOut';
-import CancellationsNoShows from './CancellationsNoShows';
-import SpecialRequests from './SpecialRequests';
+const BookingManagement = lazy(() => import('./BookingManagement'));
+const GuestManagement = lazy(() => import('./GuestManagement'));
+const CheckInOut = lazy(() => import('./CheckInOut'));
+const CancellationsNoShows = lazy(() => import('./CancellationsNoShows'));
+const SpecialRequests = lazy(() => import('./SpecialRequests'));
 
 const ReservationManagement = () => {
   const [activeTab, setActiveTab] = useState('booking');
@@ -173,13 +173,28 @@ const ReservationManagement = () => {
 
         {/* Tab Content */}
         <div className="flex-1">
-          {tabs.map((tab) => (
-            activeTab === tab.id && (
-              <div key={tab.id} className="animate-fadeIn">
-                <tab.component />
+          <Suspense
+            fallback={
+              <div className="px-4 sm:px-6 py-6">
+                <div className="hotel-panel p-6">
+                  <div className="hotel-skeleton h-5 w-40 rounded mb-5"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="hotel-skeleton h-24 rounded"></div>
+                    <div className="hotel-skeleton h-24 rounded"></div>
+                    <div className="hotel-skeleton h-24 rounded"></div>
+                  </div>
+                </div>
               </div>
-            )
-          ))}
+            }
+          >
+            {tabs.map((tab) => (
+              activeTab === tab.id && (
+                <div key={tab.id} className="animate-fadeIn">
+                  <tab.component />
+                </div>
+              )
+            ))}
+          </Suspense>
         </div>
 
         {sidebarOpen && (

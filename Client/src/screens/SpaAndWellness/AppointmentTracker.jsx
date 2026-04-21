@@ -94,9 +94,14 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
     fetchAppointments();
     fetchServices();
     fetchTherapists();
-    fetchGuests();
     fetchRooms();
   }, []);
+
+  useEffect(() => {
+    if (showModal && guests.length === 0) {
+      fetchGuests();
+    }
+  }, [showModal, guests.length]);
 
   useEffect(() => {
     filterAppointments();
