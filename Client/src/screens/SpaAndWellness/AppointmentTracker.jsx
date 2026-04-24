@@ -26,7 +26,7 @@ import { API_BASE_URL } from '../../apiconfig';
 const AppointmentTracker = ({ sidebarOpen = false }) => {
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDate, setFilterDate] = useState('');
@@ -107,27 +107,32 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
     filterAppointments();
   }, [searchTerm, filterStatus, filterDate, appointments]);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/appointments`);
+      if (!background) setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/appointments?expand=0&limit=500&fields=_id,appointmentId,guestId,guestName,guestPhone,guestEmail,service,serviceName,therapist,therapistName,spaRoom,spaRoomNumber,appointmentDate,startTime,endTime,duration,status,totalPrice,paymentStatus,specialRequests,roomNumber`
+      );
       if (!response.ok) throw new Error('Failed to fetch appointments');
       const data = await response.json();
-      setAppointments(Array.isArray(data) ? data : []);
+      const safeAppointments = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setAppointments(safeAppointments);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       setAppointments([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
   const fetchServices = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/spa/services`);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/services?limit=500&fields=_id,serviceName,basePrice,duration,isActive&isActive=true`
+      );
       if (!response.ok) throw new Error('Failed to fetch services');
       const data = await response.json();
-      setServices(Array.isArray(data) ? data : []);
+      setServices(Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []));
     } catch (error) {
       console.error('Error fetching services:', error);
       setServices([]);
@@ -145,12 +150,12 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
         headers['Authorization'] = bearerToken;
       }
       
-      const response = await fetch(`${API_BASE_URL}/spa/therapists`, {
+      const response = await fetch(`${API_BASE_URL}/spa/therapists?limit=500&fields=_id,name,hourlyRate,isActive&isActive=true`, {
         headers
       });
       if (!response.ok) throw new Error('Failed to fetch therapists');
       const data = await response.json();
-      setTherapists(Array.isArray(data) ? data : []);
+      setTherapists(Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []));
     } catch (error) {
       console.error('Error fetching therapists:', error);
       setTherapists([]);
@@ -159,10 +164,12 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
 
   const fetchGuests = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/guests`);
+      const response = await fetch(
+        `${API_BASE_URL}/guests?limit=500&fields=_id,id,firstName,lastName,email,phone,idNumber,roomNumber`
+      );
       if (!response.ok) throw new Error('Failed to fetch guests');
       const data = await response.json();
-      setGuests(Array.isArray(data) ? data : []);
+      setGuests(Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []));
     } catch (error) {
       setGuests([]);
     }
@@ -170,10 +177,12 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/spa/rooms`);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/rooms?limit=500&fields=_id,roomNumber,roomType,status,isActive&isActive=true`
+      );
       if (!response.ok) throw new Error('Failed to fetch spa rooms');
       const data = await response.json();
-      setRooms(Array.isArray(data) ? data : []);
+      setRooms(Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []));
     } catch (error) {
       console.error('Error fetching spa rooms:', error);
       setRooms([]);
@@ -332,7 +341,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
           : 'Appointment booked successfully!',
         'success'
       );
-      await fetchAppointments();
+      await fetchAppointments({ background: true });
       setShowModal(false);
       setEditingAppointment(null);
       setFormData({
@@ -577,10 +586,9 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
 
       {/* Appointments List */}
       <div className="px-4 sm:px-6 py-6">
-        {loading ? (
+        {loading && appointments.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading appointments...</p>
+            <p className="text-gray-600">Preparing appointments...</p>
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">

@@ -19,6 +19,9 @@ export const AuthProvider = ({ children }) => {
   const [redirectPath, setRedirectPath] = useState(null);
 
   useEffect(() => {
+    localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_user');
+
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       api.defaults.headers['Authorization'] = `Bearer ${token}`;
@@ -31,6 +34,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
           delete api.defaults.headers['Authorization'];
+          setUser(null);
         })
         .finally(() => {
           setLoading(false);
@@ -47,6 +51,8 @@ export const AuthProvider = ({ children }) => {
     } else {
       sessionStorage.setItem('token', token);
     }
+    localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_user');
     api.defaults.headers['Authorization'] = `Bearer ${token}`;
   };
 
@@ -54,6 +60,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
+    localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_user');
     delete api.defaults.headers['Authorization'];
   };
 

@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../../apiconfig';
 const ServiceCatalog = ({ sidebarOpen = false }) => {
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [showServiceForm, setShowServiceForm] = useState(false);
@@ -30,18 +30,21 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
     filterServices();
   }, [searchTerm, filterCategory, services]);
 
-  const fetchServices = async () => {
+  const fetchServices = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/services`);
+      if (!background) setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/services?limit=500&fields=_id,serviceName,category,description,duration,basePrice,maxCapacity,benefits,isActive,createdAt`
+      );
       if (!response.ok) throw new Error('Failed to fetch services');
       const data = await response.json();
-      setServices(Array.isArray(data) ? data : []);
+      const safeServices = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setServices(safeServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       setServices([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -172,9 +175,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
       showNotification('Service deleted successfully!', 'success');
       setShowConfirmDialog(false);
       setServiceToDelete(null);
-      setTimeout(() => {
-        fetchServices();
-      }, 500);
+      fetchServices({ background: true });
     } catch (error) {
       console.error('Error deleting service:', error);
       if (error.message.includes('401') || error.message.includes('Invalid token')) {
@@ -224,7 +225,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
         throw new Error(errorData.message || 'Failed to save service');
       }
       showNotification(editingService ? 'Service updated successfully!' : 'Service added successfully!', 'success');
-      await fetchServices();
+      await fetchServices({ background: true });
       setShowServiceForm(false);
       setEditingService(null);
       setTempBenefit('');
@@ -436,7 +437,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="h-4 w-4 rounded-full bg-white/80"></div>
                   Deleting...
                 </>
               ) : (
@@ -525,9 +526,9 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
 
       {/* Content */}
       <div className="px-4 sm:px-6 py-6">
-        {loading ? (
+        {loading && services.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <p className="text-gray-600">Preparing services...</p>
           </div>
         ) : filteredServices.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center border border-gray-200">

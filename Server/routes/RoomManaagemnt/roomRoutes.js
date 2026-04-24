@@ -5,7 +5,20 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const rooms = await Room.find().sort({ createdAt: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated list
+
+    const q = Room.find();
+    if (fields) q.select(fields.split(',').join(' '));
+    const rooms = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    // Keep backward compatible response (array), expose paging via headers.
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(rooms.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(rooms);
   } catch (err) {
     res.status(500).json({ message: err.message });

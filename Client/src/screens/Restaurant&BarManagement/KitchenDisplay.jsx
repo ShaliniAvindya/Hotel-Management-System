@@ -143,17 +143,22 @@ const KitchenDisplay = () => {
     { id: 'R301', number: '301', floor: 3, type: 'Presidential' },
   ];
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/orders`);
-        setOrders(response.data);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-    };
-    fetchOrders();
+  const refreshOrders = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/orders`);
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshOrders();
+    const pollId = setInterval(() => {
+      refreshOrders();
+    }, 20000);
+    return () => clearInterval(pollId);
+  }, [refreshOrders]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -169,7 +174,6 @@ const KitchenDisplay = () => {
   });
 
   const getElapsedTime = (orderTime) => {
-    console.log('orderTime:', orderTime); // Debug
     const parsedTime = new Date(orderTime);
     if (isNaN(parsedTime.getTime())) {
       console.warn('Invalid order time:', orderTime);

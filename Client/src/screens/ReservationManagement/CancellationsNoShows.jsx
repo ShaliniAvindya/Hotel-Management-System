@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import moment from 'moment-timezone';
 import axios from 'axios';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   XCircle,
   AlertTriangle,
@@ -25,10 +26,7 @@ import {
 import { API_BASE_URL } from '../../apiconfig';
 
 const CancellationsNoShows = () => {
-  const [activeBookings, setActiveBookings] = useState([]);
-  const [cancellations, setCancellations] = useState([]);
-  const [noShows, setNoShows] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const queryClient = useQueryClient();
   const [view, setView] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -124,30 +122,37 @@ const CancellationsNoShows = () => {
     { id: 'other', name: 'Other', category: 'other' }
   ];
 
-  const fetchData = async () => {
-    try {
-      const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
-      setRooms(roomsResponse.data);
+  const { data: rooms = [], isLoading: isRoomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/rooms`)).data
+  });
+  const { data: bookingsData = [], isLoading: isBookingsLoading } = useQuery({
+    queryKey: ['bookings'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/bookings`)).data
+  });
+  const { data: cancellationsData = [], isLoading: isCancellationsLoading } = useQuery({
+    queryKey: ['cancellations'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/cancellations`)).data
+  });
 
-      const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
-      const active = bookingsResponse.data.filter(b => ['confirmed', 'checked-in'].includes(b.status));
-      setActiveBookings(active.map(b => ({
-        ...b,
-        room: b.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === b.roomId)
-      })));
-
-      const cancellationsResponse = await axios.get(`${API_BASE_URL}/cancellations`);
-      setCancellations(cancellationsResponse.data.filter(c => c.type === 'cancellation'));
-      setNoShows(cancellationsResponse.data.filter(c => c.type === 'no-show'));
-    } catch (err) {
-      setError('Failed to fetch data from the server');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const activeBookings = useMemo(
+    () =>
+      bookingsData
+        .filter((b) => ['confirmed', 'checked-in'].includes(b.status))
+        .map((b) => ({
+          ...b,
+          room: b.splitStays?.length > 0 ? null : rooms.find((r) => r.id === b.roomId)
+        })),
+    [bookingsData, rooms]
+  );
+  const cancellations = useMemo(
+    () => cancellationsData.filter((c) => c.type === 'cancellation'),
+    [cancellationsData]
+  );
+  const noShows = useMemo(
+    () => cancellationsData.filter((c) => c.type === 'no-show'),
+    [cancellationsData]
+  );
 
   const handleCancelBooking = async (formData) => {
     try {
@@ -165,7 +170,8 @@ const CancellationsNoShows = () => {
         setShowCancelForm(false);
         setSelectedBooking(null);
         setSuccess('');
-        await fetchData();
+        await queryClient.invalidateQueries({ queryKey: ['bookings'] });
+        await queryClient.invalidateQueries({ queryKey: ['cancellations'] });
       }, 2000);
     } catch (err) {
       console.error('Cancel booking error:', err);
@@ -190,7 +196,8 @@ const CancellationsNoShows = () => {
         setShowNoShowForm(false);
         setSelectedBooking(null);
         setSuccess('');
-        await fetchData();
+        await queryClient.invalidateQueries({ queryKey: ['bookings'] });
+        await queryClient.invalidateQueries({ queryKey: ['cancellations'] });
       }, 2000);
     } catch (err) {
       console.error('No-show error:', err);
@@ -905,7 +912,11 @@ const CancellationsNoShows = () => {
               {filteredData.length} {view === 'active' ? 'active bookings' : view}
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['rooms'] });
+                queryClient.invalidateQueries({ queryKey: ['bookings'] });
+                queryClient.invalidateQueries({ queryKey: ['cancellations'] });
+              }}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
               title="Refresh"
               aria-label="Refresh data"
@@ -983,7 +994,10 @@ const CancellationsNoShows = () => {
 
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {filteredData.length === 0 ? (
+          {(isRoomsLoading || isBookingsLoading || isCancellationsLoading) ? (
+            <div className="text-center py-10 text-gray-500">Preparing cancellations...</div>
+          ) : (
+          filteredData.length === 0 ? (
             <div className="text-center py-12">
               {view === 'active' && <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />}
               {view === 'cancelled' && <XCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />}
@@ -1017,6 +1031,7 @@ const CancellationsNoShows = () => {
                 />
               ))}
             </div>
+          )
           )}
         </div>
       </div>

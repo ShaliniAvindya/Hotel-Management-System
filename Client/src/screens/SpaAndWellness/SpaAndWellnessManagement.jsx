@@ -142,11 +142,12 @@ const SpaAndWellnessManagement = () => {
         {/* Tab Content */}
         <div className="flex-1">
           {tabs.map((tab) => (
-            activeTab === tab.id && (
-              <div key={tab.id} className="animate-fadeIn">
-                <tab.component sidebarOpen={sidebarOpen} />
-              </div>
-            )
+            <div
+              key={tab.id}
+              className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
+            >
+              <tab.component sidebarOpen={sidebarOpen} />
+            </div>
           ))}
         </div>
 

@@ -21,7 +21,26 @@ const calculateInvoiceStatus = (total, paidAmount, dueDate) => {
 
 router.get('/invoices', async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ createdAt: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated
+    const reservationId = req.query.reservationId;
+    const status = req.query.status;
+
+    const filter = {};
+    if (reservationId) filter.reservationId = reservationId;
+    if (status) filter.status = status;
+
+    const q = Invoice.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+
+    const invoices = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(invoices.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(invoices);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -110,7 +129,26 @@ router.put('/invoices/:id', async (req, res) => {
 
 router.get('/payments', async (req, res) => {
   try {
-    const payments = await Payment.find().sort({ createdAt: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated
+    const reservationId = req.query.reservationId;
+    const status = req.query.status;
+
+    const filter = {};
+    if (reservationId) filter.reservationId = reservationId;
+    if (status) filter.status = status;
+
+    const q = Payment.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+
+    const payments = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(payments.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -174,7 +212,19 @@ router.post('/payments', async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
   try {
-    const rooms = await Room.find().lean();
+    const limit = Math.min(Number(req.query.limit) || 500, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || 'roomNumber';
+    const fields = req.query.fields; // comma-separated
+
+    const q = Room.find();
+    if (fields) q.select(fields.split(',').join(' '));
+    const rooms = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(rooms.length));
+    res.setHeader('Cache-Control', 'private, max-age=60');
     res.json(rooms);
   } catch (err) {
     res.status(500).json({ message: err.message });

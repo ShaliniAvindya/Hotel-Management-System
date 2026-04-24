@@ -45,6 +45,7 @@ import { API_BASE_URL } from '../../apiconfig';
 const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterAvailability, setFilterAvailability] = useState('all');
@@ -90,17 +91,21 @@ const MenuManagement = () => {
     { id: 'late_night', name: 'Late Night' },
   ];
 
+  const refreshMenuItems = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/menu`);
+      setMenuItems(response.data);
+      setFilteredItems(response.data);
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMenuItems = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/menu`);
-        setMenuItems(response.data);
-        setFilteredItems(response.data);
-      } catch (error) {
-        console.error('Error fetching menu items:', error);
-      }
-    };
-    fetchMenuItems();
+    refreshMenuItems();
   }, []);
 
   // Filter items
@@ -1348,7 +1353,9 @@ const MenuManagement = () => {
 
       {/* Menu Items Display */}
       <div className="p-6">
-        {filteredItems.length === 0 ? (
+        {loading && menuItems.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">Preparing menu...</div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No menu items found.</p>
             <button

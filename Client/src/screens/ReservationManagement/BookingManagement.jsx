@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Calendar,
   ChevronLeft,
@@ -338,19 +340,13 @@ const BookingForm = ({ booking, rooms, bookings, onSave, onCancel, quickBookingD
         const response = await axios.put(`${API_BASE_URL}/bookings/${booking.id}`, bookingData);
         onSave(response.data);
         setSuccess('Booking updated successfully!');
-        setTimeout(() => {
-          onCancel();
-          window.location.reload();
-        }, 2000);
+        onCancel();
       } else {
         // Create new booking
         const response = await axios.post(`${API_BASE_URL}/bookings`, bookingData);
         onSave(response.data);
         setSuccess('Booking created successfully!');
-        setTimeout(() => {
-          onCancel();
-          window.location.reload();
-        }, 2000);
+        onCancel();
       }
     } catch (error) {
       setError(error.response?.data?.message || 'An error occurred while saving the booking');
@@ -897,11 +893,8 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
 });
 
 const BookingCalendar = () => {
+  const queryClient = useQueryClient();
   const [view, setView] = useState('list'); 
-  const [bookings, setBookings] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [filteredBookings, setFilteredBookings] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
   const [filters, setFilters] = useState({ search: '', status: 'all', roomType: 'all', dateRange: { start: '', end: '' } });
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('week'); 
@@ -914,6 +907,47 @@ const BookingCalendar = () => {
   const [success, setSuccess] = useState(null);
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
+
+  const {
+    data: roomsData = [],
+    isLoading: isRoomsLoading,
+    error: roomsError
+  } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/rooms`);
+      return response.data;
+    }
+  });
+
+  const {
+    data: bookingsData = [],
+    isLoading: isBookingsLoading,
+    error: bookingsError
+  } = useQuery({
+    queryKey: ['bookings'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/bookings`);
+      return response.data;
+    }
+  });
+
+  const rooms = roomsData;
+  const isInitialLoading = isRoomsLoading || isBookingsLoading;
+  const queryErrorMessage =
+    roomsError?.response?.data?.message ||
+    bookingsError?.response?.data?.message ||
+    roomsError?.message ||
+    bookingsError?.message ||
+    null;
+  const bookings = useMemo(
+    () =>
+      bookingsData.map((booking) => ({
+        ...booking,
+        room: booking.splitStays?.length > 0 ? null : roomsData.find((r) => r.id === booking.roomId)
+      })),
+    [bookingsData, roomsData]
+  );
 
   const bookingStatuses = [
     { id: 'all', name: 'All Bookings', color: 'gray' },
@@ -936,34 +970,8 @@ const BookingCalendar = () => {
     { id: 'penthouse', name: 'Penthouse' }
   ];
 
-  // Fetch rooms and bookings
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
-        const fetchedRooms = roomsResponse.data;
-        setRooms(fetchedRooms);
-        setFilteredRooms(fetchedRooms);
-
-        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
-        const fetchedBookings = bookingsResponse.data.map(booking => ({
-          ...booking,
-          room: booking.splitStays.length > 0 ? null : fetchedRooms.find(r => r.id === booking.roomId)
-        }));
-        setBookings(fetchedBookings);
-        setFilteredBookings(fetchedBookings);
-      } catch (error) {
-        setError(error.response?.data?.message || 'Failed to fetch data from the server');
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Filter bookings and rooms
-  useEffect(() => {
+  const filteredBookings = useMemo(() => {
     let filteredB = bookings;
-    let filteredR = rooms;
 
     if (filters.search) {
       filteredB = filteredB.filter(
@@ -972,11 +980,6 @@ const BookingCalendar = () => {
           booking.bookingReference.toLowerCase().includes(filters.search.toLowerCase()) ||
           booking.guestEmail?.toLowerCase().includes(filters.search.toLowerCase()) ||
           booking.guestPhone?.includes(filters.search)
-      );
-      filteredR = filteredR.filter(
-        (room) =>
-          room.roomNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
-          room.name.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -996,62 +999,53 @@ const BookingCalendar = () => {
       );
     }
 
-    setFilteredBookings(filteredB);
-    setFilteredRooms(filteredR);
-  }, [bookings, rooms, filters]);
+    return filteredB;
+  }, [bookings, filters]);
 
-  const handleAddBooking = async (bookingData) => {
-    try {
-      const { id, ...bookingDataWithoutId } = bookingData;
-      const response = await axios.post(`${API_BASE_URL}/bookings`, bookingDataWithoutId);
-      const newBooking = {
-        ...response.data,
-        room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
-      };
-      setBookings([...bookings, newBooking]);
-      setFilteredBookings([...filteredBookings, newBooking]);
-      setQuickBookingData(null);
-      setFormError(null);
-      setFormSuccess('Booking created successfully!');
-      setTimeout(() => {
-        setFormSuccess(null);
-        setShowBookingForm(false);
-        window.location.reload();
-      }, 2000);
-    } catch (error) {
-      setFormError(error.response?.data?.message || 'Failed to create booking');
+  const filteredRooms = useMemo(() => {
+    let filteredR = rooms;
+    if (filters.search) {
+      filteredR = filteredR.filter(
+        (room) =>
+          room.roomNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
+          room.name.toLowerCase().includes(filters.search.toLowerCase())
+      );
     }
+
+    if (filters.roomType !== 'all') {
+      filteredR = filteredR.filter((room) => room.type === filters.roomType);
+    }
+
+    return filteredR;
+  }, [rooms, filters]);
+
+  const handleAddBooking = (newBooking) => {
+    queryClient.setQueryData(['bookings'], (prev = []) => [...prev, newBooking]);
+    setQuickBookingData(null);
+    setFormError(null);
+    setFormSuccess('Booking created successfully!');
+    setTimeout(() => setFormSuccess(null), 2000);
   };
 
-  const handleEditBooking = async (bookingData) => {
-    try {
-      const response = await axios.put(`${API_BASE_URL}/bookings/${bookingData.id}`, bookingData);
-      const updatedBooking = {
-        ...response.data,
-        room: bookingData.splitStays.length > 0 ? null : rooms.find(r => r.id === bookingData.roomId)
-      };
-      setBookings(bookings.map((b) => (b.id === bookingData.id ? updatedBooking : b)));
-      setFilteredBookings(filteredBookings.map((b) => (b.id === bookingData.id ? updatedBooking : b)));
-      setShowBookingForm(false);
-      setEditingBooking(null);
-      setFormSuccess('Booking updated successfully!');
-      setTimeout(() => {
-        setFormSuccess(null);
-        window.location.reload();
-      }, 2000);
-    } catch (error) {
-      setFormError(error.response?.data?.message || 'Failed to update booking');
-    }
+  const handleEditBooking = (updatedBooking) => {
+    queryClient.setQueryData(['bookings'], (prev = []) =>
+      prev.map((booking) => (booking.id === updatedBooking.id ? updatedBooking : booking))
+    );
+    setShowBookingForm(false);
+    setEditingBooking(null);
+    setFormSuccess('Booking updated successfully!');
+    setTimeout(() => setFormSuccess(null), 2000);
   };
 
   const handleDeleteBooking = async (bookingId) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
         await axios.delete(`${API_BASE_URL}/bookings/${bookingId}`);
-        const updatedBooking = bookings.find(b => b.id === bookingId);
-        updatedBooking.status = 'cancelled';
-        setBookings(bookings.map(b => b.id === bookingId ? updatedBooking : b));
-        setFilteredBookings(filteredBookings.map(b => b.id === bookingId ? updatedBooking : b));
+        queryClient.setQueryData(['bookings'], (prev = []) =>
+          prev.map((booking) =>
+            booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
+          )
+        );
         setSuccess('Booking cancelled successfully!');
         setTimeout(() => setSuccess(null), 2000);
       } catch (error) {
@@ -1134,6 +1128,14 @@ const BookingCalendar = () => {
   };
 
   const dates = getDateRange();
+  const calendarListHeight = Math.min(640, Math.max(filteredRooms.length * 96, 120));
+  const parentRef = useRef(null);
+  const rowVirtualizer = useVirtualizer({
+    count: filteredRooms.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 96,
+    overscan: 5
+  });
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -1152,10 +1154,10 @@ const BookingCalendar = () => {
             </div>
           )}
           
-          {(error || formError) && !(success || formSuccess) && (
+          {(error || formError || queryErrorMessage) && !(success || formSuccess) && (
             <div className="bg-red-100 border border-red-400 text-red-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <span className="flex-1">{error || formError}</span>
+              <span className="flex-1">{error || formError || queryErrorMessage}</span>
               <button 
                 onClick={() => { setError(null); setFormError(null); }} 
                 className="ml-2 text-red-700 hover:text-red-900 focus:outline-none flex-shrink-0"
@@ -1235,7 +1237,10 @@ const BookingCalendar = () => {
               {view === 'list' ? `${filteredBookings.length} bookings` : `${filteredRooms.length} rooms`}
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['rooms'] });
+                queryClient.invalidateQueries({ queryKey: ['bookings'] });
+              }}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-slate-100 rounded-lg"
               title="Refresh"
             >
@@ -1367,7 +1372,11 @@ const BookingCalendar = () => {
           </div>
         )}
 
-        {view === 'list' ? (
+        {isInitialLoading ? (
+          <div className="hotel-card p-6">
+            <div className="text-center py-10 text-gray-500">Preparing bookings...</div>
+          </div>
+        ) : view === 'list' ? (
           <div className="hotel-card p-6">
             {filteredBookings.length === 0 ? (
               <div className="text-center py-12">
@@ -1434,20 +1443,35 @@ const BookingCalendar = () => {
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
-              {filteredRooms.map((room) => (
-                <CalendarRow
-                  key={room.id}
-                  room={room}
-                  dates={dates}
-                  bookings={filteredBookings}
-                  bookingStatuses={bookingStatuses}
-                  onCellClick={handleCellClick}
-                  onBookingClick={handleBookingClick}
-                  isToday={isToday}
-                  isWeekend={isWeekend}
-                />
-              ))}
+            <div ref={parentRef} className="divide-y divide-gray-200 overflow-auto" style={{ height: calendarListHeight }}>
+              <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const room = filteredRooms[virtualRow.index];
+                  return (
+                    <div
+                      key={room.id}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualRow.start}px)`
+                      }}
+                    >
+                      <CalendarRow
+                        room={room}
+                        dates={dates}
+                        bookings={filteredBookings}
+                        bookingStatuses={bookingStatuses}
+                        onCellClick={handleCellClick}
+                        onBookingClick={handleBookingClick}
+                        isToday={isToday}
+                        isWeekend={isWeekend}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {filteredRooms.length === 0 && (

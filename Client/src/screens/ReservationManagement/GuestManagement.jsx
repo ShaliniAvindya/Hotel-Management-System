@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   User,
   Plus,
@@ -1051,8 +1052,7 @@ const GuestListItem = ({ guest, onView, onEdit, onDelete }) => {
 };
 
 const GuestManagement = () => {
-  const [guests, setGuests] = useState([]);
-  const [filteredGuests, setFilteredGuests] = useState([]);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
@@ -1060,8 +1060,6 @@ const GuestManagement = () => {
   const [editingGuest, setEditingGuest] = useState(null);
   const [showGuestDetails, setShowGuestDetails] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState(null);
-  const [rooms, setRooms] = useState([]); 
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const guestStatuses = [
@@ -1072,27 +1070,17 @@ const GuestManagement = () => {
     { id: 'inactive', name: 'Inactive', color: 'gray' }
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [guestsRes, roomsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/guests`),
-          axios.get(`${API_BASE_URL}/rooms`)
-        ]);
-        setGuests(guestsRes.data);
-        setFilteredGuests(guestsRes.data);
-        setRooms(roomsRes.data);
-      } catch (err) {
-        setError('Failed to fetch data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: guests = [], isLoading: isGuestsLoading } = useQuery({
+    queryKey: ['guests'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/guests`)).data
+  });
 
-  useEffect(() => {
+  const { data: roomsData = [], isLoading: isRoomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/rooms`)).data
+  });
+
+  const filteredGuests = useMemo(() => {
     let filtered = guests;
 
     if (searchQuery) {
@@ -1110,13 +1098,13 @@ const GuestManagement = () => {
       filtered = filtered.filter((guest) => guest.status === filterStatus);
     }
 
-    setFilteredGuests(filtered);
+    return filtered;
   }, [guests, searchQuery, filterStatus]);
 
   const handleAddGuest = async (guestData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/guests`, guestData);
-      setGuests([...guests, response.data]);
+      queryClient.setQueryData(['guests'], (prev = []) => [...prev, response.data]);
       setShowGuestForm(false);
     } catch (err) {
       alert('Failed to add guest');
@@ -1126,7 +1114,9 @@ const GuestManagement = () => {
   const handleEditGuest = async (guestData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/guests/${guestData.id}`, guestData);
-      setGuests(guests.map((guest) => (guest.id === guestData.id ? response.data : guest)));
+      queryClient.setQueryData(['guests'], (prev = []) =>
+        prev.map((guest) => (guest.id === guestData.id ? response.data : guest))
+      );
       setEditingGuest(null);
       setShowGuestForm(false);
     } catch (err) {
@@ -1138,7 +1128,9 @@ const GuestManagement = () => {
     if (window.confirm('Are you sure you want to delete this guest?')) {
       try {
         await axios.delete(`${API_BASE_URL}/guests/${guestId}`);
-        setGuests(guests.filter((guest) => guest.id !== guestId));
+        queryClient.setQueryData(['guests'], (prev = []) =>
+          prev.filter((guest) => guest.id !== guestId)
+        );
       } catch (err) {
         alert('Failed to delete guest');
       }
@@ -1150,7 +1142,13 @@ const GuestManagement = () => {
   const activeGuests = guests.filter(g => g.status === 'active').length;
   const avgStaysPerGuest = guests.length > 0 ? (guests.reduce((sum, g) => sum + g.totalStays, 0) / guests.length).toFixed(1) : 0;
 
-  if (loading) return <div className="text-center py-12">Loading...</div>;
+  if (isGuestsLoading || isRoomsLoading) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Preparing guests...
+      </div>
+    );
+  }
   if (error) return <div className="text-center py-12 text-red-600">{error}</div>;
 
   return (
@@ -1255,7 +1253,7 @@ const GuestManagement = () => {
               </button>
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['guests'] })}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             >
               <RefreshCw className="h-4 w-4" />
@@ -1345,7 +1343,7 @@ const GuestManagement = () => {
       {showGuestForm && (
         <GuestForm
           guest={editingGuest}
-          rooms={rooms}
+          rooms={roomsData}
           onSave={editingGuest ? handleEditGuest : handleAddGuest}
           onCancel={() => {
             setShowGuestForm(false);
@@ -1357,7 +1355,7 @@ const GuestManagement = () => {
       {showGuestDetails && selectedGuest && (
         <GuestDetails
           guest={selectedGuest}
-          rooms={rooms}
+          rooms={roomsData}
           onClose={() => setShowGuestDetails(false)}
           onEdit={(guest) => {
             setEditingGuest(guest);

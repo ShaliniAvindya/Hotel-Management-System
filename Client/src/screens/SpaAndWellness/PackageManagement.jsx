@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../../apiconfig';
 
 const PackageManagement = ({ sidebarOpen = false }) => {
   const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -39,10 +39,12 @@ const PackageManagement = ({ sidebarOpen = false }) => {
   const fetchServices = async () => {
     try {
       setServicesLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/services`);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/services?limit=500&fields=_id,serviceName,duration,basePrice,isActive&isActive=true`
+      );
       if (!response.ok) throw new Error('Failed to fetch services');
       const data = await response.json();
-      setAvailableServices(Array.isArray(data) ? data : []);
+      setAvailableServices(Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []));
     } catch (error) {
       console.error('Error fetching services:', error);
       setAvailableServices([]);
@@ -112,18 +114,21 @@ const PackageManagement = ({ sidebarOpen = false }) => {
     return service ? service.duration : 0;
   };
 
-  const fetchPackages = async () => {
+  const fetchPackages = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/packages`);
+      if (!background) setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/packages?expand=0&limit=500&fields=_id,packageName,description,packageType,services,originalPrice,discountType,discountValue,totalDuration,validFrom,validUntil,isActive,createdAt`
+      );
       if (!response.ok) throw new Error('Failed to fetch packages');
       const data = await response.json();
-      setPackages(Array.isArray(data) ? data : []);
+      const safePackages = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setPackages(safePackages);
     } catch (error) {
       console.error('Error fetching packages:', error);
       setPackages([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -170,7 +175,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
       }
       
       showNotification(editingPackage ? 'Package updated successfully!' : 'Package created successfully!', 'success');
-      await fetchPackages();
+      await fetchPackages({ background: true });
       setShowModal(false);
       setEditingPackage(null);
       setFormData({ packageName: '', description: '', packageType: 'bundle', services: [], originalPrice: 0, discountType: 'percentage', discountValue: 0, totalDuration: 0, validFrom: '', validUntil: '' });
@@ -346,10 +351,9 @@ const PackageManagement = ({ sidebarOpen = false }) => {
 
       {/* Content */}
       <div className="px-4 sm:px-6 py-6">
-        {loading ? (
+        {loading && packages.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            <p className="mt-4 text-gray-600">Loading packages...</p>
+            <p className="text-gray-600">Preparing packages...</p>
           </div>
         ) : filteredPackages.length === 0 ? (
           <div className="text-center py-12">

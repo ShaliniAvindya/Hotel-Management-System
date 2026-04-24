@@ -9,7 +9,28 @@ const router = express.Router();
 // Get all bookings
 router.get('/', async (req, res) => {
   try {
-    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated list
+    const status = req.query.status;
+    const roomId = req.query.roomId;
+    const guestId = req.query.guestId;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (roomId) filter.roomId = roomId;
+    if (guestId) filter.guestId = guestId;
+
+    const q = Booking.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    const bookings = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    // Backward compatible response (array), paging via headers.
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(bookings.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: err.message });

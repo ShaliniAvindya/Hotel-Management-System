@@ -188,11 +188,12 @@ const RestaurantBarManagement = () => {
         {/* Tab Content */}
         <div className="flex-1 p-4 sm:p-6">
           {tabs.map((tab) => (
-            activeTab === tab.id && (
-              <div key={tab.id} className="animate-fadeIn">
-                <tab.component />
-              </div>
-            )
+            <div
+              key={tab.id}
+              className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
+            >
+              <tab.component />
+            </div>
           ))}
         </div>
 

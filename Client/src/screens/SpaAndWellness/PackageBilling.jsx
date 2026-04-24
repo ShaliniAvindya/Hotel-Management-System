@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../../apiconfig';
 
 const PackageBilling = () => {
   const [billings, setBillings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showViewModal, setShowViewModal] = useState(false);
@@ -35,24 +35,28 @@ const PackageBilling = () => {
     return token && !token.startsWith('Bearer ') ? `Bearer ${token}` : token;
   };
 
-  const fetchBillings = async () => {
+  const fetchBillings = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
       const token = getToken();
       const headers = {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': normalizeToken(token) }),
       };
-      const response = await fetch(`${API_URL}/billing`, { headers });
+      const response = await fetch(
+        `${API_URL}/billing?expand=0&limit=500&fields=_id,billingId,appointmentId,guestId,guestName,guestEmail,guestPhone,invoiceDate,items,subtotal,tax,discount,total,amountPaid,amountDue,paymentStatus,paymentMethod,notes,dueDate`,
+        { headers }
+      );
       if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
       const data = await response.json();
-      setBillings(Array.isArray(data) ? data : []);
+      const safeBillings = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setBillings(safeBillings);
     } catch (error) {
       console.error('Error fetching billings:', error);
       showNotification('Failed to load billings', 'error');
       setBillings([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -122,7 +126,7 @@ const PackageBilling = () => {
 
       if (!response.ok) throw new Error('Failed to update billing');
       
-      fetchBillings();
+      fetchBillings({ background: true });
       setShowEditModal(false);
       showNotification('Billing updated successfully!', 'success');
     } catch (error) {
@@ -694,9 +698,9 @@ const PackageBilling = () => {
 
       {/* Billings Table */}
       <div className="px-4 sm:px-6 pb-6">
-        {loading ? (
+        {loading && billings.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            <p className="text-gray-600">Preparing billing records...</p>
           </div>
         ) : filteredBillings.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center border border-gray-200">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import {
@@ -43,6 +43,8 @@ Chart.register(...registerables);
 import { AuthContext } from '../components/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { API_BASE_URL } from '../apiconfig';
+import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 
 const Homescreen = () => {
   const navigate = useNavigate();
@@ -60,16 +62,6 @@ const Homescreen = () => {
   ]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
-  const [roomsData, setRoomsData] = useState([]);
-  const [bookingsData, setBookingsData] = useState([]);
-  const [ordersData, setOrdersData] = useState([]);
-  const [paymentsData, setPaymentsData] = useState([]);
-  const [maintenanceData, setMaintenanceData] = useState([]);
-  const [staffData, setStaffData] = useState([]);
-  const [dashboardSummary, setDashboardSummary] = useState(null);
-  const [loadingData, setLoadingData] = useState(true);
-  const [dataError, setDataError] = useState(null);
-
   const bookingsChartRef = useRef(null);
   const revenueChartRef = useRef(null);
 
@@ -78,28 +70,79 @@ const Homescreen = () => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const base = API_BASE_URL;
-    setLoadingData(true);
-    setDataError(null);
+  const buildFallbackSummary = async () => {
+    const [roomsRes, bookingsRes, ordersRes, maintenanceRes] = await Promise.all([
+      axios.get(`${API_BASE_URL}/rooms`),
+      axios.get(`${API_BASE_URL}/bookings`),
+      axios.get(`${API_BASE_URL}/orders`),
+      axios.get(`${API_BASE_URL}/roomMaintenance`),
+    ]);
 
-    fetch(`${base}/dashboard/summary`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load dashboard summary');
-        return r.json();
-      })
-      .then((summary) => {
-        setDashboardSummary(summary);
-        setRoomsData(Array.isArray(summary.rooms) ? summary.rooms : []);
-        setBookingsData(Array.isArray(summary.recentBookings) ? summary.recentBookings : []);
-        setOrdersData(Array.isArray(summary.recentOrders) ? summary.recentOrders : []);
-        setPaymentsData([]);
-        setMaintenanceData(Array.isArray(summary.recentMaintenance) ? summary.recentMaintenance : []);
-        setStaffData([]);
-      })
-      .catch((err) => setDataError(err.message || 'Failed to load data'))
-      .finally(() => setLoadingData(false));
-  }, []);
+    const rooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+    const bookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
+    const orders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
+    const maintenance = Array.isArray(maintenanceRes.data) ? maintenanceRes.data : [];
+
+    const today = new Date().toISOString().slice(0, 10);
+    const occupiedRooms = rooms.filter(
+      (r) => r.isOccupied || r.status === 'occupied' || r.occupancyStatus === 'occupied'
+    ).length;
+    const activeOrders = orders.filter((o) => !o.completed && o.status !== 'cancelled').length;
+    const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+    const pendingMaintenance = maintenance.filter((m) => !m.resolved && m.status !== 'resolved').length;
+
+    return {
+      totalRooms: rooms.length,
+      occupiedRooms,
+      availableRooms: Math.max(rooms.length - occupiedRooms, 0),
+      todaysBookings: bookings.filter((b) => b.checkInDate?.slice?.(0, 10) === today).length,
+      totalBookings: bookings.length,
+      activeOrders,
+      totalOrders: orders.length,
+      pendingOrders,
+      pendingMaintenance,
+      staffCount: 0,
+      revenueFromPayments: 0,
+      revenueFromOrders: orders.reduce((sum, o) => sum + Number(o.total || o.amount || 0), 0),
+      bookingsSeries: [],
+      rooms,
+      recentBookings: bookings.slice(0, 10),
+      recentOrders: orders.slice(0, 25),
+      recentMaintenance: maintenance.slice(0, 8),
+      _fallback: true,
+    };
+  };
+
+  const { data: dashboardSummary = {} } = useQuery({
+    queryKey: ['dashboard-summary'],
+    staleTime: 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 2,
+    queryFn: async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/dashboard/summary`);
+        return response.data;
+      } catch (error) {
+        return buildFallbackSummary();
+      }
+    },
+  });
+
+  const roomsData = useMemo(() => (Array.isArray(dashboardSummary.rooms) ? dashboardSummary.rooms : []), [dashboardSummary.rooms]);
+  const bookingsData = useMemo(
+    () => (Array.isArray(dashboardSummary.recentBookings) ? dashboardSummary.recentBookings : []),
+    [dashboardSummary.recentBookings]
+  );
+  const ordersData = useMemo(
+    () => (Array.isArray(dashboardSummary.recentOrders) ? dashboardSummary.recentOrders : []),
+    [dashboardSummary.recentOrders]
+  );
+  const maintenanceData = useMemo(
+    () => (Array.isArray(dashboardSummary.recentMaintenance) ? dashboardSummary.recentMaintenance : []),
+    [dashboardSummary.recentMaintenance]
+  );
+  const paymentsData = [];
+  const staffData = [];
 
   // helper: safe number coercion
   const safeNumber = (v) => {
@@ -470,26 +513,8 @@ const Homescreen = () => {
         </header>
 
         <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-          {dataError && (
-            <div className="hotel-card border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-              {dataError}
-            </div>
-          )}
-
-          {loadingData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((item) => (
-                <div key={item} className="hotel-card p-6">
-                  <div className="hotel-skeleton h-4 w-28 rounded mb-4"></div>
-                  <div className="hotel-skeleton h-9 w-20 rounded mb-3"></div>
-                  <div className="hotel-skeleton h-3 w-36 rounded"></div>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Enhanced Key Metrics */}
-          <div className={`${loadingData ? 'hidden' : 'grid'} grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms/totalRooms)*100) : 0}% occupied`} tone="navy" icon={Bed} />
             <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${dashboardSummary?.totalBookings ?? bookingsData.length} total bookings`} tone="emerald" icon={CalendarIcon} />
             <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} tone="gold" icon={DollarSign} />

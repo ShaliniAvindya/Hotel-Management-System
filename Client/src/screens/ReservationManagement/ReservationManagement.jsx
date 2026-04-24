@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   Calendar,
   Users,
@@ -67,6 +67,19 @@ const ReservationManagement = () => {
   const [activeTab, setActiveTab] = useState('booking');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
+
+  useEffect(() => {
+    const preloadTabs = async () => {
+      await Promise.all([
+        import('./BookingManagement'),
+        import('./GuestManagement'),
+        import('./CheckInOut'),
+        import('./CancellationsNoShows'),
+        import('./SpecialRequests'),
+      ]);
+    };
+    preloadTabs();
+  }, []);
 
   const tabs = [
     { 
@@ -175,24 +188,16 @@ const ReservationManagement = () => {
         <div className="flex-1">
           <Suspense
             fallback={
-              <div className="px-4 sm:px-6 py-6">
-                <div className="hotel-panel p-6">
-                  <div className="hotel-skeleton h-5 w-40 rounded mb-5"></div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="hotel-skeleton h-24 rounded"></div>
-                    <div className="hotel-skeleton h-24 rounded"></div>
-                    <div className="hotel-skeleton h-24 rounded"></div>
-                  </div>
-                </div>
-              </div>
+              <div className="px-4 sm:px-6 py-6 text-gray-500">Opening section...</div>
             }
           >
             {tabs.map((tab) => (
-              activeTab === tab.id && (
-                <div key={tab.id} className="animate-fadeIn">
-                  <tab.component />
-                </div>
-              )
+              <div
+                key={tab.id}
+                className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
+              >
+                <tab.component />
+              </div>
             ))}
           </Suspense>
         </div>

@@ -110,26 +110,27 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     { id: 'penthouse', name: 'Penthouse', icon: Sparkles, defaultCapacity: 10 },
   ];
 
+  const fetchData = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      setError(null);
+      const [roomsRes, bookingsRes, maintenanceRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/rooms`),
+        axios.get(`${API_BASE_URL}/bookings`),
+        axios.get(`${API_BASE_URL}/roomMaintenance`),
+      ]);
+      setRooms(roomsRes.data);
+      setBookings(bookingsRes.data);
+      setRoomMaintenance(maintenanceRes.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError('Failed to fetch data. Please try again.');
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [roomsRes, bookingsRes, maintenanceRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/rooms`),
-          axios.get(`${API_BASE_URL}/bookings`),
-          axios.get(`${API_BASE_URL}/roomMaintenance`),
-        ]);
-        setRooms(roomsRes.data);
-        setBookings(bookingsRes.data);
-        setRoomMaintenance(maintenanceRes.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -723,7 +724,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               Today
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => fetchData({ background: true })}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             >
               <RefreshCw className="h-5 w-5" />
@@ -761,10 +762,9 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
           </div>
           <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200"></div>
           <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
-            {loading ? (
+            {loading && rooms.length === 0 ? (
               <div className="text-center py-12">
-                <RefreshCw className="h-8 w-8 text-gray-400 animate-spin mx-auto" />
-                <p className="mt-2 text-gray-600">Loading...</p>
+                <p className="text-gray-600">Preparing availability...</p>
               </div>
             ) : filteredRooms.length === 0 ? (
               <div className="text-center py-12">

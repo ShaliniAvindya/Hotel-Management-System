@@ -10,6 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,6 +18,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setError(null);
     try {
       const res = await api.post('/auth/login', { email, password });
@@ -31,6 +34,8 @@ const Login = () => {
     } catch (err) {
       console.error('Login error', err);
       setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -77,7 +82,13 @@ const Login = () => {
             </label>
             <a href="#" className="text-sm text-blue-600">Forgot?</a>
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-md shadow">Sign in</button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-blue-600 disabled:bg-blue-400 text-white py-3 rounded-md shadow"
+          >
+            {submitting ? 'Signing in...' : 'Sign in'}
+          </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">

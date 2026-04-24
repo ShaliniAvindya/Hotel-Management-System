@@ -109,9 +109,23 @@ const RestaurantSettings = () => {
     }
   };
 
-  const [restaurantInfo, setRestaurantInfo] = useState(null);
+  const [restaurantInfo, setRestaurantInfo] = useState({
+    name: '', address: '', phone: '', email: '', website: '', description: '', cuisine: '', capacity: 0,
+    operatingHours: {
+      monday: { open: '', close: '', closed: false },
+      tuesday: { open: '', close: '', closed: false },
+      wednesday: { open: '', close: '', closed: false },
+      thursday: { open: '', close: '', closed: false },
+      friday: { open: '', close: '', closed: false },
+      saturday: { open: '', close: '', closed: false },
+      sunday: { open: '', close: '', closed: false }
+    }
+  });
 
-  const [systemPreferences, setSystemPreferences] = useState(null);
+  const [systemPreferences, setSystemPreferences] = useState({
+    currency: 'USD', timezone: 'America/New_York', dateFormat: 'MM/DD/YYYY', timeFormat: '12h', language: 'en', taxRate: 0, serviceCharge: 0,
+    reservationDuration: 0, maxPartySize: 0, advanceBookingDays: 0
+  });
 
   const settingSections = [
     { id: 'general', label: 'General Settings', icon: Settings },
@@ -154,24 +168,8 @@ const RestaurantSettings = () => {
         api.get(`${API_BASE_URL}/settings/restaurant`),
         api.get(`${API_BASE_URL}/settings/system`),
       ]);
-      const defaultRestaurant = {
-        name: '', address: '', phone: '', email: '', website: '', description: '', cuisine: '', capacity: 0,
-        operatingHours: {
-          monday: { open: '', close: '', closed: false },
-          tuesday: { open: '', close: '', closed: false },
-          wednesday: { open: '', close: '', closed: false },
-          thursday: { open: '', close: '', closed: false },
-          friday: { open: '', close: '', closed: false },
-          saturday: { open: '', close: '', closed: false },
-          sunday: { open: '', close: '', closed: false }
-        }
-      };
-      const defaultSystem = {
-        currency: '', timezone: '', dateFormat: '', timeFormat: '', language: '', taxRate: 0, serviceCharge: 0,
-        reservationDuration: 0, maxPartySize: 0, advanceBookingDays: 0
-      };
-      setRestaurantInfo({ ...defaultRestaurant, ...(restaurantRes.data || {}) });
-      setSystemPreferences({ ...defaultSystem, ...(systemRes.data || {}) });
+      setRestaurantInfo(prev => ({ ...prev, ...(restaurantRes.data || {}) }));
+      setSystemPreferences(prev => ({ ...prev, ...(systemRes.data || {}) }));
       return { restaurant: restaurantRes.data, system: systemRes.data };
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -271,8 +269,7 @@ const RestaurantSettings = () => {
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
-      {systemPreferences ? (
-        <>
+      <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">System Preferences</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -324,17 +321,13 @@ const RestaurantSettings = () => {
               </div>
             </div>
           </div>
-        </>
-      ) : (
-        <div>Loading system preferences...</div>
-      )}
+      </>
     </div>
   );
 
   const renderRestaurantInfo = () => (
     <div className="space-y-6">
-      {restaurantInfo ? (
-        <>
+      <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Restaurant Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -460,10 +453,7 @@ const RestaurantSettings = () => {
               ))}
             </div>
           </div>
-        </>
-      ) : (
-        <div>Loading restaurant info...</div>
-      )}
+      </>
     </div>
   );
 
@@ -888,8 +878,6 @@ const RestaurantSettings = () => {
 
   const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
 
-  console.log('RestaurantSettings rendering');
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar
@@ -912,7 +900,6 @@ const RestaurantSettings = () => {
             <div className="flex items-center space-x-4 mb-4 w-full">
               <button
                 onClick={() => {
-                  console.log('Opening sidebar');
                   setSidebarOpen(true);
                 }}
                 className="lg:hidden text-gray-600 hover:text-gray-900"

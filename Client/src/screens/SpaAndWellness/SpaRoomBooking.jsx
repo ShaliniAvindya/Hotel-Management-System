@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../../apiconfig';
 
 const SpaRoomBooking = ({ sidebarOpen = false }) => {
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -36,18 +36,21 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
     fetchRooms();
   }, []);
 
-  const fetchRooms = async () => {
+  const fetchRooms = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/rooms`);
+      if (!background) setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/rooms?limit=500&fields=_id,roomNumber,roomType,capacity,hourlyRate,amenities,features,status,isActive`
+      );
       if (!response.ok) throw new Error('Failed to fetch rooms');
       const data = await response.json();
-      setRooms(Array.isArray(data) ? data : []);
+      const safeRooms = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setRooms(safeRooms);
     } catch (error) {
       console.error('Error fetching rooms:', error);
       setRooms([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -104,7 +107,7 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
       }
       
       showNotification(editingRoom ? 'Room updated successfully!' : 'Room added successfully!', 'success');
-      await fetchRooms();
+      await fetchRooms({ background: true });
       setShowModal(false);
       setEditingRoom(null);
       setFormData({ roomNumber: '', roomType: 'single', capacity: 1, hourlyRate: 0, amenities: [], features: [], status: 'available' });
@@ -266,10 +269,9 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
 
       {/* Content */}
       <div className="px-4 sm:px-6 py-6">
-        {loading ? (
+        {loading && rooms.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-            <p className="mt-4 text-gray-600">Loading rooms...</p>
+            <p className="text-gray-600">Preparing rooms...</p>
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="text-center py-12">

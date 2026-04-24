@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calendar,
   Clock,
@@ -26,9 +27,7 @@ import {
 import { API_BASE_URL } from '../../apiconfig';
 
 const CheckInCheckOut = () => {
-  const [bookings, setBookings] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [filteredBookings, setFilteredBookings] = useState([]);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewFilter, setViewFilter] = useState('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
@@ -55,32 +54,27 @@ const CheckInCheckOut = () => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
 
-  // Fetch rooms and bookings
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
-        setRooms(roomsResponse.data);
+  const { data: rooms = [], isLoading: isRoomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/rooms`)).data
+  });
 
-        const bookingsResponse = await axios.get(`${API_BASE_URL}/bookings`);
-        const fetchedBookings = bookingsResponse.data.map(booking => ({
-          ...booking,
-          room: booking.splitStays.length > 0 ? null : roomsResponse.data.find(r => r.id === booking.roomId)
-        }));
-        console.log('Fetched bookings:', fetchedBookings);
-        setBookings(fetchedBookings);
-        setFilteredBookings(fetchedBookings);
-      } catch (err) {
-        setError('Failed to fetch data from the server');
-      }
-    };
-    fetchData();
-  }, []);
+  const { data: bookingsData = [], isLoading: isBookingsLoading } = useQuery({
+    queryKey: ['bookings'],
+    queryFn: async () => (await axios.get(`${API_BASE_URL}/bookings`)).data
+  });
 
-  // Filter bookings
-  useEffect(() => {
-  let filtered = bookings;
-  console.log('Bookings before filter:', bookings);
+  const bookings = useMemo(
+    () =>
+      bookingsData.map((booking) => ({
+        ...booking,
+        room: booking.splitStays?.length > 0 ? null : rooms.find((r) => r.id === booking.roomId)
+      })),
+    [bookingsData, rooms]
+  );
+
+  const filteredBookings = useMemo(() => {
+    let filtered = bookings;
     const today = new Date().toISOString().split('T')[0];
 
     if (searchQuery) {
@@ -116,8 +110,7 @@ const CheckInCheckOut = () => {
         break;
     }
 
-  console.log('Filtered bookings:', filtered);
-  setFilteredBookings(filtered);
+    return filtered;
   }, [bookings, searchQuery, viewFilter]);
 
   const handleCheckIn = (booking) => {
@@ -157,13 +150,13 @@ const CheckInCheckOut = () => {
         ...response.data,
         room: selectedBooking.room
       };
-      setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
-      setFilteredBookings(filteredBookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      queryClient.setQueryData(['bookings'], (prev = []) =>
+        prev.map((booking) => (booking.id === selectedBooking.id ? { ...booking, ...updatedBooking } : booking))
+      );
       setSuccess('Guest checked in successfully');
       setTimeout(() => {
         setShowCheckInModal(false);
         setSuccess(null);
-        window.location.reload();
       }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to check in guest');
@@ -180,13 +173,13 @@ const CheckInCheckOut = () => {
         ...response.data,
         room: selectedBooking.room
       };
-      setBookings(bookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
-      setFilteredBookings(filteredBookings.map(b => b.id === selectedBooking.id ? updatedBooking : b));
+      queryClient.setQueryData(['bookings'], (prev = []) =>
+        prev.map((booking) => (booking.id === selectedBooking.id ? { ...booking, ...updatedBooking } : booking))
+      );
       setSuccess('Guest checked out successfully');
       setTimeout(() => {
         setShowCheckOutModal(false);
         setSuccess(null);
-        window.location.reload();
       }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to check out guest');
@@ -601,7 +594,10 @@ const CheckInCheckOut = () => {
               {filteredBookings.length} bookings
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['rooms'] });
+                queryClient.invalidateQueries({ queryKey: ['bookings'] });
+              }}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
               title="Refresh"
             >
@@ -670,7 +666,10 @@ const CheckInCheckOut = () => {
 
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {filteredBookings.length === 0 ? (
+          {(isRoomsLoading || isBookingsLoading) ? (
+            <div className="p-6 text-center text-gray-500">Preparing check-in data...</div>
+          ) : (
+          filteredBookings.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings found</h3>
@@ -816,6 +815,7 @@ const CheckInCheckOut = () => {
                 </tbody>
               </table>
             </div>
+          )
           )}
         </div>
       </div>

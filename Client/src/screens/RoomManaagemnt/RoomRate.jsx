@@ -93,36 +93,28 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     { id: 'penthouse', name: 'Penthouse', icon: Sparkles },
   ];
 
-  // Fetch rates from backend
-  useEffect(() => {
-    const fetchRates = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(RATES_API_BASE_URL);
-        const data = Array.isArray(response.data) ? response.data : [];
-        setRates(data);
-      } catch (error) {
-        console.error('Error fetching rates:', error);
+  const refreshData = async ({ background = false } = {}) => {
+    if (!background) setLoading(true);
+    try {
+      const [ratesRes, roomsRes] = await Promise.all([
+        axios.get(RATES_API_BASE_URL),
+        axios.get(ROOMS_API_BASE_URL),
+      ]);
+      setRates(Array.isArray(ratesRes.data) ? ratesRes.data : []);
+      setRooms(Array.isArray(roomsRes.data) ? roomsRes.data : []);
+    } catch (error) {
+      console.error('Error refreshing rate data:', error);
+      if (!background) {
         setRates([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRates();
-  }, []);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const response = await axios.get(ROOMS_API_BASE_URL);
-        const data = Array.isArray(response.data) ? response.data : [];
-        setRooms(data);
-      } catch (error) {
-        console.error('Error fetching rooms:', error);
         setRooms([]);
       }
-    };
-    fetchRooms();
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
   // Filter rates based on search, type, and status
@@ -1186,7 +1178,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 </button>
               </div>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => refreshData({ background: true })}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
               >
                 <RefreshCw className="h-4 w-4" />
@@ -1228,9 +1220,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           </div>
         </div>
         <div className="px-4 sm:px-6 py-4 sm:py-6">
-          {loading ? (
+          {loading && rates.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+              <p className="text-gray-600">Preparing rates...</p>
             </div>
           ) : filteredRates.length === 0 ? (
             <div className="text-center py-12">
@@ -1259,7 +1251,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 const StatusIcon = getStatusIcon(rate.status);
                 const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
                 return (
-                  <div key={rate.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                     <div className="p-4 sm:p-6">
                       <div className="flex items-start justify-between mb-3 sm:mb-4">
                         <div className="flex-1">
@@ -1436,7 +1428,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   {filteredRates.map(rate => {
                     const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
                     return (
-                      <tr key={rate.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div>
                             <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{rate.name || 'Unnamed Rate'}</p>

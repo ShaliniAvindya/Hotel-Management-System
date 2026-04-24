@@ -6,7 +6,19 @@ const router = express.Router();
 // Get all guests
 router.get('/', async (req, res) => {
   try {
-    const guests = await Guest.find().sort({ createdDate: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdDate';
+    const fields = req.query.fields; // comma-separated
+
+    const q = Guest.find();
+    if (fields) q.select(fields.split(',').join(' '));
+    const guests = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(guests.length));
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(guests);
   } catch (err) {
     try {

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Home,
   Plus,
@@ -55,9 +56,7 @@ const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
-  const [rooms, setRooms] = useState([]);
-  const [rates, setRates] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); 
@@ -107,34 +106,31 @@ const RoomInventory = () => {
     { id: 'work_desk', name: 'Work Desk', icon: Shield, category: 'business' },
   ];
 
-  // Fetch rooms 
-  const fetchRooms = async () => {
-    try {
-      const response = await axios.get(ROOMS_API_BASE_URL);
-      setRooms(response.data);
-      setFilteredRooms(response.data);
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
+  const { data: roomsData = [], isLoading: isRoomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => {
+      const data = (await axios.get(ROOMS_API_BASE_URL)).data;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.items)) return data.items;
+      return [];
     }
-  };
+  });
 
-  const fetchRates = async () => {
-    try {
-      const response = await axios.get(RATES_API_BASE_URL);
-      setRates(response.data);
-    } catch (error) {
-      console.error('Error fetching rates:', error);
+  const { data: ratesData = [], isLoading: isRatesLoading } = useQuery({
+    queryKey: ['room-rates'],
+    queryFn: async () => {
+      const data = (await axios.get(RATES_API_BASE_URL)).data;
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.items)) return data.items;
+      return [];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchRooms();
-    fetchRates();
-  }, []);
+  const rooms = Array.isArray(roomsData) ? roomsData : (roomsData?.items && Array.isArray(roomsData.items) ? roomsData.items : []);
+  const rates = Array.isArray(ratesData) ? ratesData : (ratesData?.items && Array.isArray(ratesData.items) ? ratesData.items : []);
 
-  // Filter rooms
-  useEffect(() => {
-    let filtered = rooms;
+  const filteredRooms = useMemo(() => {
+    let filtered = Array.isArray(rooms) ? rooms : [];
 
     if (searchQuery) {
       filtered = filtered.filter(
@@ -149,7 +145,7 @@ const RoomInventory = () => {
       filtered = filtered.filter((room) => room.type === filterType);
     }
 
-    setFilteredRooms(filtered);
+    return filtered;
   }, [rooms, searchQuery, filterType]);
 
   const getRoomTypeName = (type) => {
@@ -190,8 +186,8 @@ const RoomInventory = () => {
           };
           await axios.post(RATES_API_BASE_URL, newRate);
         }
-        fetchRooms();
-        fetchRates();
+        queryClient.invalidateQueries({ queryKey: ['rooms'] });
+        queryClient.invalidateQueries({ queryKey: ['room-rates'] });
         setShowRoomForm(false);
       }
     } catch (error) {
@@ -232,8 +228,8 @@ const RoomInventory = () => {
           };
           await axios.post(RATES_API_BASE_URL, newRate);
         }
-        fetchRooms();
-        fetchRates();
+        queryClient.invalidateQueries({ queryKey: ['rooms'] });
+        queryClient.invalidateQueries({ queryKey: ['room-rates'] });
         setEditingRoom(null);
         setShowRoomForm(false);
       }
@@ -252,8 +248,8 @@ const RoomInventory = () => {
           if (rateToDelete) {
             await axios.delete(`${RATES_API_BASE_URL}/${rateToDelete._id}`);
           }
-          fetchRooms();
-          fetchRates();
+          queryClient.invalidateQueries({ queryKey: ['rooms'] });
+          queryClient.invalidateQueries({ queryKey: ['room-rates'] });
         }
       } catch (error) {
         console.error('Error deleting room:', error);
@@ -939,7 +935,10 @@ const RoomInventory = () => {
               </button>
             </div>
             <button
-              onClick={fetchRooms}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['rooms'] });
+                queryClient.invalidateQueries({ queryKey: ['room-rates'] });
+              }}
               className="p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-[#fffaf0] rounded-lg"
             >
               <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -951,7 +950,9 @@ const RoomInventory = () => {
       {/* Room Display */}
       <div className="p-4 sm:p-6">
         <div className="hotel-card p-4 sm:p-6">
-          {filteredRooms.length === 0 ? (
+          {(isRoomsLoading || isRatesLoading) ? (
+            <div className="text-center py-10 text-gray-500">Preparing rooms...</div>
+          ) : filteredRooms.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <Home className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No rooms found</h3>

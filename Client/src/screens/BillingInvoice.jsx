@@ -205,77 +205,78 @@ const BillingInvoice = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
+  const refreshData = async ({ background = false } = {}) => {
+    if (!background) setLoading(true);
+    try {
+      const [bookingsRes, roomsRes, invoicesRes, paymentsRes, servicesRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/bookings?limit=500&fields=id,firstName,lastName,guestEmail,guestPhone,roomId,checkInDate,checkOutDate,guests,totalAmount,status,createdAt,specialRequests,depositAmount,minibarCharges,additionalServices,damageCharges,finalAmount`),
+        fetch(`${API_BASE_URL}/billing/rooms?limit=500&fields=id,name,roomNumber`),
+        fetch(`${API_BASE_URL}/billing/invoices?limit=500`),
+        fetch(`${API_BASE_URL}/billing/payments?limit=500&fields=id,reservationId,amount,type,method,status,date,reference`),
+        fetch(`${API_BASE_URL}/billing/services`),
+      ]);
+      const normalize = (d) => (Array.isArray(d) ? d : (d?.items && Array.isArray(d.items) ? d.items : []));
+
+      const bookings = normalize(await bookingsRes.json());
+      const roomsData = normalize(await roomsRes.json());
+      let invoicesData = normalize(await invoicesRes.json());
+      const paymentsData = normalize(await paymentsRes.json());
+      const services = await servicesRes.json();
+
+      const mappedReservations = bookings.map(booking => ({
+        id: booking.id,
+        guestName: `${booking.firstName} ${booking.lastName}`.trim(),
+        email: booking.guestEmail,
+        phone: booking.guestPhone,
+        address: booking.address || '',
+        roomId: booking.roomId,
+        room: roomsData.find(room => room.id === booking.roomId) || { name: 'Unknown', roomNumber: 'N/A' },
+        checkIn: booking.checkInDate,
+        checkOut: booking.checkOutDate,
+        guests: booking.guests,
+        nights: Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
+        roomRate: booking.totalAmount / Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
+        totalRoomCharges: booking.totalAmount,
+        status: booking.status.replace('-', '_'),
+        bookingDate: booking.createdAt,
+        specialRequests: booking.specialRequests,
+        advancePayment: booking.depositAmount,
+        deposit: booking.depositAmount,
+        additionalCharges: [
+          ...(booking.minibarCharges ? [{ serviceId: 'minibar', quantity: 1, unitPrice: booking.minibarCharges, total: booking.minibarCharges, date: booking.checkInDate }] : []),
+          ...(booking.additionalServices ? [{ serviceId: 'additional_services', quantity: 1, unitPrice: booking.additionalServices, total: booking.additionalServices, date: booking.checkInDate }] : []),
+          ...(booking.damageCharges ? [{ serviceId: 'damage', quantity: 1, unitPrice: booking.damageCharges, total: booking.damageCharges, date: booking.checkInDate }] : []),
+        ],
+        finalAmount: booking.finalAmount,
+      }));
+
+      const currentDate = new Date('2025-09-10');
+      invoicesData = invoicesData.map(invoice => ({
+        ...invoice,
+        status: invoice.paidAmount >= invoice.total
+          ? 'paid'
+          : new Date(invoice.dueDate) < currentDate
+            ? 'overdue'
+            : 'pending',
+        reservation: mappedReservations.find(r => r.id === invoice.reservationId) || null,
+        payments: paymentsData.filter(p => p.reservationId === invoice.reservationId),
+      }));
+
+      setReservations(mappedReservations);
+      setRooms(roomsData);
+      setInvoices(invoicesData);
+      setPayments(paymentsData);
+      setAdditionalServices(services);
+    } catch (err) {
+      toast.error('Failed to fetch data');
+      console.error(err);
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [bookingsRes, roomsRes, invoicesRes, paymentsRes, servicesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/bookings`),
-          fetch(`${API_BASE_URL}/billing/rooms`),
-          fetch(`${API_BASE_URL}/billing/invoices`),
-          fetch(`${API_BASE_URL}/billing/payments`),
-          fetch(`${API_BASE_URL}/billing/services`),
-        ]);
-        const bookings = await bookingsRes.json();
-        const rooms = await roomsRes.json();
-        let invoices = await invoicesRes.json();
-        const payments = await paymentsRes.json();
-        const services = await servicesRes.json();
-
-        // Map bookings to reservations format
-        const mappedReservations = bookings.map(booking => ({
-          id: booking.id,
-          guestName: `${booking.firstName} ${booking.lastName}`.trim(),
-          email: booking.guestEmail,
-          phone: booking.guestPhone,
-          address: booking.address || '',
-          roomId: booking.roomId,
-          room: rooms.find(room => room.id === booking.roomId) || { name: 'Unknown', roomNumber: 'N/A' },
-          checkIn: booking.checkInDate,
-          checkOut: booking.checkOutDate,
-          guests: booking.guests,
-          nights: Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          roomRate: booking.totalAmount / Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          totalRoomCharges: booking.totalAmount,
-          status: booking.status.replace('-', '_'),
-          bookingDate: booking.createdAt,
-          specialRequests: booking.specialRequests,
-          advancePayment: booking.depositAmount,
-          deposit: booking.depositAmount,
-          additionalCharges: [
-            ...(booking.minibarCharges ? [{ serviceId: 'minibar', quantity: 1, unitPrice: booking.minibarCharges, total: booking.minibarCharges, date: booking.checkInDate }] : []),
-            ...(booking.additionalServices ? [{ serviceId: 'additional_services', quantity: 1, unitPrice: booking.additionalServices, total: booking.additionalServices, date: booking.checkInDate }] : []),
-            ...(booking.damageCharges ? [{ serviceId: 'damage', quantity: 1, unitPrice: booking.damageCharges, total: booking.damageCharges, date: booking.checkInDate }] : []),
-          ],
-          finalAmount: booking.finalAmount,
-        }));
-
-        // Attach payments and reservation to invoices
-        const currentDate = new Date('2025-09-10');
-        invoices = invoices.map(invoice => ({
-          ...invoice,
-          status: invoice.paidAmount >= invoice.total
-            ? 'paid'
-            : new Date(invoice.dueDate) < currentDate
-              ? 'overdue'
-              : 'pending',
-          reservation: mappedReservations.find(r => r.id === invoice.reservationId) || null,
-          payments: payments.filter(p => p.reservationId === invoice.reservationId),
-        }));
-
-        setReservations(mappedReservations);
-        setRooms(rooms);
-        setInvoices(invoices);
-        setPayments(payments);
-        setAdditionalServices(services);
-      } catch (err) {
-        toast.error('Failed to fetch data');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    refreshData();
   }, []);
 
   const getRoomById = (roomId) => rooms.find(room => room.id === roomId) || { name: 'Unknown', roomNumber: 'N/A' };
@@ -364,56 +365,7 @@ const BillingInvoice = () => {
         });
         toast.success('Charges updated successfully');
         onSave({ ...reservation, additionalCharges: charges });
-        const [bookingsRes, invoicesRes, paymentsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/bookings`),
-          fetch(`${API_BASE_URL}/billing/invoices`),
-          fetch(`${API_BASE_URL}/billing/payments`),
-        ]);
-        const bookings = await bookingsRes.json();
-        const rooms = await (await fetch(`${API_BASE_URL}/billing/rooms`)).json();
-        let invoices = await invoicesRes.json();
-        const payments = await paymentsRes.json();
-        const mappedReservations = bookings.map(booking => ({
-          id: booking.id,
-          guestName: `${booking.firstName} ${booking.lastName}`.trim(),
-          email: booking.guestEmail,
-          phone: booking.guestPhone,
-          address: booking.address || '',
-          roomId: booking.roomId,
-          room: rooms.find(room => room.id === booking.roomId) || { name: 'Unknown', roomNumber: 'N/A' },
-          checkIn: booking.checkInDate,
-          checkOut: booking.checkOutDate,
-          guests: booking.guests,
-          nights: Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          roomRate: booking.totalAmount / Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          totalRoomCharges: booking.totalAmount,
-          status: booking.status.replace('-', '_'),
-          bookingDate: booking.createdAt,
-          specialRequests: booking.specialRequests,
-          advancePayment: booking.depositAmount,
-          deposit: booking.depositAmount,
-          additionalCharges: [
-            ...(booking.minibarCharges ? [{ serviceId: 'minibar', quantity: 1, unitPrice: booking.minibarCharges, total: booking.minibarCharges, date: booking.checkInDate }] : []),
-            ...(booking.additionalServices ? [{ serviceId: 'additional_services', quantity: 1, unitPrice: booking.additionalServices, total: booking.additionalServices, date: booking.checkInDate }] : []),
-            ...(booking.damageCharges ? [{ serviceId: 'damage', quantity: 1, unitPrice: booking.damageCharges, total: booking.damageCharges, date: booking.checkInDate }] : []),
-          ],
-          finalAmount: booking.finalAmount,
-        }));
-
-        invoices = invoices.map(invoice => ({
-          ...invoice,
-          status: invoice.paidAmount >= invoice.total
-            ? 'paid'
-            : new Date(invoice.dueDate) < currentDate
-              ? 'overdue'
-              : 'pending',
-          reservation: mappedReservations.find(r => r.id === invoice.reservationId) || null,
-          payments: payments.filter(p => p.reservationId === invoice.reservationId),
-        }));
-
-        setReservations(mappedReservations);
-        setInvoices(invoices);
-        setPayments(payments);
+        await refreshData({ background: true });
       } catch (err) {
         toast.error('Failed to update charges');
         console.error(err);
@@ -620,59 +572,7 @@ const BillingInvoice = () => {
         const newPayment = await response.json();
         toast.success('Payment recorded successfully');
         onSave(newPayment);
-        // Auto-refresh data
-        const [bookingsRes, roomsRes, invoicesRes, paymentsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/bookings`),
-          fetch(`${API_BASE_URL}/billing/rooms`),
-          fetch(`${API_BASE_URL}/billing/invoices`),
-          fetch(`${API_BASE_URL}/billing/payments`),
-        ]);
-        const bookings = await bookingsRes.json();
-        const rooms = await roomsRes.json();
-        let invoices = await invoicesRes.json();
-        const payments = await paymentsRes.json();
-        const mappedReservations = bookings.map(booking => ({
-          id: booking.id,
-          guestName: `${booking.firstName} ${booking.lastName}`.trim(),
-          email: booking.guestEmail,
-          phone: booking.guestPhone,
-          address: booking.address || '',
-          roomId: booking.roomId,
-          room: rooms.find(room => room.id === booking.roomId) || { name: 'Unknown', roomNumber: 'N/A' },
-          checkIn: booking.checkInDate,
-          checkOut: booking.checkOutDate,
-          guests: booking.guests,
-          nights: Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          roomRate: booking.totalAmount / Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-          totalRoomCharges: booking.totalAmount,
-          status: booking.status.replace('-', '_'),
-          bookingDate: booking.createdAt,
-          specialRequests: booking.specialRequests,
-          advancePayment: booking.depositAmount,
-          deposit: booking.depositAmount,
-          additionalCharges: [
-            ...(booking.minibarCharges ? [{ serviceId: 'minibar', quantity: 1, unitPrice: booking.minibarCharges, total: booking.minibarCharges, date: booking.checkInDate }] : []),
-            ...(booking.additionalServices ? [{ serviceId: 'additional_services', quantity: 1, unitPrice: booking.additionalServices, total: booking.additionalServices, date: booking.checkInDate }] : []),
-            ...(booking.damageCharges ? [{ serviceId: 'damage', quantity: 1, unitPrice: booking.damageCharges, total: booking.damageCharges, date: booking.checkInDate }] : []),
-          ],
-          finalAmount: booking.finalAmount,
-        }));
-
-        invoices = invoices.map(invoice => ({
-          ...invoice,
-          status: invoice.paidAmount >= invoice.total
-            ? 'paid'
-            : new Date(invoice.dueDate) < currentDate
-              ? 'overdue'
-              : 'pending',
-          reservation: mappedReservations.find(r => r.id === invoice.reservationId) || null,
-          payments: payments.filter(p => p.reservationId === invoice.reservationId),
-        }));
-
-        setReservations(mappedReservations);
-        setRooms(rooms);
-        setInvoices(invoices);
-        setPayments(payments);
+        await refreshData({ background: true });
       } catch (err) {
         toast.error(`Failed to record payment: ${err.message}`);
         console.error(err);
@@ -1082,8 +982,6 @@ const BillingInvoice = () => {
 
   const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
 
-  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar
@@ -1110,7 +1008,7 @@ const BillingInvoice = () => {
               </div>
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => refreshData({ background: true })}
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                 >
                   <RefreshCw className="h-5 w-5" />
@@ -1143,52 +1041,56 @@ const BillingInvoice = () => {
         </div>
         <div className="px-6 py-6">
           {activeTab === 'reservations' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <div className="flex items-center space-x-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by guest name, ID, or email..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+            loading && reservations.length === 0 ? (
+              <div className="text-gray-600">Preparing billings...</div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <>
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search by guest name, ID, or email..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Filter className="h-4 w-4 text-gray-500" />
+                        <select
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="checked_in">Checked In</option>
+                          <option value="checked_out">Checked Out</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="no_show">No Show</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-4 w-4 text-gray-500" />
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="checked_in">Checked In</option>
-                      <option value="checked_out">Checked Out</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="no_show">No Show</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Guest & Room</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Dates</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Charges</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payments</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Balance</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Reservation Status</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice Status</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredReservations.map((reservation) => {
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Guest & Room</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Dates</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Charges</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payments</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Balance</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Reservation Status</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice Status</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {filteredReservations.map((reservation) => {
                       const totalCharges = calculateTotalCharges(reservation);
                       const totalPaid = getTotalPaid(reservation.id);
                       const balance = totalCharges - totalPaid;
@@ -1279,16 +1181,21 @@ const BillingInvoice = () => {
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               </div>
-            </div>
+            )
           )}
           {activeTab === 'payments' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+            loading && payments.length === 0 ? (
+              <div className="text-gray-600">Preparing billings...</div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payment ID</th>
@@ -1331,14 +1238,18 @@ const BillingInvoice = () => {
                       );
                     })}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
-            </div>
+            )
           )}
           {activeTab === 'invoices' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+            loading && uniqueInvoices.length === 0 ? (
+              <div className="text-gray-600">Preparing billings...</div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice #</th>
@@ -1421,9 +1332,10 @@ const BillingInvoice = () => {
                       );
                     })}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
-            </div>
+            )
           )}
           {showBillingForm && selectedReservation && (
             <BillingForm

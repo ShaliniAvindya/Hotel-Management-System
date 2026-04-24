@@ -67,33 +67,43 @@ const RestaurantAnalytics = () => {
   const [rooms, setRooms] = useState([]);
   const [payments, setPayments] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = async ({ background = false } = {}) => {
+    if (!background) setLoading(true);
     try {
       const [bR, oR, rR, pR] = await Promise.all([
-        axios.get(`${API_BASE_URL}/bookings`),
-        axios.get(`${API_BASE_URL}/orders`),
-        axios.get(`${API_BASE_URL}/rooms`),
-        axios.get(`${API_BASE_URL}/billing/payments`),
+        axios.get(`${API_BASE_URL}/bookings`, {
+          params: { limit: 500, fields: 'id,status,createdAt,checkInDate,checkOutDate,roomId,totalAmount' },
+        }),
+        axios.get(`${API_BASE_URL}/orders`, {
+          params: { limit: 500, fields: 'id,status,total,amount,createdAt,items.name,items.quantity' },
+        }),
+        axios.get(`${API_BASE_URL}/rooms`, {
+          params: { limit: 500, fields: 'id,roomNumber,status,occupancyStatus,type' },
+        }),
+        axios.get(`${API_BASE_URL}/billing/payments`, {
+          params: { limit: 500, fields: 'id,reservationId,amount,total,status,method,type,date,createdAt' },
+        }),
       ]);
 
-      setBookings(bR.data || []);
-      setOrders(oR.data || []);
-      setRooms(rR.data || []);
-      setPayments(pR.data || []);
+      const normalize = (d) => (Array.isArray(d) ? d : (d?.items && Array.isArray(d.items) ? d.items : []));
+
+      setBookings(normalize(bR.data));
+      setOrders(normalize(oR.data));
+      setRooms(normalize(rR.data));
+      setPayments(normalize(pR.data));
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Analytics fetch error', err);
       setError(err?.message || 'Failed to load analytics');
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -102,7 +112,7 @@ const RestaurantAnalytics = () => {
   }, []);
 
   const handleRefresh = async () => {
-    await fetchAll();
+    await fetchAll({ background: true });
   };
 
   const downloadFile = (blob, filename) => {
@@ -379,7 +389,7 @@ const RestaurantAnalytics = () => {
               <div className="bg-black text-white text-sm px-4 py-2 rounded-lg shadow">{toast}</div>
             </div>
           )}
-          {loading ? (
+          {loading && bookings.length === 0 && orders.length === 0 && rooms.length === 0 && payments.length === 0 ? (
             <div className="text-center py-20">Loading analytics...</div>
           ) : error ? (
             <div className="text-center py-20 text-red-600">{error}</div>

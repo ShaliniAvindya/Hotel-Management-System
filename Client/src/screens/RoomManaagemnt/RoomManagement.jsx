@@ -184,11 +184,12 @@ const RoomManagement = () => {
         {/* Tab Content */}
         <div className="flex-1">
           {tabs.map((tab) => (
-            activeTab === tab.id && (
-              <div key={tab.id} className="animate-fadeIn">
-                <tab.component />
-              </div>
-            )
+            <div
+              key={tab.id}
+              className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
+            >
+              <tab.component />
+            </div>
           ))}
         </div>
 

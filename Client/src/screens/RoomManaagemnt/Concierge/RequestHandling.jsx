@@ -69,8 +69,7 @@ const RequestHandling = () => {
   ];
 
   useEffect(() => {
-    fetchRequests();
-    fetchStaffMembers();
+    refreshData();
   }, []);
 
   useEffect(() => {
@@ -92,6 +91,35 @@ const RequestHandling = () => {
       setFilteredStaff([]);
     }
   }, [selectedSpecialty, staffMembers]);
+
+  const refreshData = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      const [requestsRes, staffRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/concierge/requests`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }),
+        fetch(`${API_BASE_URL}/staffMembers`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }),
+      ]);
+
+      if (!requestsRes.ok) throw new Error('Failed to fetch requests');
+      if (!staffRes.ok) throw new Error('Failed to fetch staff');
+
+      const [requestsData, staffData] = await Promise.all([requestsRes.json(), staffRes.json()]);
+      setRequests(requestsData);
+      setStaffMembers(staffData);
+    } catch (error) {
+      console.error('Error refreshing concierge data:', error);
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
 
   const fetchRequests = async () => {
     try {
@@ -196,7 +224,7 @@ const RequestHandling = () => {
 
       if (!response.ok) throw new Error('Failed to save request');
       
-      await fetchRequests();
+      await refreshData({ background: true });
       setShowModal(false);
     } catch (error) {
       console.error('Error saving request:', error);
@@ -215,7 +243,7 @@ const RequestHandling = () => {
       });
 
       if (!response.ok) throw new Error('Failed to delete request');
-      await fetchRequests();
+      await refreshData({ background: true });
     } catch (error) {
       console.error('Error deleting request:', error);
     }
@@ -253,7 +281,7 @@ const RequestHandling = () => {
       });
 
       if (!response.ok) throw new Error('Failed to assign request');
-      await fetchRequests();
+      await refreshData({ background: true });
       setShowAssignModal(false);
     } catch (error) {
       console.error('Error assigning request:', error);
@@ -273,7 +301,7 @@ const RequestHandling = () => {
       });
 
       if (!response.ok) throw new Error('Failed to update status');
-      await fetchRequests();
+      await refreshData({ background: true });
     } catch (error) {
       console.error('Error updating status:', error);
     }
@@ -368,10 +396,9 @@ const RequestHandling = () => {
       </div>
 
       {/* Requests List */}
-      {loading ? (
+      {loading && requests.length === 0 ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading requests...</p>
+          <p className="text-gray-600">Preparing requests...</p>
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">

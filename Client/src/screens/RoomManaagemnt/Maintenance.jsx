@@ -73,76 +73,36 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
     other: { color: 'gray', icon: Wrench },
   };
 
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(ROOMS_API_URL);
-        setRooms(response.data);
-      } catch (error) {
-        console.error('Error fetching rooms:', error);
-        setError('Failed to fetch rooms. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRooms();
-  }, []);
+  const refreshData = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      const [roomsRes, ticketsRes, categoriesRes, staffRes] = await Promise.all([
+        axios.get(ROOMS_API_URL),
+        axios.get(TICKETS_API_URL),
+        axios.get(CATEGORIES_API_URL),
+        axios.get(STAFF_API_URL),
+      ]);
 
-  // Fetch maintenance tickets
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(TICKETS_API_URL);
-        setRoomMaintenance(response.data);
-        setFilteredTickets(response.data);
-      } catch (error) {
-        console.error('Error fetching maintenance tickets:', error);
-        setError('Failed to fetch maintenance tickets. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTickets();
-  }, []);
+      setRooms(roomsRes.data || []);
+      setRoomMaintenance(ticketsRes.data || []);
+      setFilteredTickets(ticketsRes.data || []);
+      const uniqueCategories = [...new Set([...(categoriesRes.data || []), 'other'])].map((category) => ({
+        id: category.toLowerCase(),
+        name: category.charAt(0).toUpperCase() + category.slice(1),
+      }));
+      setCategories(uniqueCategories);
+      setStaffMembers(staffRes.data || []);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching maintenance page data:', error);
+      setError('Failed to fetch maintenance data. Please try again.');
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
 
-  // Fetch categories
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(CATEGORIES_API_URL);
-        const uniqueCategories = [...new Set([...response.data, 'other'])].map(category => ({
-          id: category.toLowerCase(),
-          name: category.charAt(0).toUpperCase() + category.slice(1),
-        }));
-        setCategories(uniqueCategories);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        setError('Failed to fetch categories. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Fetch staff members 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(STAFF_API_URL);
-        setStaffMembers(response.data);
-      } catch (error) {
-        console.error('Error fetching staff members:', error);
-        setError('Failed to fetch staff members. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStaff();
+    refreshData();
   }, []);
 
   // Priorities 
@@ -302,12 +262,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
         await updateRoomMaintenanceStatus(ticketData.roomId);
       }
 
-      const catResponse = await axios.get(CATEGORIES_API_URL);
-      const uniqueCategories = [...new Set([...catResponse.data, 'other'])].map(category => ({
-        id: category.toLowerCase(),
-        name: category.charAt(0).toUpperCase() + category.slice(1),
-      }));
-      setCategories(uniqueCategories);
+      await refreshData({ background: true });
     } catch (error) {
       console.error('Error adding ticket:', error);
       setError('Failed to add ticket. Please try again.');
@@ -345,12 +300,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           await updateRoomMaintenanceStatus(ticket.roomId);
         }
 
-        const response = await axios.get(CATEGORIES_API_URL);
-        const uniqueCategories = [...new Set([...response.data, 'other'])].map(category => ({
-          id: category.toLowerCase(),
-          name: category.charAt(0).toUpperCase() + category.slice(1),
-        }));
-        setCategories(uniqueCategories);
+        await refreshData({ background: true });
       } catch (error) {
         console.error('Error deleting ticket:', error);
         setError('Failed to delete ticket. Please try again.');
@@ -1206,7 +1156,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                   </button>
                 </div>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => refreshData({ background: true })}
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -1216,9 +1166,9 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           </div>
         </div>
 
-        {loading && (
+        {loading && roomMaintenance.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-600">Loading...</p>
+            <p className="text-sm text-gray-600">Preparing maintenance data...</p>
           </div>
         )}
 

@@ -45,6 +45,7 @@ import { API_BASE_URL } from '../../apiconfig';
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -94,30 +95,25 @@ const OrderManagement = () => {
     { id: 'R301', number: '301', floor: 3, type: 'Presidential' },
   ];
 
-  useEffect(() => {
-    const fetchMenuItems = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/menu`);
-        setMenuItems(response.data);
-      } catch (error) {
-        console.error('Error fetching menu items:', error);
-      }
-    };
-    fetchMenuItems();
-  }, []);
+  const refreshData = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      const [menuResponse, ordersResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}/menu`),
+        axios.get(`${API_BASE_URL}/orders`),
+      ]);
+      setMenuItems(menuResponse.data);
+      setOrders(ordersResponse.data);
+      setFilteredOrders(ordersResponse.data);
+    } catch (error) {
+      console.error('Error fetching orders or menu:', error);
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
 
-  // Fetch orders
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/orders`);
-        setOrders(response.data);
-        setFilteredOrders(response.data);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-    };
-    fetchOrders();
+    refreshData();
   }, []);
 
   // Filter orders
@@ -1296,7 +1292,9 @@ const OrderManagement = () => {
       {/* Orders Display */}
       <div className="p-4 sm:p-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          {filteredOrders.length === 0 ? (
+          {loading && orders.length === 0 ? (
+            <div className="text-center py-10 text-gray-500">Preparing orders...</div>
+          ) : filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>

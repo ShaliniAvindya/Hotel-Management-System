@@ -30,6 +30,7 @@ const SpecialRequests = () => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -60,25 +61,29 @@ const SpecialRequests = () => {
     { id: 'cancelled', name: 'Cancelled', color: 'red' },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [roomsResponse, bookingsResponse, requestsResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/rooms`),
-          axios.get(`${API_BASE_URL}/bookings`),
-          axios.get(`${API_BASE_URL}/specialrequests`),
-        ]);
+  const refreshData = async ({ background = false } = {}) => {
+    try {
+      if (!background) setLoading(true);
+      const [roomsResponse, bookingsResponse, requestsResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}/rooms`),
+        axios.get(`${API_BASE_URL}/bookings`),
+        axios.get(`${API_BASE_URL}/specialrequests`),
+      ]);
 
-        setRooms(roomsResponse.data);
-        setBookings(bookingsResponse.data);
-        setRequests(requestsResponse.data);
-        setFilteredRequests(requestsResponse.data);
-      } catch (err) {
-        setError('Failed to fetch data from the server');
-        setTimeout(() => setError(''), 3000);
-      }
-    };
-    fetchData();
+      setRooms(roomsResponse.data);
+      setBookings(bookingsResponse.data);
+      setRequests(requestsResponse.data);
+      setFilteredRequests(requestsResponse.data);
+    } catch (err) {
+      setError('Failed to fetch data from the server');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      if (!background) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
   // Filter requests
@@ -147,7 +152,6 @@ const SpecialRequests = () => {
           setShowRequestDetails(false);
           setSelectedRequest(null);
           setSuccess('');
-          window.location.reload();
         }, 2000);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to delete special request');
@@ -742,7 +746,7 @@ const SpecialRequests = () => {
             <span>Add New Request</span>
           </button>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refreshData({ background: true })}
             className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             title="Refresh"
             aria-label="Refresh data"
@@ -809,7 +813,9 @@ const SpecialRequests = () => {
 
         {/* Requests Display */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {filteredRequests.length === 0 ? (
+          {loading && requests.length === 0 ? (
+            <div className="text-center py-10 text-gray-500">Preparing requests...</div>
+          ) : filteredRequests.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No requests found</h3>

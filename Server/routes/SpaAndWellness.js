@@ -9,8 +9,24 @@ const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString
 
 router.get('/services', async (req, res) => {
   try {
-    const services = await SpaService.find().sort({ createdAt: -1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated list
+    const isActive = req.query.isActive;
+
+    const filter = {};
+    if (isActive === 'true') filter.isActive = true;
+    if (isActive === 'false') filter.isActive = false;
+
+    const q = SpaService.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    const services = await q.sort(sort).skip(skip).limit(limit).lean();
     console.log('Fetched services:', services.length, 'Services');
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(services.length));
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(services);
   } catch (error) {
     console.error('Error fetching services:', error);
@@ -102,7 +118,24 @@ router.delete('/services/:id', auth, async (req, res) => {
 
 router.get('/therapists', async (req, res) => {
   try {
-    const therapists = await Therapist.find().sort({ name: 1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || 'name';
+    const fields = req.query.fields; // comma-separated list
+    const isActive = req.query.isActive;
+
+    const filter = {};
+    if (isActive === 'true') filter.isActive = true;
+    if (isActive === 'false') filter.isActive = false;
+
+    const q = Therapist.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    const therapists = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(therapists.length));
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(therapists);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -172,7 +205,24 @@ router.delete('/therapists/:id', auth, async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
   try {
-    const rooms = await SpaRoom.find().sort({ roomNumber: 1 }).lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || 'roomNumber';
+    const fields = req.query.fields; // comma-separated list
+    const isActive = req.query.isActive;
+
+    const filter = {};
+    if (isActive === 'true') filter.isActive = true;
+    if (isActive === 'false') filter.isActive = false;
+
+    const q = SpaRoom.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    const rooms = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(rooms.length));
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -240,10 +290,22 @@ router.delete('/rooms/:id', auth, async (req, res) => {
 
 router.get('/packages', async (req, res) => {
   try {
-    const packages = await SpaPackage.find()
-      .populate('services.serviceId')
-      .sort({ createdAt: -1 })
-      .lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated list
+    const expand = req.query.expand !== '0'; // keep existing behavior by default
+
+    const q = SpaPackage.find();
+    if (fields) q.select(fields.split(',').join(' '));
+    if (expand) q.populate('services.serviceId');
+
+    const packages = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(packages.length));
+    res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(packages);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -315,13 +377,33 @@ router.delete('/packages/:id', auth, async (req, res) => {
 
 router.get('/appointments', async (req, res) => {
   try {
-    const appointments = await SpaAppointment.find()
-      .populate('service', 'serviceName basePrice')
-      .populate('therapist', 'name hourlyRate')
-      .populate('spaRoom', 'roomNumber hourlyRate')
-      .populate('package', 'packageName discountedPrice')
-      .sort({ appointmentDate: -1, createdAt: -1 })
-      .lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-appointmentDate -createdAt';
+    const fields = req.query.fields; // comma-separated list
+    const status = req.query.status;
+    const guestId = req.query.guestId;
+    const expand = req.query.expand !== '0'; // keep existing behavior by default
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (guestId) filter.guestId = guestId;
+
+    const q = SpaAppointment.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    if (expand) {
+      q.populate('service', 'serviceName basePrice')
+        .populate('therapist', 'name hourlyRate')
+        .populate('spaRoom', 'roomNumber hourlyRate')
+        .populate('package', 'packageName discountedPrice');
+    }
+
+    const appointments = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(appointments.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(appointments);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -528,11 +610,29 @@ router.patch('/appointments/:id/status', auth, async (req, res) => {
 
 router.get('/billing', async (req, res) => {
   try {
-    const billings = await SpaBilling.find()
-      .populate('appointmentId', 'appointmentId guestName guestPhone guestEmail packageName therapistName serviceName')
-      .populate('guestId', 'name email phone')
-      .sort({ createdAt: -1 })
-      .lean();
+    const limit = Math.min(Number(req.query.limit) || 200, 500);
+    const skip = Math.max(Number(req.query.skip) || 0, 0);
+    const sort = req.query.sort || '-createdAt';
+    const fields = req.query.fields; // comma-separated list
+    const paymentStatus = req.query.paymentStatus;
+    const expand = req.query.expand !== '0'; // keep existing behavior by default
+
+    const filter = {};
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+
+    const q = SpaBilling.find(filter);
+    if (fields) q.select(fields.split(',').join(' '));
+    if (expand) {
+      q.populate('appointmentId', 'appointmentId guestName guestPhone guestEmail packageName therapistName serviceName')
+        .populate('guestId', 'name email phone');
+    }
+
+    const billings = await q.sort(sort).skip(skip).limit(limit).lean();
+
+    res.setHeader('X-Limit', String(limit));
+    res.setHeader('X-Skip', String(skip));
+    res.setHeader('X-Count', String(billings.length));
+    res.setHeader('Cache-Control', 'private, max-age=10');
     res.json(billings);
   } catch (error) {
     res.status(500).json({ message: error.message });

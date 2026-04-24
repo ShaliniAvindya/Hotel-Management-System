@@ -41,11 +41,7 @@ const App = () => {
         <Suspense
           fallback={
             <div className="hotel-page grid min-h-screen place-items-center p-6">
-              <div className="hotel-card w-full max-w-sm p-6">
-                <div className="hotel-skeleton h-5 w-32 rounded mb-5"></div>
-                <div className="hotel-skeleton h-10 w-full rounded mb-3"></div>
-                <div className="hotel-skeleton h-3 w-48 rounded"></div>
-              </div>
+              <p className="text-gray-600">Opening application...</p>
             </div>
           }
         >

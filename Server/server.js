@@ -1,8 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const compression = require('compression');
+const helmet = require('helmet');
 require('dotenv').config();
+const { cacheGetJson } = require('./utils/httpCache');
 
 const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes'); 
 const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
@@ -28,6 +30,9 @@ const dashboardRoutes = require('./routes/dashboard');
 const app = express();
 
 // Middleware
+app.set('etag', false);
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(compression());
 app.use(cors({
   origin: ['http://localhost:5173', 'https://lushhotelcloud.com'],
   credentials: true,
@@ -57,7 +62,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

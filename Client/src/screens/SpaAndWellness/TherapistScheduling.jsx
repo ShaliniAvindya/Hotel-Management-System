@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../../apiconfig';
 
 const TherapistScheduling = ({ sidebarOpen = false }) => {
   const [therapists, setTherapists] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -51,18 +51,21 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
     fetchTherapists();
   }, []);
 
-  const fetchTherapists = async () => {
+  const fetchTherapists = async ({ background = false } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/spa/therapists`);
+      if (!background) setLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/spa/therapists?limit=500&fields=_id,name,email,phone,specializations,hourlyRate,experience,availability,bio,certifications,totalAppointments,isActive`
+      );
       if (!response.ok) throw new Error('Failed to fetch therapists');
       const data = await response.json();
-      setTherapists(Array.isArray(data) ? data : []);
+      const safeTherapists = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : []);
+      setTherapists(safeTherapists);
     } catch (error) {
       console.error('Error fetching therapists:', error);
       setTherapists([]);
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -154,7 +157,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
       }
       
       showNotification(editingTherapist ? 'Therapist updated successfully!' : 'Therapist added successfully!', 'success');
-      await fetchTherapists();
+      await fetchTherapists({ background: true });
       setShowModal(false);
       setEditingTherapist(null);
       setFormData({ name: '', email: '', phone: '', specializations: [], hourlyRate: 0, experience: 0, availability: [] });
@@ -380,10 +383,9 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
 
       {/* Content */}
       <div className="px-4 sm:px-6 py-6">
-        {loading ? (
+        {loading && therapists.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-            <p className="mt-4 text-gray-600">Loading therapists...</p>
+            <p className="text-gray-600">Preparing therapists...</p>
           </div>
         ) : filteredTherapists.length === 0 ? (
           <div className="text-center py-12">
@@ -909,7 +911,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
                       }
 
                       showNotification('Schedule updated successfully!', 'success');
-                      await fetchTherapists();
+                      await fetchTherapists({ background: true });
                       setShowScheduleModal(false);
                     } catch (error) {
                       console.error('Error updating schedule:', error);
