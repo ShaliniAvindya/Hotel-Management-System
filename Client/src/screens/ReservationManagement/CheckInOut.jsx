@@ -68,6 +68,8 @@ const CheckInCheckOut = () => {
     () =>
       bookingsData.map((booking) => ({
         ...booking,
+        guestName:
+          booking.guestName || `${booking.firstName || ''} ${booking.lastName || ''}`.trim(),
         room: booking.splitStays?.length > 0 ? null : rooms.find((r) => r.id === booking.roomId)
       })),
     [bookingsData, rooms]
@@ -81,9 +83,9 @@ const CheckInCheckOut = () => {
       filtered = filtered.filter(
         (booking) =>
           booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          booking.bookingReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          booking.bookingReference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (booking.room?.roomNumber && booking.room.roomNumber.includes(searchQuery)) ||
-          booking.guestPhone.includes(searchQuery)
+          booking.guestPhone?.includes(searchQuery)
       );
     }
 
@@ -667,7 +669,11 @@ const CheckInCheckOut = () => {
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {(isRoomsLoading || isBookingsLoading) ? (
-            <div className="p-6 text-center text-gray-500">Preparing check-in data...</div>
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+            </div>
           ) : (
           filteredBookings.length === 0 ? (
             <div className="text-center py-12">

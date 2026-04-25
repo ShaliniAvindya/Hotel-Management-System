@@ -22,11 +22,16 @@ import {
   Sparkles
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const AppointmentTracker = ({ sidebarOpen = false }) => {
-  const [appointments, setAppointments] = useState([]);
+  const cachedAppointments = readViewCache('spa-appointments', { fallback: [] });
+  const cachedServices = readViewCache('spa-services-active', { fallback: [] });
+  const cachedTherapists = readViewCache('spa-therapists-active', { fallback: [] });
+  const cachedRooms = readViewCache('spa-rooms-active', { fallback: [] });
+  const [appointments, setAppointments] = useState(cachedAppointments);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => cachedAppointments.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDate, setFilterDate] = useState('');
@@ -36,10 +41,10 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [services, setServices] = useState([]);
-  const [therapists, setTherapists] = useState([]);
+  const [services, setServices] = useState(cachedServices);
+  const [therapists, setTherapists] = useState(cachedTherapists);
   const [guests, setGuests] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState(cachedRooms);
   const [submitError, setSubmitError] = useState('');
   const [guestSearchTerm, setGuestSearchTerm] = useState('');
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
@@ -106,6 +111,22 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
   useEffect(() => {
     filterAppointments();
   }, [searchTerm, filterStatus, filterDate, appointments]);
+
+  useEffect(() => {
+    writeViewCache('spa-appointments', appointments);
+  }, [appointments]);
+
+  useEffect(() => {
+    writeViewCache('spa-services-active', services);
+  }, [services]);
+
+  useEffect(() => {
+    writeViewCache('spa-therapists-active', therapists);
+  }, [therapists]);
+
+  useEffect(() => {
+    writeViewCache('spa-rooms-active', rooms);
+  }, [rooms]);
 
   const fetchAppointments = async ({ background = false } = {}) => {
     try {
@@ -233,8 +254,8 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
     if (searchTerm) {
       filtered = filtered.filter(apt =>
         apt.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.guestPhone.includes(searchTerm) ||
-        apt.appointmentId.includes(searchTerm)
+        apt.guestPhone?.includes(searchTerm) ||
+        apt.appointmentId?.includes(searchTerm)
       );
     }
 
@@ -508,7 +529,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 
@@ -588,7 +609,11 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
       <div className="px-4 sm:px-6 py-6">
         {loading && appointments.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing appointments...</p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-40 rounded-xl bg-white shadow-sm" />
+              ))}
+            </div>
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -645,7 +670,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       <User size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-gray-700 truncate">{apt.guestName}</p>
-                        <p className="text-xs text-gray-500 truncate">{apt.guestPhone}</p>
+                        <p className="text-xs text-gray-500 truncate">{apt.guestPhone || 'Details syncing...'}</p>
                       </div>
                     </div>
                   </div>
@@ -975,11 +1000,11 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Phone</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedAppointment.guestPhone}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedAppointment.guestPhone || 'Refreshing...'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
-                    <p className="text-base font-semibold text-gray-900">{selectedAppointment.guestEmail}</p>
+                    <p className="text-base font-semibold text-gray-900">{selectedAppointment.guestEmail || 'Refreshing...'}</p>
                   </div>
                 </div>
               </div>
@@ -1049,30 +1074,12 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
   );
 };
 
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-down {
-    animation: fadeInDown 0.3s ease-out;
-  }
-`;
-document.head.appendChild(style);
-
 const ConfirmationModal = ({ isOpen, title, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   
   return createPortal(
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 animate-fade-in-down">
+      <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
         <div className="flex items-start gap-3 mb-4">
           <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
           <h3 className="text-lg font-bold text-gray-900">{title}</h3>

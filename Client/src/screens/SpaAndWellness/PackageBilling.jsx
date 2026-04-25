@@ -4,10 +4,12 @@ import { Search, FileText, DollarSign, AlertCircle, Eye, Download, X, Edit2, Che
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const PackageBilling = () => {
-  const [billings, setBillings] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const cachedBillings = readViewCache('spa-billings', { fallback: [] });
+  const [billings, setBillings] = useState(cachedBillings);
+  const [loading, setLoading] = useState(() => cachedBillings.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showViewModal, setShowViewModal] = useState(false);
@@ -26,6 +28,10 @@ const PackageBilling = () => {
   useEffect(() => {
     fetchBillings();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('spa-billings', billings);
+  }, [billings]);
 
   const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -612,7 +618,7 @@ const PackageBilling = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Notification */}
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 
@@ -700,7 +706,14 @@ const PackageBilling = () => {
       <div className="px-4 sm:px-6 pb-6">
         {loading && billings.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing billing records...</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="h-28 rounded-xl bg-white shadow-sm" />
+                <div className="h-28 rounded-xl bg-white shadow-sm" />
+                <div className="h-28 rounded-xl bg-white shadow-sm" />
+              </div>
+              <div className="h-96 rounded-xl bg-white shadow-sm" />
+            </div>
           </div>
         ) : filteredBillings.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
@@ -783,24 +796,3 @@ const PackageBilling = () => {
 };
 
 export default PackageBilling;
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-down {
-    animation: fadeInDown 0.3s ease-out;
-  }
-`;
-if (!document.head.querySelector('style[data-billing-animation]')) {
-  style.setAttribute('data-billing-animation', 'true');
-  document.head.appendChild(style);
-}

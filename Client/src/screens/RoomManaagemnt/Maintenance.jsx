@@ -35,6 +35,7 @@ import {
   Users,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { queryClient } from '../../lib/queryClient';
 
 const ROOMS_API_URL = `${API_BASE_URL}/rooms`;
 const TICKETS_API_URL = `${API_BASE_URL}/roomMaintenance`;
@@ -43,9 +44,13 @@ const STAFF_API_URL = `${API_BASE_URL}/staffMembers`;
 const AVAIL_API_URL = `${API_BASE_URL}/roomAvailability`;
 
 const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
-  const [rooms, setRooms] = useState([]);
-  const [roomMaintenance, setRoomMaintenance] = useState([]);
-  const [filteredTickets, setFilteredTickets] = useState([]);
+  const cachedRooms = queryClient.getQueryData(['rooms']) || [];
+  const cachedMaintenance = queryClient.getQueryData(['room-maintenance']) || [];
+  const cachedCategories = queryClient.getQueryData(['maintenance-categories']) || [];
+  const cachedStaffMembers = queryClient.getQueryData(['staff-members']) || [];
+  const [rooms, setRooms] = useState(cachedRooms);
+  const [roomMaintenance, setRoomMaintenance] = useState(cachedMaintenance);
+  const [filteredTickets, setFilteredTickets] = useState(cachedMaintenance);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
@@ -56,9 +61,15 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
   const [showTicketDetails, setShowTicketDetails] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showUnavailableRooms, setShowUnavailableRooms] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [staffMembers, setStaffMembers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState(cachedCategories);
+  const [staffMembers, setStaffMembers] = useState(cachedStaffMembers);
+  const [loading, setLoading] = useState(
+    () =>
+      cachedRooms.length === 0 &&
+      cachedMaintenance.length === 0 &&
+      cachedCategories.length === 0 &&
+      cachedStaffMembers.length === 0
+  );
   const [error, setError] = useState(null);
 
   const categoryStyles = {
@@ -83,15 +94,22 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
         axios.get(STAFF_API_URL),
       ]);
 
-      setRooms(roomsRes.data || []);
-      setRoomMaintenance(ticketsRes.data || []);
-      setFilteredTickets(ticketsRes.data || []);
+      const nextRooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+      const nextTickets = Array.isArray(ticketsRes.data) ? ticketsRes.data : [];
       const uniqueCategories = [...new Set([...(categoriesRes.data || []), 'other'])].map((category) => ({
         id: category.toLowerCase(),
         name: category.charAt(0).toUpperCase() + category.slice(1),
       }));
+      const nextStaffMembers = Array.isArray(staffRes.data) ? staffRes.data : [];
+      setRooms(nextRooms);
+      setRoomMaintenance(nextTickets);
+      setFilteredTickets(nextTickets);
       setCategories(uniqueCategories);
-      setStaffMembers(staffRes.data || []);
+      setStaffMembers(nextStaffMembers);
+      queryClient.setQueryData(['rooms'], nextRooms);
+      queryClient.setQueryData(['room-maintenance'], nextTickets);
+      queryClient.setQueryData(['maintenance-categories'], uniqueCategories);
+      queryClient.setQueryData(['staff-members'], nextStaffMembers);
       setError(null);
     } catch (error) {
       console.error('Error fetching maintenance page data:', error);
@@ -348,7 +366,11 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-4 sm:p-6 text-center">
-              <p className="text-gray-700">Loading data...</p>
+              <div className="space-y-3">
+                <div className="h-10 rounded-lg bg-gray-100" />
+                <div className="h-10 rounded-lg bg-gray-100" />
+                <div className="h-10 rounded-lg bg-gray-100" />
+              </div>
             </div>
           </div>
         </div>,
@@ -1167,8 +1189,10 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
         </div>
 
         {loading && roomMaintenance.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-sm text-gray-600">Preparing maintenance data...</p>
+          <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="h-40 rounded-xl bg-white border border-gray-200" />
+            <div className="h-40 rounded-xl bg-white border border-gray-200" />
+            <div className="h-40 rounded-xl bg-white border border-gray-200" />
           </div>
         )}
 

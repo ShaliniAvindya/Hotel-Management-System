@@ -24,13 +24,19 @@ import {
   Eye,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { queryClient } from '../../lib/queryClient';
 
 const SpecialRequests = () => {
-  const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const cachedRequests = queryClient.getQueryData(['special-requests']) || [];
+  const cachedRooms = queryClient.getQueryData(['rooms']) || [];
+  const cachedBookings = queryClient.getQueryData(['bookings']) || [];
+  const [requests, setRequests] = useState(cachedRequests);
+  const [filteredRequests, setFilteredRequests] = useState(cachedRequests);
+  const [rooms, setRooms] = useState(cachedRooms);
+  const [bookings, setBookings] = useState(cachedBookings);
+  const [loading, setLoading] = useState(
+    () => cachedRequests.length === 0 && cachedRooms.length === 0 && cachedBookings.length === 0
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -70,10 +76,16 @@ const SpecialRequests = () => {
         axios.get(`${API_BASE_URL}/specialrequests`),
       ]);
 
-      setRooms(roomsResponse.data);
-      setBookings(bookingsResponse.data);
-      setRequests(requestsResponse.data);
-      setFilteredRequests(requestsResponse.data);
+      const nextRooms = Array.isArray(roomsResponse.data) ? roomsResponse.data : [];
+      const nextBookings = Array.isArray(bookingsResponse.data) ? bookingsResponse.data : [];
+      const nextRequests = Array.isArray(requestsResponse.data) ? requestsResponse.data : [];
+      setRooms(nextRooms);
+      setBookings(nextBookings);
+      setRequests(nextRequests);
+      setFilteredRequests(nextRequests);
+      queryClient.setQueryData(['rooms'], nextRooms);
+      queryClient.setQueryData(['bookings'], nextBookings);
+      queryClient.setQueryData(['special-requests'], nextRequests);
     } catch (err) {
       setError('Failed to fetch data from the server');
       setTimeout(() => setError(''), 3000);
@@ -93,10 +105,10 @@ const SpecialRequests = () => {
     if (searchQuery) {
       filtered = filtered.filter(
         (request) =>
-          request.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          request.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          request.roomNumber.includes(searchQuery)
+          request.guestName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          request.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          request.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          request.roomNumber?.includes(searchQuery)
       );
     }
 
@@ -114,7 +126,9 @@ const SpecialRequests = () => {
   const handleAddRequest = async (requestData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/specialrequests`, requestData);
-      setRequests((prev) => [...prev, response.data]);
+      const nextRequests = [...requests, response.data];
+      setRequests(nextRequests);
+      queryClient.setQueryData(['special-requests'], nextRequests);
       setSuccess('Special request created successfully');
       setTimeout(() => {
         setShowRequestForm(false);
@@ -129,7 +143,9 @@ const SpecialRequests = () => {
   const handleEditRequest = async (requestData) => {
     try {
       const response = await axios.put(`${API_BASE_URL}/specialrequests/${requestData.id}`, requestData);
-      setRequests((prev) => prev.map((request) => (request.id === requestData.id ? response.data : request)));
+      const nextRequests = requests.map((request) => (request.id === requestData.id ? response.data : request));
+      setRequests(nextRequests);
+      queryClient.setQueryData(['special-requests'], nextRequests);
       setSuccess('Special request updated successfully');
       setTimeout(() => {
         setEditingRequest(null);
@@ -146,7 +162,9 @@ const SpecialRequests = () => {
     if (window.confirm('Are you sure you want to delete this request?')) {
       try {
         await axios.delete(`${API_BASE_URL}/specialrequests/${requestId}`);
-        setRequests(requests.filter((request) => request.id !== requestId));
+        const nextRequests = requests.filter((request) => request.id !== requestId);
+        setRequests(nextRequests);
+        queryClient.setQueryData(['special-requests'], nextRequests);
         setSuccess('Special request deleted successfully');
         setTimeout(() => {
           setShowRequestDetails(false);
@@ -191,7 +209,7 @@ const SpecialRequests = () => {
       setFormData({
         ...formData,
         bookingId,
-        guestName: selectedBooking?.guestName || '',
+        guestName: selectedBooking?.guestName || `${selectedBooking?.firstName || ''} ${selectedBooking?.lastName || ''}`.trim(),
         roomNumber:
           selectedBooking?.splitStays?.length > 0
             ? 'Multiple Rooms'
@@ -814,7 +832,11 @@ const SpecialRequests = () => {
         {/* Requests Display */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {loading && requests.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">Preparing requests...</div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="h-36 rounded-xl bg-white border border-gray-200" />
+              <div className="h-36 rounded-xl bg-white border border-gray-200" />
+              <div className="h-36 rounded-xl bg-white border border-gray-200" />
+            </div>
           ) : filteredRequests.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />

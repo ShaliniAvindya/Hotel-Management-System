@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Sidebar from './Sidebar';
 import axios from 'axios';
 import { API_BASE_URL } from '../apiconfig';
+import { readViewCache, writeViewCache } from '../lib/viewCache';
 import {
   BarChart3,
   Utensils,
@@ -59,15 +60,24 @@ const ChartCanvas = ({ draw }) => {
 };
 
 const RestaurantAnalytics = () => {
+  const cachedAnalytics = readViewCache('analytics-page', {
+    fallback: { bookings: [], orders: [], rooms: [], payments: [] },
+  });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
-  const [bookings, setBookings] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [payments, setPayments] = useState([]);
+  const [bookings, setBookings] = useState(cachedAnalytics.bookings || []);
+  const [orders, setOrders] = useState(cachedAnalytics.orders || []);
+  const [rooms, setRooms] = useState(cachedAnalytics.rooms || []);
+  const [payments, setPayments] = useState(cachedAnalytics.payments || []);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(
+    () =>
+      (cachedAnalytics.bookings || []).length === 0 &&
+      (cachedAnalytics.orders || []).length === 0 &&
+      (cachedAnalytics.rooms || []).length === 0 &&
+      (cachedAnalytics.payments || []).length === 0
+  );
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [exporting, setExporting] = useState(false);
@@ -93,10 +103,21 @@ const RestaurantAnalytics = () => {
 
       const normalize = (d) => (Array.isArray(d) ? d : (d?.items && Array.isArray(d.items) ? d.items : []));
 
-      setBookings(normalize(bR.data));
-      setOrders(normalize(oR.data));
-      setRooms(normalize(rR.data));
-      setPayments(normalize(pR.data));
+      const nextBookings = normalize(bR.data);
+      const nextOrders = normalize(oR.data);
+      const nextRooms = normalize(rR.data);
+      const nextPayments = normalize(pR.data);
+
+      setBookings(nextBookings);
+      setOrders(nextOrders);
+      setRooms(nextRooms);
+      setPayments(nextPayments);
+      writeViewCache('analytics-page', {
+        bookings: nextBookings,
+        orders: nextOrders,
+        rooms: nextRooms,
+        payments: nextPayments,
+      });
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
@@ -355,7 +376,7 @@ const RestaurantAnalytics = () => {
         setSidebarMinimized={setSidebarMinimized}
       />
 
-      <div className={`flex-1 transition-all duration-300 ${sidebarMinimized ? 'ml-16' : 'ml-64'}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72'}`}>
         <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-100 sticky top-0 z-30">
           <div className="px-6 py-5 flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -390,7 +411,18 @@ const RestaurantAnalytics = () => {
             </div>
           )}
           {loading && bookings.length === 0 && orders.length === 0 && rooms.length === 0 && payments.length === 0 ? (
-            <div className="text-center py-20">Loading analytics...</div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="h-28 rounded-3xl bg-white border border-gray-100 shadow-sm" />
+                <div className="h-28 rounded-3xl bg-white border border-gray-100 shadow-sm" />
+                <div className="h-28 rounded-3xl bg-white border border-gray-100 shadow-sm" />
+                <div className="h-28 rounded-3xl bg-white border border-gray-100 shadow-sm" />
+              </div>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+                <div className="h-96 rounded-3xl bg-white border border-gray-100 shadow-sm lg:col-span-3" />
+                <div className="h-96 rounded-3xl bg-white border border-gray-100 shadow-sm" />
+              </div>
+            </div>
           ) : error ? (
             <div className="text-center py-20 text-red-600">{error}</div>
           ) : (

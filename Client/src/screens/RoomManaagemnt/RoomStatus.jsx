@@ -51,9 +51,11 @@ import {
   Calendar,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { queryClient } from '../../lib/queryClient';
 
 const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
-  const [rooms, setRooms] = useState([]);
+  const cachedRooms = queryClient.getQueryData(['rooms']) || [];
+  const [rooms, setRooms] = useState(cachedRooms);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -65,7 +67,9 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
   const fetchRooms = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/rooms`);
-      setRooms(response.data);
+      const nextRooms = Array.isArray(response.data) ? response.data : [];
+      setRooms(nextRooms);
+      queryClient.setQueryData(['rooms'], nextRooms);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching rooms:', error);

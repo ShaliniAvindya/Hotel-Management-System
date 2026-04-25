@@ -172,7 +172,7 @@ const AdminPanel = () => {
               : notificationType === 'warning'
               ? 'bg-yellow-500'
               : 'bg-green-500'
-          } text-white px-8 py-6 rounded-xl shadow-2xl flex flex-col items-center transition-all duration-300 animate-fadeIn min-w-[300px]`}
+          } text-white px-8 py-6 rounded-xl shadow-2xl flex flex-col items-center transition-all duration-300 min-w-[300px]`}
         >
           <p className="text-lg font-semibold text-center">{notificationMessage}</p>
           <div className="mt-4 w-full bg-white/20 h-1 rounded-full overflow-hidden">
@@ -237,17 +237,6 @@ const AdminPanel = () => {
           border-radius: 0 8px 8px 0 !important;
         }
 
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -60%);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-          }
-        }
-
         @keyframes timer {
           from {
             width: 100%;
@@ -255,10 +244,6 @@ const AdminPanel = () => {
           to {
             width: 0%;
           }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
         }
 
         .animate-timer {

@@ -45,6 +45,7 @@ import { toast } from 'react-hot-toast';
 import { API_BASE_URL } from '../apiconfig';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '../lib/queryClient';
 
 const Homescreen = () => {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ const Homescreen = () => {
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const bookingsChartRef = useRef(null);
   const revenueChartRef = useRef(null);
+  const cachedDashboardSummary = queryClient.getQueryData(['dashboard-summary']);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -115,6 +117,7 @@ const Homescreen = () => {
 
   const { data: dashboardSummary = {} } = useQuery({
     queryKey: ['dashboard-summary'],
+    initialData: cachedDashboardSummary,
     staleTime: 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: 2,

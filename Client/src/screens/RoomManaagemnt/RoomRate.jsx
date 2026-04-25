@@ -32,6 +32,7 @@ import {
   Users,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { queryClient } from '../../lib/queryClient';
 
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
@@ -68,8 +69,10 @@ class ErrorBoundary extends React.Component {
 }
 
 const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
-  const [rates, setRates] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const cachedRates = queryClient.getQueryData(['room-rates']) || [];
+  const cachedRooms = queryClient.getQueryData(['rooms']) || [];
+  const [rates, setRates] = useState(cachedRates);
+  const [rooms, setRooms] = useState(cachedRooms);
   const [filteredRates, setFilteredRates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -80,7 +83,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const [editingRate, setEditingRate] = useState(null);
   const [showRateDetails, setShowRateDetails] = useState(false);
   const [selectedRate, setSelectedRate] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => cachedRates.length === 0 && cachedRooms.length === 0);
 
   const roomTypes = [
     { id: 'single', name: 'Single Room', icon: Bed },
@@ -100,8 +103,12 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
         axios.get(RATES_API_BASE_URL),
         axios.get(ROOMS_API_BASE_URL),
       ]);
-      setRates(Array.isArray(ratesRes.data) ? ratesRes.data : []);
-      setRooms(Array.isArray(roomsRes.data) ? roomsRes.data : []);
+      const nextRates = Array.isArray(ratesRes.data) ? ratesRes.data : [];
+      const nextRooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+      setRates(nextRates);
+      setRooms(nextRooms);
+      queryClient.setQueryData(['room-rates'], nextRates);
+      queryClient.setQueryData(['rooms'], nextRooms);
     } catch (error) {
       console.error('Error refreshing rate data:', error);
       if (!background) {
@@ -174,7 +181,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const handleAdd = async (data) => {
     try {
       const response = await axios.post(RATES_API_BASE_URL, data);
-      setRates([...rates, response.data]);
+      const nextRates = [...rates, response.data];
+      setRates(nextRates);
+      queryClient.setQueryData(['room-rates'], nextRates);
       if (data.rateType === 'ratePlan' && data.roomId) {
         const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
         const room = roomRes.data;
@@ -184,7 +193,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           weekendPrice: data.weekendPrice
         };
         await axios.put(`${ROOMS_API_BASE_URL}/${data.roomId}`, updatedRoom);
-        setRooms(rooms.map(r => r.id === data.roomId ? updatedRoom : r));
+        const nextRooms = rooms.map(r => r.id === data.roomId ? updatedRoom : r);
+        setRooms(nextRooms);
+        queryClient.setQueryData(['rooms'], nextRooms);
       }
       setShowRateForm(false);
     } catch (error) {
@@ -195,7 +206,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const handleEdit = async (data) => {
     try {
       const response = await axios.put(`${RATES_API_BASE_URL}/${data.id}`, data);
-      setRates(rates.map(item => (item.id === data.id ? response.data : item)));
+      const nextRates = rates.map(item => (item.id === data.id ? response.data : item));
+      setRates(nextRates);
+      queryClient.setQueryData(['room-rates'], nextRates);
       if (data.rateType === 'ratePlan' && data.roomId) {
         const roomRes = await axios.get(`${ROOMS_API_BASE_URL}/${data.roomId}`);
         const room = roomRes.data;
@@ -205,7 +218,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           weekendPrice: data.weekendPrice
         };
         await axios.put(`${ROOMS_API_BASE_URL}/${data.roomId}`, updatedRoom);
-        setRooms(rooms.map(r => r.id === data.roomId ? updatedRoom : r));
+        const nextRooms = rooms.map(r => r.id === data.roomId ? updatedRoom : r);
+        setRooms(nextRooms);
+        queryClient.setQueryData(['rooms'], nextRooms);
       }
       setEditingRate(null);
       setShowRateForm(false);
@@ -218,7 +233,9 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
           await axios.delete(`${RATES_API_BASE_URL}/${id}`);
-          setRates(rates.filter(item => item._id !== id));
+          const nextRates = rates.filter(item => item._id !== id && item.id !== id);
+          setRates(nextRates);
+          queryClient.setQueryData(['room-rates'], nextRates);
       } catch (error) {
         console.error('Error deleting rate:', error);
       }
@@ -1222,7 +1239,11 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
         <div className="px-4 sm:px-6 py-4 sm:py-6">
           {loading && rates.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-gray-600">Preparing rates...</p>
+              <div className="grid w-full max-w-5xl grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="h-40 rounded-xl bg-white border border-gray-200" />
+                <div className="h-40 rounded-xl bg-white border border-gray-200" />
+                <div className="h-40 rounded-xl bg-white border border-gray-200" />
+              </div>
             </div>
           ) : filteredRates.length === 0 ? (
             <div className="text-center py-12">

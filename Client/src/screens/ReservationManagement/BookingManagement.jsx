@@ -988,7 +988,7 @@ const BookingCalendar = () => {
     }
 
     if (filters.roomType !== 'all') {
-      filteredR = filteredR.filter((room) => room.type === filters.roomType);
+      filteredB = filteredB.filter((booking) => booking.room?.type === filters.roomType);
     }
 
     if (filters.dateRange.start && filters.dateRange.end) {
@@ -1142,7 +1142,7 @@ const BookingCalendar = () => {
       {createPortal(
         <div className="fixed top-6 right-6 z-[100]">
           {(success || formSuccess) && (
-            <div className="bg-green-100 border border-green-400 text-green-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in mb-4">
+            <div className="bg-green-100 border border-green-400 text-green-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 mb-4">
               <CheckCircle className="h-5 w-5 flex-shrink-0" />
               <span className="flex-1">{success || formSuccess}</span>
               <button 
@@ -1155,7 +1155,7 @@ const BookingCalendar = () => {
           )}
           
           {(error || formError || queryErrorMessage) && !(success || formSuccess) && (
-            <div className="bg-red-100 border border-red-400 text-red-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in">
+            <div className="bg-red-100 border border-red-400 text-red-800 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <span className="flex-1">{error || formError || queryErrorMessage}</span>
               <button 
@@ -1374,7 +1374,11 @@ const BookingCalendar = () => {
 
         {isInitialLoading ? (
           <div className="hotel-card p-6">
-            <div className="text-center py-10 text-gray-500">Preparing bookings...</div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="h-40 rounded-xl bg-white border border-gray-200" />
+              <div className="h-40 rounded-xl bg-white border border-gray-200" />
+              <div className="h-40 rounded-xl bg-white border border-gray-200" />
+            </div>
           </div>
         ) : view === 'list' ? (
           <div className="hotel-card p-6">

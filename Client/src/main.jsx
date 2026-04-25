@@ -11,28 +11,8 @@ try {
 import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,
-      gcTime: 30 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1
-    }
-  }
-});
-
-try {
-  // Clear previously persisted caches once for security.
-  localStorage.removeItem('hotel-management-query-cache');
-  Object.keys(localStorage)
-    .filter((key) => key.endsWith('_v1') || key === 'analytics_snapshot_v1')
-    .forEach((key) => localStorage.removeItem(key));
-} catch (e) {
-  console.warn('Failed to clear old local cache entries', e);
-}
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

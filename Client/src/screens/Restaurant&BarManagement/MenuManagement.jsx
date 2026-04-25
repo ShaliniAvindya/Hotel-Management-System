@@ -41,11 +41,13 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const MenuManagement = () => {
-  const [menuItems, setMenuItems] = useState([]);
+  const cachedMenuItems = readViewCache('restaurant-menu-items', { fallback: [] });
+  const [menuItems, setMenuItems] = useState(cachedMenuItems);
   const [filteredItems, setFilteredItems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => cachedMenuItems.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterAvailability, setFilterAvailability] = useState('all');
@@ -107,6 +109,10 @@ const MenuManagement = () => {
   useEffect(() => {
     refreshMenuItems();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('restaurant-menu-items', menuItems);
+  }, [menuItems]);
 
   // Filter items
   useEffect(() => {
@@ -265,7 +271,7 @@ const MenuManagement = () => {
   const ConfirmationPopup = ({ title, message, onConfirm, onCancel }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
@@ -1354,7 +1360,11 @@ const MenuManagement = () => {
       {/* Menu Items Display */}
       <div className="p-6">
         {loading && menuItems.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">Preparing menu...</div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="h-80 rounded-xl bg-white shadow-sm" />
+            ))}
+          </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No menu items found.</p>

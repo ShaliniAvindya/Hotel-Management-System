@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const Modal = ({ isOpen, onClose, children, title }) => {
   const modalRef = useRef(null);
@@ -96,7 +97,8 @@ const Modal = ({ isOpen, onClose, children, title }) => {
 };
 
 const KitchenDisplay = () => {
-  const [orders, setOrders] = useState([]);
+  const cachedKitchenOrders = readViewCache('restaurant-kitchen-orders', { fallback: [] });
+  const [orders, setOrders] = useState(cachedKitchenOrders);
   const [selectedStation, setSelectedStation] = useState('all');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -159,6 +161,10 @@ const KitchenDisplay = () => {
     }, 20000);
     return () => clearInterval(pollId);
   }, [refreshOrders]);
+
+  useEffect(() => {
+    writeViewCache('restaurant-kitchen-orders', orders);
+  }, [orders]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);

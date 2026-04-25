@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   UtensilsCrossed,
   Plus,
@@ -63,15 +63,28 @@ import {
   Receipt
 } from 'lucide-react';
 import Sidebar from '../Sidebar';
-import MenuManagement from './MenuManagement';
-import OrderManagement from './OrderManagement';
-import BarOperations from './BarOperations';
-import KitchenDisplay from './KitchenDisplay';
+const MenuManagement = lazy(() => import('./MenuManagement'));
+const OrderManagement = lazy(() => import('./OrderManagement'));
+const BarOperations = lazy(() => import('./BarOperations'));
+const KitchenDisplay = lazy(() => import('./KitchenDisplay'));
 
 const RestaurantBarManagement = () => {
   const [activeTab, setActiveTab] = useState('menu');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
+
+  useEffect(() => {
+    const preloadTabs = async () => {
+      await Promise.all([
+        import('./MenuManagement'),
+        import('./OrderManagement'),
+        import('./BarOperations'),
+        import('./KitchenDisplay'),
+      ]);
+    };
+
+    preloadTabs();
+  }, []);
 
   const tabs = [
     { 
@@ -119,7 +132,7 @@ const RestaurantBarManagement = () => {
     return colorMap[tab.color];
   };
 
-  const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
+  const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -187,14 +200,16 @@ const RestaurantBarManagement = () => {
 
         {/* Tab Content */}
         <div className="flex-1 p-4 sm:p-6">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
-            >
-              <tab.component />
-            </div>
-          ))}
+          <Suspense fallback={<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /></div>}>
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={activeTab === tab.id ? 'block' : 'hidden'}
+              >
+                {activeTab === tab.id ? <tab.component /> : null}
+              </div>
+            ))}
+          </Suspense>
         </div>
 
         {/* Mobile sidebar overlay */}
@@ -204,16 +219,6 @@ const RestaurantBarManagement = () => {
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}
-
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out forwards;
-          }
-        `}</style>
       </div>
     </div>
   );

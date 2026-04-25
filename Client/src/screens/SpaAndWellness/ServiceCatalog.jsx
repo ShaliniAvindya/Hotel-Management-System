@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Search, Edit, Trash2, AlertCircle, X, Eye, Sparkles, CheckCircle, XCircle, Power, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const ServiceCatalog = ({ sidebarOpen = false }) => {
-  const [services, setServices] = useState([]);
+  const cachedServices = readViewCache('spa-services', { fallback: [] });
+  const [services, setServices] = useState(cachedServices);
   const [filteredServices, setFilteredServices] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => cachedServices.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [showServiceForm, setShowServiceForm] = useState(false);
@@ -29,6 +31,10 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
   useEffect(() => {
     filterServices();
   }, [searchTerm, filterCategory, services]);
+
+  useEffect(() => {
+    writeViewCache('spa-services', services);
+  }, [services]);
 
   const fetchServices = async ({ background = false } = {}) => {
     try {
@@ -454,7 +460,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 
@@ -528,7 +534,11 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
       <div className="px-4 sm:px-6 py-6">
         {loading && services.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing services...</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-56 rounded-xl bg-white shadow-sm" />
+              ))}
+            </div>
           </div>
         ) : filteredServices.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
@@ -737,23 +747,5 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
     </div>
   );
 };
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-down {
-    animation: fadeInDown 0.3s ease-out;
-  }
-`;
-document.head.appendChild(style);
 
 export default ServiceCatalog;

@@ -106,7 +106,7 @@ export default function Navigation() {
       {/* Popup for no shop profile */}
       {showNoShopPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full flex flex-col items-center">
             <div className="text-2xl font-bold text-[#1A3C34] mb-2">No Shop Profile Found</div>
             <div className="text-gray-700 mb-6 text-center">You haven't created a shop profile page yet. Please create a shop page first to continue.</div>
             <button

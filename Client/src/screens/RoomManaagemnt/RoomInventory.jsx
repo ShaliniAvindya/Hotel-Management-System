@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,12 +51,16 @@ import {
   Sun,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`; 
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
   const queryClient = useQueryClient();
+  const cachedInventory = readViewCache('room-inventory-page', {
+    fallback: { rooms: [], rates: [] },
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); 
@@ -108,6 +112,7 @@ const RoomInventory = () => {
 
   const { data: roomsData = [], isLoading: isRoomsLoading } = useQuery({
     queryKey: ['rooms'],
+    initialData: cachedInventory.rooms,
     queryFn: async () => {
       const data = (await axios.get(ROOMS_API_BASE_URL)).data;
       if (Array.isArray(data)) return data;
@@ -118,6 +123,7 @@ const RoomInventory = () => {
 
   const { data: ratesData = [], isLoading: isRatesLoading } = useQuery({
     queryKey: ['room-rates'],
+    initialData: cachedInventory.rates,
     queryFn: async () => {
       const data = (await axios.get(RATES_API_BASE_URL)).data;
       if (Array.isArray(data)) return data;
@@ -128,6 +134,11 @@ const RoomInventory = () => {
 
   const rooms = Array.isArray(roomsData) ? roomsData : (roomsData?.items && Array.isArray(roomsData.items) ? roomsData.items : []);
   const rates = Array.isArray(ratesData) ? ratesData : (ratesData?.items && Array.isArray(ratesData.items) ? ratesData.items : []);
+
+  useEffect(() => {
+    if (rooms.length === 0 && rates.length === 0) return;
+    writeViewCache('room-inventory-page', { rooms, rates });
+  }, [rooms, rates]);
 
   const filteredRooms = useMemo(() => {
     let filtered = Array.isArray(rooms) ? rooms : [];
@@ -951,7 +962,11 @@ const RoomInventory = () => {
       <div className="p-4 sm:p-6">
         <div className="hotel-card p-4 sm:p-6">
           {(isRoomsLoading || isRatesLoading) ? (
-            <div className="text-center py-10 text-gray-500">Preparing rooms...</div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="h-48 rounded-xl bg-white border border-gray-200" />
+              <div className="h-48 rounded-xl bg-white border border-gray-200" />
+              <div className="h-48 rounded-xl bg-white border border-gray-200" />
+            </div>
           ) : filteredRooms.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <Home className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />

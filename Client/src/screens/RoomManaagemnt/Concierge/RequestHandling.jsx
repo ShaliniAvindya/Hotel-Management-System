@@ -14,11 +14,14 @@ import {
   Eye,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../../apiconfig';
+import { queryClient } from '../../../lib/queryClient';
 
 const RequestHandling = () => {
-  const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedRequests = queryClient.getQueryData(['concierge-requests']) || [];
+  const cachedStaffMembers = queryClient.getQueryData(['staff-members']) || [];
+  const [requests, setRequests] = useState(cachedRequests);
+  const [filteredRequests, setFilteredRequests] = useState(cachedRequests);
+  const [loading, setLoading] = useState(() => cachedRequests.length === 0 && cachedStaffMembers.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
@@ -27,7 +30,7 @@ const RequestHandling = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
-  const [staffMembers, setStaffMembers] = useState([]);
+  const [staffMembers, setStaffMembers] = useState(cachedStaffMembers);
   const [specialties, setSpecialties] = useState([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [filteredStaff, setFilteredStaff] = useState([]);
@@ -68,6 +71,13 @@ const RequestHandling = () => {
     { value: 'urgent', label: 'Urgent', color: 'red' },
   ];
 
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    return token
+      ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
+      : {};
+  };
+
   useEffect(() => {
     refreshData();
   }, []);
@@ -98,12 +108,12 @@ const RequestHandling = () => {
       const [requestsRes, staffRes] = await Promise.all([
         fetch(`${API_BASE_URL}/concierge/requests`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            ...getAuthHeader(),
           }
         }),
         fetch(`${API_BASE_URL}/staffMembers`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            ...getAuthHeader(),
           }
         }),
       ]);
@@ -112,8 +122,12 @@ const RequestHandling = () => {
       if (!staffRes.ok) throw new Error('Failed to fetch staff');
 
       const [requestsData, staffData] = await Promise.all([requestsRes.json(), staffRes.json()]);
-      setRequests(requestsData);
-      setStaffMembers(staffData);
+      const nextRequests = Array.isArray(requestsData) ? requestsData : [];
+      const nextStaffMembers = Array.isArray(staffData) ? staffData : [];
+      setRequests(nextRequests);
+      setStaffMembers(nextStaffMembers);
+      queryClient.setQueryData(['concierge-requests'], nextRequests);
+      queryClient.setQueryData(['staff-members'], nextStaffMembers);
     } catch (error) {
       console.error('Error refreshing concierge data:', error);
     } finally {
@@ -126,12 +140,14 @@ const RequestHandling = () => {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/concierge/requests`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         }
       });
       if (!response.ok) throw new Error('Failed to fetch requests');
       const data = await response.json();
-      setRequests(data);
+      const nextRequests = Array.isArray(data) ? data : [];
+      setRequests(nextRequests);
+      queryClient.setQueryData(['concierge-requests'], nextRequests);
     } catch (error) {
       console.error('Error fetching requests:', error);
     } finally {
@@ -143,12 +159,14 @@ const RequestHandling = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/staffMembers`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         }
       });
       if (!response.ok) throw new Error('Failed to fetch staff');
       const data = await response.json();
-      setStaffMembers(data);
+      const nextStaffMembers = Array.isArray(data) ? data : [];
+      setStaffMembers(nextStaffMembers);
+      queryClient.setQueryData(['staff-members'], nextStaffMembers);
     } catch (error) {
       console.error('Error fetching staff members:', error);
     }
@@ -159,9 +177,9 @@ const RequestHandling = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(req =>
-        req.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.roomNumber.includes(searchTerm) ||
-        req.id.includes(searchTerm)
+        req.guestName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.roomNumber?.includes(searchTerm) ||
+        req.id?.includes(searchTerm)
       );
     }
 
@@ -217,7 +235,7 @@ const RequestHandling = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         },
         body: JSON.stringify(formData)
       });
@@ -238,7 +256,7 @@ const RequestHandling = () => {
       const response = await fetch(`${API_BASE_URL}/concierge/requests/${requestId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         }
       });
 
@@ -272,7 +290,7 @@ const RequestHandling = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         },
         body: JSON.stringify({ 
           assignedTo: selectedStaff,
@@ -295,7 +313,7 @@ const RequestHandling = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...getAuthHeader(),
         },
         body: JSON.stringify({ status: newStatus })
       });
@@ -397,8 +415,11 @@ const RequestHandling = () => {
 
       {/* Requests List */}
       {loading && requests.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">Preparing requests...</p>
+        <div className="grid grid-cols-1 gap-4 px-6 pb-20 md:grid-cols-2 xl:grid-cols-4">
+          <div className="h-48 rounded-xl bg-white border border-gray-200" />
+          <div className="h-48 rounded-xl bg-white border border-gray-200" />
+          <div className="h-48 rounded-xl bg-white border border-gray-200" />
+          <div className="h-48 rounded-xl bg-white border border-gray-200" />
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">

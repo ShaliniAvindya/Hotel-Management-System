@@ -46,8 +46,12 @@ import {
   Split,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { queryClient } from '../../lib/queryClient';
 
 const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
+  const cachedRooms = queryClient.getQueryData(['rooms']) || [];
+  const cachedBookings = queryClient.getQueryData(['bookings']) || [];
+  const cachedMaintenance = queryClient.getQueryData(['room-maintenance']) || [];
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -55,11 +59,13 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   const [showStatusForm, setShowStatusForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterRoomType, setFilterRoomType] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(
+    () => cachedRooms.length === 0 && cachedBookings.length === 0 && cachedMaintenance.length === 0
+  );
   const [error, setError] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [roomMaintenance, setRoomMaintenance] = useState([]);
+  const [rooms, setRooms] = useState(cachedRooms);
+  const [bookings, setBookings] = useState(cachedBookings);
+  const [roomMaintenance, setRoomMaintenance] = useState(cachedMaintenance);
 
   const availableAmenities = [
     { id: 'wifi', name: 'Free WiFi', icon: Wifi, category: 'technology' },
@@ -119,9 +125,15 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
         axios.get(`${API_BASE_URL}/bookings`),
         axios.get(`${API_BASE_URL}/roomMaintenance`),
       ]);
-      setRooms(roomsRes.data);
-      setBookings(bookingsRes.data);
-      setRoomMaintenance(maintenanceRes.data);
+      const nextRooms = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+      const nextBookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
+      const nextMaintenance = Array.isArray(maintenanceRes.data) ? maintenanceRes.data : [];
+      setRooms(nextRooms);
+      setBookings(nextBookings);
+      setRoomMaintenance(nextMaintenance);
+      queryClient.setQueryData(['rooms'], nextRooms);
+      queryClient.setQueryData(['bookings'], nextBookings);
+      queryClient.setQueryData(['room-maintenance'], nextMaintenance);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to fetch data. Please try again.');
@@ -763,8 +775,10 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
           <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200"></div>
           <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
             {loading && rooms.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600">Preparing availability...</p>
+              <div className="grid gap-3 p-4">
+                <div className="h-16 rounded-lg bg-white border border-gray-200" />
+                <div className="h-16 rounded-lg bg-white border border-gray-200" />
+                <div className="h-16 rounded-lg bg-white border border-gray-200" />
               </div>
             ) : filteredRooms.length === 0 ? (
               <div className="text-center py-12">

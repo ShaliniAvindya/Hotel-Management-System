@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Search, Edit, Trash2, AlertCircle, DollarSign, X, RefreshCw, Eye, Minus } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const PackageManagement = ({ sidebarOpen = false }) => {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const cachedPackages = readViewCache('spa-packages', { fallback: [] });
+  const cachedServices = readViewCache('spa-package-services', { fallback: [] });
+  const [packages, setPackages] = useState(cachedPackages);
+  const [loading, setLoading] = useState(() => cachedPackages.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -15,7 +18,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [showPackageDetails, setShowPackageDetails] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
-  const [availableServices, setAvailableServices] = useState([]);
+  const [availableServices, setAvailableServices] = useState(cachedServices);
   const [serviceInput, setServiceInput] = useState({ serviceId: '', count: 1 });
   const [servicesLoading, setServicesLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,6 +60,14 @@ const PackageManagement = ({ sidebarOpen = false }) => {
     fetchPackages();
     fetchServices();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('spa-packages', packages);
+  }, [packages]);
+
+  useEffect(() => {
+    writeViewCache('spa-package-services', availableServices);
+  }, [availableServices]);
 
   const handleAddService = () => {
     if (!serviceInput.serviceId) {
@@ -353,7 +364,11 @@ const PackageManagement = ({ sidebarOpen = false }) => {
       <div className="px-4 sm:px-6 py-6">
         {loading && packages.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing packages...</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-64 rounded-xl bg-white shadow-sm" />
+              ))}
+            </div>
           </div>
         ) : filteredPackages.length === 0 ? (
           <div className="text-center py-12">
@@ -869,7 +884,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
 
       {/* Notification */}
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 

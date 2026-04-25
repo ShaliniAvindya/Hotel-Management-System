@@ -141,6 +141,7 @@ const CancellationsNoShows = () => {
         .filter((b) => ['confirmed', 'checked-in'].includes(b.status))
         .map((b) => ({
           ...b,
+          guestName: b.guestName || `${b.firstName || ''} ${b.lastName || ''}`.trim(),
           room: b.splitStays?.length > 0 ? null : rooms.find((r) => r.id === b.roomId)
         })),
     [bookingsData, rooms]
@@ -231,9 +232,11 @@ const CancellationsNoShows = () => {
       data = data.filter(item => {
         const booking = item.originalBookingId || item;
         return (
-          booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          booking.bookingReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          booking.guestEmail.toLowerCase().includes(searchQuery.toLowerCase())
+          (booking.guestName || `${booking.firstName || ''} ${booking.lastName || ''}`.trim())
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          booking.bookingReference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          booking.guestEmail?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       });
     }
@@ -995,7 +998,11 @@ const CancellationsNoShows = () => {
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {(isRoomsLoading || isBookingsLoading || isCancellationsLoading) ? (
-            <div className="text-center py-10 text-gray-500">Preparing cancellations...</div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+            </div>
           ) : (
           filteredData.length === 0 ? (
             <div className="text-center py-12">

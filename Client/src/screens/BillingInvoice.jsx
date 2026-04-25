@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './Sidebar';
+import { readViewCache, writeViewCache } from '../lib/viewCache';
 import {
   CreditCard, Receipt, FileText, Search, Filter, RefreshCw, CheckCircle, XCircle, AlertCircle, X, Download, Printer, Eye, Menu, History,
 } from 'lucide-react';
@@ -12,6 +13,7 @@ import { API_BASE_URL } from '../apiconfig';
 // Helper to download invoice as PDF
 const handleDownloadInvoice = (invoice, reservation) => {
   const doc = new jsPDF();
+  const invoiceItems = Array.isArray(invoice?.items) ? invoice.items : [];
   
   doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
@@ -67,7 +69,7 @@ const handleDownloadInvoice = (invoice, reservation) => {
   doc.text('Total', 188, 116, { align: 'right' });
   
   let y = 126;
-  invoice.items.forEach((item) => {
+  invoiceItems.forEach((item) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(31, 41, 55);
     doc.text(item.description, 22, y, { maxWidth: 90 });
@@ -187,11 +189,20 @@ const PaymentHistoryModal = ({ invoice, onClose }) => {
 };
 
 const BillingInvoice = () => {
-  const [reservations, setReservations] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [payments, setPayments] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [additionalServices, setAdditionalServices] = useState([]);
+  const cachedBillingSnapshot = readViewCache('billing-invoice-page', {
+    fallback: {
+      reservations: [],
+      invoices: [],
+      payments: [],
+      rooms: [],
+      additionalServices: [],
+    },
+  });
+  const [reservations, setReservations] = useState(cachedBillingSnapshot.reservations || []);
+  const [invoices, setInvoices] = useState(cachedBillingSnapshot.invoices || []);
+  const [payments, setPayments] = useState(cachedBillingSnapshot.payments || []);
+  const [rooms, setRooms] = useState(cachedBillingSnapshot.rooms || []);
+  const [additionalServices, setAdditionalServices] = useState(cachedBillingSnapshot.additionalServices || []);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showBillingForm, setShowBillingForm] = useState(false);
@@ -201,7 +212,12 @@ const BillingInvoice = () => {
   const [activeTab, setActiveTab] = useState('reservations');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(
+    () =>
+      (cachedBillingSnapshot.reservations || []).length === 0 &&
+      (cachedBillingSnapshot.invoices || []).length === 0 &&
+      (cachedBillingSnapshot.payments || []).length === 0
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
@@ -250,7 +266,7 @@ const BillingInvoice = () => {
         finalAmount: booking.finalAmount,
       }));
 
-      const currentDate = new Date('2025-09-10');
+      const currentDate = new Date();
       invoicesData = invoicesData.map(invoice => ({
         ...invoice,
         status: invoice.paidAmount >= invoice.total
@@ -267,6 +283,13 @@ const BillingInvoice = () => {
       setInvoices(invoicesData);
       setPayments(paymentsData);
       setAdditionalServices(services);
+      writeViewCache('billing-invoice-page', {
+        reservations: mappedReservations,
+        invoices: invoicesData,
+        payments: paymentsData,
+        rooms: roomsData,
+        additionalServices: services,
+      });
     } catch (err) {
       toast.error('Failed to fetch data');
       console.error(err);
@@ -315,7 +338,7 @@ const BillingInvoice = () => {
   const filteredReservations = reservations.filter(reservation => {
     const matchesSearch = reservation.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          reservation.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         reservation.email.toLowerCase().includes(searchQuery.toLowerCase());
+                         reservation.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === 'all' || reservation.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -871,7 +894,7 @@ const BillingInvoice = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoice.items.map((item, index) => (
+                  {(invoice.items || []).map((item, index) => (
                     <tr key={index} className="border-b">
                       <td className="px-4 py-3 text-sm">{item.description}</td>
                       <td className="px-4 py-3 text-sm text-right">{item.quantity}</td>
@@ -980,7 +1003,7 @@ const BillingInvoice = () => {
     return colorMap[tab.color];
   };
 
-  const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
+  const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -1042,7 +1065,10 @@ const BillingInvoice = () => {
         <div className="px-6 py-6">
           {activeTab === 'reservations' && (
             loading && reservations.length === 0 ? (
-              <div className="text-gray-600">Preparing billings...</div>
+              <div className="space-y-4">
+                <div className="h-16 rounded-lg bg-white shadow-sm border border-gray-200"></div>
+                <div className="h-96 rounded-lg bg-white shadow-sm border border-gray-200"></div>
+              </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <>
@@ -1103,7 +1129,7 @@ const BillingInvoice = () => {
                           <td className="px-6 py-4">
                             <div>
                               <p className="font-semibold text-gray-900">{reservation.guestName}</p>
-                              <p className="text-sm text-gray-600">{reservation.email}</p>
+                              <p className="text-sm text-gray-600">{reservation.email || 'Details syncing...'}</p>
                               <p className="text-sm text-blue-600">{reservation.room?.name} ({reservation.room?.roomNumber})</p>
                             </div>
                           </td>
@@ -1191,7 +1217,7 @@ const BillingInvoice = () => {
           )}
           {activeTab === 'payments' && (
             loading && payments.length === 0 ? (
-              <div className="text-gray-600">Preparing billings...</div>
+              <div className="h-96 rounded-lg bg-white shadow-sm border border-gray-200"></div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="overflow-x-auto">
@@ -1232,7 +1258,7 @@ const BillingInvoice = () => {
                             {new Date(payment.date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono">
-                            {payment.reference}
+                            {payment.reference || 'N/A'}
                           </td>
                         </tr>
                       );
@@ -1245,7 +1271,7 @@ const BillingInvoice = () => {
           )}
           {activeTab === 'invoices' && (
             loading && uniqueInvoices.length === 0 ? (
-              <div className="text-gray-600">Preparing billings...</div>
+              <div className="h-96 rounded-lg bg-white shadow-sm border border-gray-200"></div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="overflow-x-auto">

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Search, Calendar, Star, AlertCircle, X, CheckCircle, XCircle, Trash2, Edit, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const TherapistScheduling = ({ sidebarOpen = false }) => {
-  const [therapists, setTherapists] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const cachedTherapists = readViewCache('spa-therapists', { fallback: [] });
+  const [therapists, setTherapists] = useState(cachedTherapists);
+  const [loading, setLoading] = useState(() => cachedTherapists.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -50,6 +52,10 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
   useEffect(() => {
     fetchTherapists();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('spa-therapists', therapists);
+  }, [therapists]);
 
   const fetchTherapists = async ({ background = false } = {}) => {
     try {
@@ -315,7 +321,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 
@@ -385,7 +391,11 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
       <div className="px-4 sm:px-6 py-6">
         {loading && therapists.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing therapists...</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-64 rounded-xl bg-white shadow-sm" />
+              ))}
+            </div>
           </div>
         ) : filteredTherapists.length === 0 ? (
           <div className="text-center py-12">
@@ -976,23 +986,5 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
     </div>
   );
 };
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-fade-in-down {
-    animation: fadeInDown 0.3s ease-out;
-  }
-`;
-document.head.appendChild(style);
 
 export default TherapistScheduling;

@@ -1144,8 +1144,11 @@ const GuestManagement = () => {
 
   if (isGuestsLoading || isRoomsLoading) {
     return (
-      <div className="p-6 text-center text-gray-500">
-        Preparing guests...
+      <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="h-32 rounded-xl bg-white border border-gray-200" />
+        <div className="h-32 rounded-xl bg-white border border-gray-200" />
+        <div className="h-32 rounded-xl bg-white border border-gray-200" />
+        <div className="h-32 rounded-xl bg-white border border-gray-200" />
       </div>
     );
   }

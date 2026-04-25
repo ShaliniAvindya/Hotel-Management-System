@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Search, Edit, Trash2, AlertCircle, X, RefreshCw, Eye } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const SpaRoomBooking = ({ sidebarOpen = false }) => {
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const cachedRooms = readViewCache('spa-room-booking', { fallback: [] });
+  const [rooms, setRooms] = useState(cachedRooms);
+  const [loading, setLoading] = useState(() => cachedRooms.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -35,6 +37,10 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
   useEffect(() => {
     fetchRooms();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('spa-room-booking', rooms);
+  }, [rooms]);
 
   const fetchRooms = async ({ background = false } = {}) => {
     try {
@@ -271,7 +277,11 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
       <div className="px-4 sm:px-6 py-6">
         {loading && rooms.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">Preparing rooms...</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-52 rounded-xl bg-white shadow-sm" />
+              ))}
+            </div>
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="text-center py-12">
@@ -662,7 +672,7 @@ const SpaRoomBooking = ({ sidebarOpen = false }) => {
       )}
 
       {notification && (
-        <div className="fixed top-4 right-4 z-[9999] animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
             notification.type === 'success' ? 'bg-green-500' : 
             notification.type === 'error' ? 'bg-red-500' : 

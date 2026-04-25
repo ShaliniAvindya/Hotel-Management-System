@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { 
   Sparkles, 
   Calendar, 
@@ -11,17 +11,32 @@ import {
   Heart 
 } from 'lucide-react';
 import Sidebar from '../Sidebar';
-import AppointmentTracker from './AppointmentTracker';
-import ServiceCatalog from './ServiceCatalog';
-import TherapistScheduling from './TherapistScheduling';
-import SpaRoomBooking from './SpaRoomBooking';
-import PackageManagement from './PackageManagement';
-import PackageBilling from './PackageBilling';
+const AppointmentTracker = lazy(() => import('./AppointmentTracker'));
+const ServiceCatalog = lazy(() => import('./ServiceCatalog'));
+const TherapistScheduling = lazy(() => import('./TherapistScheduling'));
+const SpaRoomBooking = lazy(() => import('./SpaRoomBooking'));
+const PackageManagement = lazy(() => import('./PackageManagement'));
+const PackageBilling = lazy(() => import('./PackageBilling'));
 
 const SpaAndWellnessManagement = () => {
   const [activeTab, setActiveTab] = useState('appointments');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
+
+  useEffect(() => {
+    const preloadTabs = async () => {
+      await Promise.all([
+        import('./AppointmentTracker'),
+        import('./ServiceCatalog'),
+        import('./TherapistScheduling'),
+        import('./SpaRoomBooking'),
+        import('./PackageManagement'),
+        import('./PackageBilling'),
+      ]);
+    };
+
+    preloadTabs();
+  }, []);
 
   const tabs = [
     { 
@@ -81,7 +96,7 @@ const SpaAndWellnessManagement = () => {
     return colorMap[tab.color];
   };
 
-  const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
+  const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -141,14 +156,16 @@ const SpaAndWellnessManagement = () => {
 
         {/* Tab Content */}
         <div className="flex-1">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={activeTab === tab.id ? 'animate-fadeIn block' : 'hidden'}
-            >
-              <tab.component sidebarOpen={sidebarOpen} />
-            </div>
-          ))}
+          <Suspense fallback={<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 px-6 py-6"><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /></div>}>
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={activeTab === tab.id ? 'block' : 'hidden'}
+              >
+                {activeTab === tab.id ? <tab.component sidebarOpen={sidebarOpen} /> : null}
+              </div>
+            ))}
+          </Suspense>
         </div>
 
         {sidebarOpen && (
@@ -157,16 +174,6 @@ const SpaAndWellnessManagement = () => {
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}
-
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out forwards;
-          }
-        `}</style>
       </div>
     </div>
   );

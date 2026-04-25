@@ -876,7 +876,7 @@ const RestaurantSettings = () => {
     }
   };
 
-  const mainMargin = sidebarMinimized ? 'lg:ml-16' : 'lg:ml-64';
+  const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -889,7 +889,7 @@ const RestaurantSettings = () => {
       <div className={`${mainMargin} transition-all duration-300 min-h-screen bg-gray-50`}>
         {/* Toast Notification */}
         {showToast && (
-          <div className="fixed top-6 right-6 z-50 flex items-center bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg animate-fade-in">
+          <div className="fixed top-6 right-6 z-50 flex items-center bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg">
             <CheckCircle className="h-5 w-5 mr-2" />
             <span>{toastMsg}</span>
           </div>

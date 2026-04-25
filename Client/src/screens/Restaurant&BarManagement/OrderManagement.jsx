@@ -41,11 +41,14 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../apiconfig';
+import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState([]);
+  const cachedOrders = readViewCache('restaurant-orders', { fallback: [] });
+  const cachedMenuItems = readViewCache('restaurant-order-menu-items', { fallback: [] });
+  const [orders, setOrders] = useState(cachedOrders);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => cachedOrders.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -56,7 +59,7 @@ const OrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [userRole, setUserRole] = useState('front_office'); // front_office, kitchen, waiter
   const [showConfirmation, setShowConfirmation] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
+  const [menuItems, setMenuItems] = useState(cachedMenuItems);
 
   // Order types
   const orderTypes = [
@@ -115,6 +118,14 @@ const OrderManagement = () => {
   useEffect(() => {
     refreshData();
   }, []);
+
+  useEffect(() => {
+    writeViewCache('restaurant-orders', orders);
+  }, [orders]);
+
+  useEffect(() => {
+    writeViewCache('restaurant-order-menu-items', menuItems);
+  }, [menuItems]);
 
   // Filter orders
   useEffect(() => {
@@ -299,7 +310,7 @@ const OrderManagement = () => {
   const ConfirmationPopup = ({ title, message, onConfirm, onCancel }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
@@ -1293,7 +1304,11 @@ const OrderManagement = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
           {loading && orders.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">Preparing orders...</div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-56 rounded-xl bg-gray-50" />
+              ))}
+            </div>
           ) : filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
