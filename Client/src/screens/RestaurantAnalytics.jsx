@@ -12,27 +12,36 @@ import {
   ChevronRight,
   Eye,
   Menu,
+  RefreshCw,
+  Download,
 } from 'lucide-react';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-const KPI = ({ title, value, subtitle, color = 'blue' }) => (
-  <div className={`group p-6 rounded-2xl relative overflow-hidden bg-${color}-50 border border-${color}-200 hover:shadow-md`}>
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+const KPI = ({ title, value, subtitle, icon: Icon }) => {
+  return (
+    <div className="hotel-stat-card bg-white border border-[#c9a24a]/40 p-6 hover:border-[#c9a24a]/60 transition-colors duration-300 shadow-sm rounded-xl">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-gray-500 mb-2">{title}</p>
+          <p className="text-4xl font-bold mb-1.5 tracking-tight text-[#0f2742] leading-none">{value}</p>
+          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+        </div>
+        {Icon && (
+          <div className="rounded-xl bg-[#0f2742] flex items-center justify-center flex-shrink-0 ml-3 shadow-md" style={{ height: 52, width: 52 }}>
+            <Icon className="h-6 w-6 text-white" />
+          </div>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SmallStat = ({ label, value }) => (
-  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
-    <div className="text-sm text-gray-700">{label}</div>
-    <div className="font-semibold text-gray-900">{value}</div>
+  <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-50/80 hover:bg-[#fffaf0] border border-transparent hover:border-[#ead8a8]/40 transition-all duration-150">
+    <div className="text-sm text-gray-600">{label}</div>
+    <div className="text-sm font-bold text-[#172033]">{value}</div>
   </div>
 );
 
@@ -289,12 +298,13 @@ const RestaurantAnalytics = () => {
           {
             label: 'Bookings',
             data: bookingsByDate.data,
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.08)',
-            tension: 0.3,
+            borderColor: '#0f2742',
+            backgroundColor: 'rgba(201,162,74,0.12)',
+            tension: 0.35,
             fill: true,
             pointRadius: 3,
-            borderWidth: 2,
+            pointBackgroundColor: '#c9a24a',
+            borderWidth: 2.5,
           },
         ],
       },
@@ -359,16 +369,17 @@ const RestaurantAnalytics = () => {
         datasets: [
           {
             data: revenueSplit.data,
-            backgroundColor: ['#10b981', '#f97316'],
+            backgroundColor: ['#0f2742', '#c9a24a'],
+            borderWidth: 0,
           },
         ],
       },
-      options: { responsive: true },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="hotel-page">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -377,29 +388,45 @@ const RestaurantAnalytics = () => {
       />
 
       <div className={`flex-1 transition-all duration-300 ${sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72'}`}>
-        <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-100 sticky top-0 z-30">
-          <div className="px-6 py-5 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200"
-              >
-                <Menu size={24} />
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="bg-gradient-to-br from-orange-500 to-orange-400 p-3 rounded-2xl shadow">
-                  <Utensils className="h-6 w-6 text-white" />
+        <header className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all"
+                >
+                  <Menu size={24} />
+                </button>
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <BarChart3 className="h-7 w-7 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">Analytics & Reports</h1>
-                  <p className="text-sm text-gray-500">Insights for rooms, reservations, restaurant and billing</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Business Intelligence</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Analytics & Reports</h1>
+                  <p className="text-sm text-white/60">Insights for rooms, reservations, restaurant and billing.</p>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button onClick={handleExport} className="p-2 rounded-xl hover:bg-gray-100" disabled={exporting}>{exporting ? 'Exporting...' : 'Export'}</button>
-              <button onClick={handleRefresh} className="p-2 rounded-xl hover:bg-gray-100">Refresh</button>
-              {lastUpdated && <div className="text-xs text-gray-500">Updated {new Date(lastUpdated).toLocaleTimeString()}</div>}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="hotel-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-60"
+                >
+                  {exporting ? 'Exporting...' : 'Export CSV'}
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  className="hotel-button-primary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+                >
+                  Refresh
+                </button>
+                {lastUpdated && (
+                  <span className="text-xs text-white/40 hidden md:block">
+                    {new Date(lastUpdated).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -428,14 +455,14 @@ const RestaurantAnalytics = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KPI title="Occupancy" value={`${occupiedRooms}/${totalRooms}`} subtitle={`${occupancyRate}%`} color="blue" />
-                <KPI title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} subtitle={`Collected: $${revenueFromPayments.toLocaleString()} · Orders: $${revenueFromOrders.toLocaleString()}`} color="green" />
-                <KPI title="F&B Revenue" value={`$${revenueFromOrders.toLocaleString()}`} subtitle={`${orders.length} orders`} color="orange" />
-                <KPI title="Bookings (30d)" value={bookingsByDate.data.reduce((s, v) => s + v, 0)} subtitle={`${bookings.length} total`} color="red" />
+                <KPI title="Occupancy" value={`${occupiedRooms}/${totalRooms}`} subtitle={`${occupancyRate}%`} icon={Bed} />
+                <KPI title="Total Revenue" value={`$${totalRevenue.toFixed(2)}`} subtitle={`Collected: $${revenueFromPayments.toFixed(2)} · Orders: $${revenueFromOrders.toFixed(2)}`} icon={DollarSign} />
+                <KPI title="F&B Revenue" value={`$${revenueFromOrders.toFixed(2)}`} subtitle={`${orders.length} orders`} icon={Utensils} />
+                <KPI title="Bookings (30d)" value={bookingsByDate.data.reduce((s, v) => s + v, 0)} subtitle={`${bookings.length} total`} icon={Calendar} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all duration-300 lg:col-span-3">
+                <div className="hotel-card p-6 lg:col-span-3">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Bookings (last 30 days)</h3>
                     <button className="text-sm text-gray-500">View</button>
@@ -450,19 +477,19 @@ const RestaurantAnalytics = () => {
                     <SmallStat label="No-show" value={bookings.filter(b=>b.status==='no-show').length} />
                   </div>
                 </div>
-                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all duration-300 lg:col-span-1">
+                <div className="hotel-card p-6 lg:col-span-1">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Revenue Split</h3>
                     <button className="text-sm text-gray-500">Month</button>
                   </div>
                   <div className="h-56 flex items-center justify-center"><div className="w-40 h-40"><ChartCanvas draw={(ctx)=>drawRevenueDonut(ctx)} /></div></div>
                   <div className="mt-4 space-y-2">
-                    <SmallStat label="Collected (payments)" value={`$${revenueFromPayments.toLocaleString()}`} />
-                    <SmallStat label="F&B Orders" value={`$${revenueFromOrders.toLocaleString()}`} />
-                    <SmallStat label="Total" value={`$${totalRevenue.toLocaleString()}`} />
+                    <SmallStat label="Collected (payments)" value={`$${revenueFromPayments.toFixed(2)}`} />
+                    <SmallStat label="F&B Orders" value={`$${revenueFromOrders.toFixed(2)}`} />
+                    <SmallStat label="Total" value={`$${totalRevenue.toFixed(2)}`} />
                   </div>
                 </div>
-                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all duration-300 lg:col-span-4">
+                 <div className="hotel-card p-6 lg:col-span-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Top F&B Items</h3>
                     <button className="text-sm text-gray-500">Export</button>

@@ -310,30 +310,32 @@ const OrderManagement = () => {
   const ConfirmationPopup = ({ title, message, onConfirm, onCancel }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+          <div className="bg-[#0f2742] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+            <h3 className="text-lg font-bold text-white">{title}</h3>
             <button
               onClick={onCancel}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-gray-600 mb-6">{message}</p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Confirm
-            </button>
+          <div className="p-6">
+            <p className="text-[#0f2742] mb-6 font-medium">{message}</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={onCancel}
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors font-medium"
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       </div>,
@@ -426,29 +428,29 @@ const OrderManagement = () => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl animate-slide-up">
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <div className="px-4 sm:px-6 py-4 border-b border-[#c9a24a]/30 flex items-center justify-between bg-[#0f2742] sticky top-0 z-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
               {order ? 'Edit Order' : 'Create New Order'}
             </h2>
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
             {/* Order Type & Customer Info */}
-            <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h3>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <h3 className="text-lg font-bold text-[#0f2742] mb-4">Order Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Order Type *</label>
+                  <label className="block text-sm font-bold text-[#0f2742] uppercase tracking-wide mb-2">Order Type *</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                     required
                   >
                     {orderTypes.map((type) => (
@@ -463,7 +465,7 @@ const OrderManagement = () => {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                   >
                     <option value="low">Low</option>
                     <option value="normal">Normal</option>
@@ -476,7 +478,7 @@ const OrderManagement = () => {
                     type="text"
                     value={formData.customerName}
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                     required
                   />
                 </div>
@@ -488,7 +490,7 @@ const OrderManagement = () => {
                       type="tel"
                       value={formData.customerPhone}
                       onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                       required
                     />
                   </div>
@@ -503,7 +505,7 @@ const OrderManagement = () => {
                 <select
                   value={formData.tableId}
                   onChange={(e) => setFormData({ ...formData, tableId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                   required
                 >
                   <option value="">Select Table</option>
@@ -522,7 +524,7 @@ const OrderManagement = () => {
                 <select
                   value={formData.roomId}
                   onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                   required
                 >
                   <option value="">Select Room</option>
@@ -542,7 +544,7 @@ const OrderManagement = () => {
                   type="text"
                   value={formData.locationDetails}
                   onChange={(e) => setFormData({ ...formData, locationDetails: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                   placeholder="e.g., Pool Area - Cabana 3"
                   required
                 />
@@ -572,7 +574,7 @@ const OrderManagement = () => {
                     <button
                       type="button"
                       onClick={() => addMenuItem(item)}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-1 transition-colors"
+                      className="px-3 py-1 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-1 transition-colors"
                     >
                       <Plus className="h-4 w-4" />
                       <span>Add</span>
@@ -604,7 +606,7 @@ const OrderManagement = () => {
                           <button
                             type="button"
                             onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                            className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                            className="w-6 h-6 bg-[#0f2742] text-white rounded-full flex items-center justify-center hover:bg-[#153456] transition-colors"
                           >
                             +
                           </button>
@@ -623,7 +625,7 @@ const OrderManagement = () => {
                         placeholder="Special instructions for this item..."
                         value={item.specialInstructions}
                         onChange={(e) => updateItemInstructions(item.id, e.target.value)}
-                        className="w-full px-3 py-1 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full px-3 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                       />
                     </div>
                   ))}
@@ -657,7 +659,7 @@ const OrderManagement = () => {
               <textarea
                 value={formData.specialInstructions}
                 onChange={(e) => setFormData({ ...formData, specialInstructions: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                 rows={3}
                 placeholder="Any special instructions for this order..."
               />
@@ -674,7 +676,7 @@ const OrderManagement = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                className="px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 transition-colors"
                 disabled={selectedItems.length === 0}
               >
                 <Check className="h-4 w-4" />
@@ -694,23 +696,23 @@ const OrderManagement = () => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
+          <div className="px-4 sm:px-6 py-4 border-b border-[#c9a24a]/30 flex items-center justify-between bg-[#0f2742] sticky top-0 z-10">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <OrderTypeIcon className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-white/10 rounded-lg">
+                <OrderTypeIcon className="h-6 w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Order {order.id}</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-lg sm:text-xl font-bold text-white">Order {order.id}</h2>
+                <p className="text-sm text-white/60">
                   {getOrderTypeName(order.type)} • {order.customerName}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
@@ -761,7 +763,7 @@ const OrderManagement = () => {
                     <select
                       value={order.status}
                       onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
                     >
                       {getAllowedStatuses(order.status, userRole).map((status) => {
                         const StatusIcon = status.icon;
@@ -912,105 +914,107 @@ const OrderManagement = () => {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
     return (
-      <div className="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-shadow bg-white hover:scale-105 transform transition-transform duration-200">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <OrderTypeIcon className="h-5 w-5 text-gray-600" />
+      <div className="border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 group bg-white">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4 flex flex-col h-full">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-lg">
+                <OrderTypeIcon className="h-5 w-5 text-[#c9a24a]" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#0f2742]">{order.id}</h3>
+                <p className="text-sm text-[#0f2742]/60">{order.customerName}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{order.id}</h3>
-              <p className="text-sm text-gray-600">{order.customerName}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(order.priority)}`}
-            >
-              {order.priority === 'high' && (
-                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
-              )}
-              {order.priority.toUpperCase()}
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center justify-between">
-            <div className="relative">
+            <div className="flex items-center gap-2">
               <span
-                className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
-                  order.status
-                )}`}
-                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(order.priority)}`}
               >
-                {orderStatuses.find((s) => s.id === order.status)?.name}
-              </span>
-              {showStatusDropdown &&
-                (userRole === 'kitchen' || userRole === 'waiter' || userRole === 'front_office') &&
-                order.status !== 'billed' &&
-                order.status !== 'cancelled' && (
-                  <div className="absolute z-10 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg animate-slide-up">
-                    {getAllowedStatuses(order.status, userRole).map((status) => {
-                      const StatusIcon = status.icon;
-                      return (
-                        <button
-                          key={status.id}
-                          onClick={() => {
-                            handleStatusChange(order.id, status.id);
-                            setShowStatusDropdown(false);
-                          }}
-                          disabled={order.status === status.id}
-                          className={`w-full px-4 py-2 text-left text-sm flex items-center space-x-2 ${
-                            order.status === status.id
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'hover:bg-blue-50 text-gray-900'
-                          }`}
-                        >
-                          <StatusIcon className="h-4 w-4" />
-                          <span>{status.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                {order.priority === 'high' && (
+                  <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
                 )}
+                {order.priority.toUpperCase()}
+              </span>
             </div>
-            <span className="text-sm text-gray-600">{getOrderTypeName(order.type)}</span>
           </div>
 
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <MapPin className="h-4 w-4" />
-            <span className="truncate">{getLocationInfo(order)}</span>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-2 text-gray-600">
-              <ShoppingCart className="h-4 w-4" />
-              <span>{totalItems} items</span>
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center justify-between">
+              <div className="relative">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                    order.status
+                  )}`}
+                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                >
+                  {orderStatuses.find((s) => s.id === order.status)?.name}
+                </span>
+                {showStatusDropdown &&
+                  (userRole === 'kitchen' || userRole === 'waiter' || userRole === 'front_office') &&
+                  order.status !== 'billed' &&
+                  order.status !== 'cancelled' && (
+                    <div className="absolute z-10 mt-2 w-48 bg-white border border-[#c9a24a]/30 rounded-lg shadow-lg animate-slide-up">
+                      {getAllowedStatuses(order.status, userRole).map((status) => {
+                        const StatusIcon = status.icon;
+                        return (
+                          <button
+                            key={status.id}
+                            onClick={() => {
+                              handleStatusChange(order.id, status.id);
+                              setShowStatusDropdown(false);
+                            }}
+                            disabled={order.status === status.id}
+                            className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
+                              order.status === status.id
+                                ? 'bg-[#0f2742]/5 text-[#0f2742]/40 cursor-not-allowed'
+                                : 'hover:bg-[#fffaf0] text-[#0f2742]'
+                            }`}
+                          >
+                            <StatusIcon className="h-4 w-4" />
+                            <span>{status.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+              </div>
+              <span className="text-sm text-[#0f2742]/60">{getOrderTypeName(order.type)}</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600">
-              <Timer className="h-4 w-4" />
-              <span>{order.estimatedTime}min</span>
-            </div>
-            <div className="font-semibold text-gray-900">${order.total.toFixed(2)}</div>
-          </div>
 
-          <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString()}</div>
-        </div>
+            <div className="flex items-center gap-2 text-sm text-[#0f2742]/60">
+              <MapPin className="h-4 w-4" />
+              <span className="truncate">{getLocationInfo(order)}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-[#0f2742]/60">
+                <ShoppingCart className="h-4 w-4" />
+                <span>{totalItems} items</span>
+              </div>
+              <div className="flex items-center gap-2 text-[#0f2742]/60">
+                <Timer className="h-4 w-4" />
+                <span>{order.estimatedTime}min</span>
+              </div>
+              <div className="font-bold text-[#0f2742]">${order.total.toFixed(2)}</div>
+            </div>
+
+            <div className="text-xs text-[#0f2742]/40">{new Date(order.createdAt).toLocaleString()}</div>
+          </div>
 
         {/* Special Instructions Indicator */}
         {order.specialInstructions && (
-          <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0" />
-              <p className="text-xs text-yellow-800 truncate">{order.specialInstructions}</p>
+          <div className="mb-3 p-2 bg-[#fffaf0] border border-[#ead8a8] rounded">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-[#8a681b] flex-shrink-0" />
+              <p className="text-xs text-[#8a681b] truncate">{order.specialInstructions}</p>
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-          <div className="flex items-center space-x-1">
+        <div className="flex justify-between items-center pt-3 mt-auto border-t border-gray-100">
+          <div className="flex items-center gap-1">
             {userRole === 'kitchen' && order.status === 'new' && (
               <button
                 onClick={() => handleStatusChange(order.id, 'preparing')}
@@ -1023,7 +1027,7 @@ const OrderManagement = () => {
             {userRole === 'kitchen' && order.status === 'preparing' && (
               <button
                 onClick={() => handleStatusChange(order.id, 'ready')}
-                className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
                 title="Mark Ready"
               >
                 <Check className="h-4 w-4" />
@@ -1039,10 +1043,10 @@ const OrderManagement = () => {
               </button>
             )}
           </div>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => onView(order)}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              className="p-1 text-[#0f2742] hover:bg-[#0f2742]/5 rounded transition-colors"
               title="View Details"
             >
               <Eye className="h-4 w-4" />
@@ -1050,7 +1054,7 @@ const OrderManagement = () => {
             {userRole !== 'kitchen' && (
               <button
                 onClick={() => onEdit(order)}
-                className="p-1 text-gray-400 hover:text-orange-600 rounded transition-colors"
+                className="p-1 text-[#c9a24a] hover:bg-[#fffaf0] rounded transition-colors"
                 title="Edit Order"
               >
                 <Edit className="h-4 w-4" />
@@ -1059,13 +1063,14 @@ const OrderManagement = () => {
             {userRole === 'front_office' && (
               <button
                 onClick={() => onDelete(order.id)}
-                className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                className="p-1 text-rose-400 hover:text-rose-600 rounded transition-colors"
                 title="Delete Order"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
           </div>
+        </div>
         </div>
       </div>
     );
@@ -1077,20 +1082,20 @@ const OrderManagement = () => {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
     return (
-      <tr className="border-b border-gray-100 hover:bg-gray-50">
+      <tr className="border-b border-[#c9a24a]/30 hover:bg-slate-50">
         <td className="py-4 px-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <OrderTypeIcon className="h-4 w-4 text-gray-600" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <OrderTypeIcon className="h-4 w-4 text-[#c9a24a]" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{order.id}</p>
-              <p className="text-sm text-gray-600">{order.customerName}</p>
+              <p className="font-bold text-[#0f2742]">{order.id}</p>
+              <p className="text-sm text-[#0f2742]/60">{order.customerName}</p>
             </div>
           </div>
         </td>
         <td className="py-4 px-4">
-          <span className="text-sm text-gray-900">{getOrderTypeName(order.type)}</span>
+          <span className="text-sm font-medium text-[#0f2742]">{getOrderTypeName(order.type)}</span>
         </td>
         <td className="py-4 px-4 relative">
           <span
@@ -1119,7 +1124,7 @@ const OrderManagement = () => {
                       className={`w-full px-4 py-2 text-left text-sm flex items-center space-x-2 ${
                         order.status === status.id
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'hover:bg-blue-50 text-gray-900'
+                          : 'hover:bg-[#fffaf0] text-[#0f2742]'
                       }`}
                     >
                       <StatusIcon className="h-4 w-4" />
@@ -1151,7 +1156,7 @@ const OrderManagement = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onView(order)}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              className="p-1 text-[#0f2742] hover:bg-slate-50 rounded transition-colors"
               title="View Details"
             >
               <Eye className="h-4 w-4" />
@@ -1159,7 +1164,7 @@ const OrderManagement = () => {
             {userRole !== 'kitchen' && (
               <button
                 onClick={() => onEdit(order)}
-                className="p-1 text-gray-600 hover:bg-gray-50 rounded transition-colors"
+                className="p-1 text-[#c9a24a] hover:bg-[#fffaf0] rounded transition-colors"
                 title="Edit"
               >
                 <Edit className="h-4 w-4" />
@@ -1181,17 +1186,16 @@ const OrderManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50/50 transition-all duration-300 ease-in-out">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4 flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">View as:</label>
+      <div className="px-4 sm:px-6 py-4 bg-white border-b border-[#c9a24a]/30 shadow-sm sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
               <select
                 value={userRole}
                 onChange={(e) => setUserRole(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+                className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] text-sm transition-all"
               >
                 <option value="front_office">Front Office</option>
                 <option value="kitchen">Kitchen</option>
@@ -1201,7 +1205,7 @@ const OrderManagement = () => {
           </div>
 
           {/* Search and Filters */}
-          <div className="flex items-center space-x-4 flex-wrap gap-4">
+          <div className="flex items-center gap-3 flex-wrap flex-1">
             <div className="relative w-full sm:w-auto">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
@@ -1211,7 +1215,7 @@ const OrderManagement = () => {
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-4 py-2 w-full border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] text-sm font-semobold transition-all"
               />
             </div>
 
@@ -1222,7 +1226,7 @@ const OrderManagement = () => {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="pl-10 pr-8 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-8 py-2 w-full border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] text-sm transition-all"
               >
                 <option value="all">All Types</option>
                 {orderTypes.map((type) => (
@@ -1240,7 +1244,7 @@ const OrderManagement = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-10 pr-8 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="pl-10 pr-8 py-2 w-full border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] text-sm transition-all"
               >
                 <option value="all">All Status</option>
                 {orderStatuses.map((status) => (
@@ -1251,52 +1255,50 @@ const OrderManagement = () => {
               </select>
             </div>
 
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-[#0f2742]/5 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-all ${
+                  viewMode === 'grid' ? 'bg-[#0f2742] shadow-sm text-white' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-all ${
+                  viewMode === 'list' ? 'bg-[#0f2742] shadow-sm text-white' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setFilterType('all');
+                setFilterStatus('all');
+              }}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Reset Filters"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
             {userRole === 'front_office' && (
               <button
                 onClick={() => {
                   setEditingOrder(null);
                   setShowOrderForm(true);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center gap-2 transition-colors font-medium text-sm"
               >
                 <Plus className="h-4 w-4" />
                 <span>New Order</span>
               </button>
             )}
           </div>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${
-                viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'
-              } transition-colors`}
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'
-              } transition-colors`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setFilterType('all');
-              setFilterStatus('all');
-            }}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Reset Filters"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
@@ -1324,7 +1326,7 @@ const OrderManagement = () => {
                     setEditingOrder(null);
                     setShowOrderForm(true);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto transition-colors"
+                  className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 mx-auto transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create First Order</span>
@@ -1332,7 +1334,7 @@ const OrderManagement = () => {
               )}
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredOrders.map((order) => (
                 <OrderCard
                   key={order._id}
@@ -1351,18 +1353,18 @@ const OrderManagement = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-max">
-                <thead className="bg-gray-50">
+              <table className="w-full min-w-max border-[#c9a24a]/30 border">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Order</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Type</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Location</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Items</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Total</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Priority</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Est. Time</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Order</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Type</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Status</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Location</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Items</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Total</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Priority</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Est. Time</th>
+                    <th className="text-left py-3 px-4 font-bold text-[#0f2742] uppercase tracking-wider text-xs">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -239,7 +239,10 @@ const BillingInvoice = () => {
       const paymentsData = normalize(await paymentsRes.json());
       const services = await servicesRes.json();
 
-      const mappedReservations = bookings.map(booking => ({
+      const mappedReservations = bookings.map(booking => {
+        const nights = Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24));
+        const totalAmount = booking.totalAmount ?? 0;
+        return {
         id: booking.id,
         guestName: `${booking.firstName} ${booking.lastName}`.trim(),
         email: booking.guestEmail,
@@ -250,21 +253,22 @@ const BillingInvoice = () => {
         checkIn: booking.checkInDate,
         checkOut: booking.checkOutDate,
         guests: booking.guests,
-        nights: Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-        roomRate: booking.totalAmount / Math.ceil((new Date(booking.checkOutDate) - new Date(booking.checkInDate)) / (1000 * 60 * 60 * 24)),
-        totalRoomCharges: booking.totalAmount,
+        nights: nights,
+        roomRate: nights > 0 ? totalAmount / nights : 0,
+        totalRoomCharges: totalAmount,
         status: booking.status.replace('-', '_'),
         bookingDate: booking.createdAt,
         specialRequests: booking.specialRequests,
-        advancePayment: booking.depositAmount,
-        deposit: booking.depositAmount,
+        advancePayment: booking.depositAmount ?? 0,
+        deposit: booking.depositAmount ?? 0,
         additionalCharges: [
           ...(booking.minibarCharges ? [{ serviceId: 'minibar', quantity: 1, unitPrice: booking.minibarCharges, total: booking.minibarCharges, date: booking.checkInDate }] : []),
           ...(booking.additionalServices ? [{ serviceId: 'additional_services', quantity: 1, unitPrice: booking.additionalServices, total: booking.additionalServices, date: booking.checkInDate }] : []),
           ...(booking.damageCharges ? [{ serviceId: 'damage', quantity: 1, unitPrice: booking.damageCharges, total: booking.damageCharges, date: booking.checkInDate }] : []),
         ],
-        finalAmount: booking.finalAmount,
-      }));
+        finalAmount: booking.finalAmount ?? 0,
+      };
+      });
 
       const currentDate = new Date();
       invoicesData = invoicesData.map(invoice => ({
@@ -315,7 +319,7 @@ const BillingInvoice = () => {
 
   const getPaymentsByReservation = (reservationId) => payments.filter(payment => payment.reservationId === reservationId);
 
-  const getTotalPaid = (reservationId) => getPaymentsByReservation(reservationId).reduce((sum, payment) => sum + payment.amount, 0);
+  const getTotalPaid = (reservationId) => getPaymentsByReservation(reservationId).reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
 
   const getOutstandingBalance = (reservation) => calculateTotalCharges(reservation) - getTotalPaid(reservation.id);
 
@@ -1006,7 +1010,7 @@ const BillingInvoice = () => {
   const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="hotel-page flex">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -1014,35 +1018,37 @@ const BillingInvoice = () => {
         setSidebarMinimized={setSidebarMinimized}
       />
       <div className={`flex-1 ${mainMargin} transition-all duration-300`}>
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
+        {/* Unified sticky header + tabs */}
+        <div className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900"
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all"
                 >
                   <Menu size={24} />
                 </button>
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <Receipt className="h-7 w-7 text-[#c9a24a]" />
+                </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Billing & Payments</h1>
-                  <p className="text-gray-600">Manage reservations, payments, and invoices</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Finance</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Billing & Payments</h1>
+                  <p className="text-sm text-white/60">Manage reservations, payments, and invoices.</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => refreshData({ background: true })}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                </button>
-              </div>
+              <button
+                onClick={() => refreshData({ background: true })}
+                className="hotel-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium self-start lg:self-auto"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Refresh</span>
+              </button>
             </div>
           </div>
-        </div>
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-5">
-          <div className="px-6">
-            <nav className="flex space-x-1" aria-label="Tabs">
+          <div className="px-4 sm:px-6 pb-4 pt-2 overflow-x-auto">
+            <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -1050,11 +1056,13 @@ const BillingInvoice = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`${getTabStyles(tab, isActive)} 
-                      flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm 
-                      transition-all duration-200 rounded-t-lg`}
+                    className={`hotel-tab flex items-center space-x-2 px-4 py-2.5 border font-medium text-sm ${
+                      isActive
+                        ? 'bg-[#0f2742] text-white border-[#c9a24a] shadow-sm'
+                        : 'bg-white text-slate-600 border-slate-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]'
+                    }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );
@@ -1070,52 +1078,59 @@ const BillingInvoice = () => {
                 <div className="h-96 rounded-lg bg-white shadow-sm border border-gray-200"></div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="hotel-card overflow-hidden">
                 <>
-                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search by guest name, ID, or email..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                  <div className="px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+                        <div className="relative w-full sm:w-64">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search by guest name, ID, or email..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                          />
+                        </div>
+                        <div className="relative">
+                          <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                          >
+                            <option value="all">All Status</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="checked_in">Checked In</option>
+                            <option value="checked_out">Checked Out</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="no_show">No Show</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Filter className="h-4 w-4 text-gray-500" />
-                        <select
-                          value={filterStatus}
-                          onChange={(e) => setFilterStatus(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="all">All Status</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="checked_in">Checked In</option>
-                          <option value="checked_out">Checked Out</option>
-                          <option value="cancelled">Cancelled</option>
-                          <option value="no_show">No Show</option>
-                        </select>
+                      <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          {filteredReservations.length} reservations
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Guest & Room</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Dates</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Charges</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payments</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Balance</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Reservation Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                      <thead className="bg-[#0f2742]">
+                        <tr className="border-b border-[#c9a24a]">
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Guest & Room</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Dates</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Charges</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Payments</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Balance</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Reservation Status</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Invoice Status</th>
+                          <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody>
                         {filteredReservations.map((reservation) => {
                       const totalCharges = calculateTotalCharges(reservation);
                       const totalPaid = getTotalPaid(reservation.id);
@@ -1125,7 +1140,7 @@ const BillingInvoice = () => {
                       const subtotal = reservation.totalRoomCharges + additionalTotal;
                       const tax = subtotal * 0.1;
                       return (
-                        <tr key={reservation.id} className="hover:bg-gray-50">
+                        <tr key={reservation.id} className="border-b border-[#c9a24a]/20 hover:bg-[#f6edd6]/30">
                           <td className="px-6 py-4">
                             <div>
                               <p className="font-semibold text-gray-900">{reservation.guestName}</p>
@@ -1142,17 +1157,17 @@ const BillingInvoice = () => {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm">
-                              <p className="font-semibold">${totalCharges.toFixed(2)}</p>
-                              <p className="text-gray-600">Room: ${reservation.totalRoomCharges.toFixed(2)}</p>
+                              <p className="font-semibold">${(totalCharges ?? 0).toFixed(2)}</p>
+                              <p className="text-gray-600">Room: ${(reservation.totalRoomCharges ?? 0).toFixed(2)}</p>
                               {reservation.additionalCharges?.length > 0 && (
-                                <p className="text-gray-600">Extras: ${additionalTotal.toFixed(2)}</p>
+                                <p className="text-gray-600">Extras: ${(additionalTotal ?? 0).toFixed(2)}</p>
                               )}
-                              <p className="text-gray-600">Tax (10%): ${tax.toFixed(2)}</p>
+                              <p className="text-gray-600">Tax (10%): ${(tax ?? 0).toFixed(2)}</p>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm">
-                              <p className="font-semibold text-green-600">${totalPaid.toFixed(2)}</p>
+                              <p className="font-semibold text-green-600">${(totalPaid ?? 0).toFixed(2)}</p>
                               <p className="text-gray-600">{getPaymentsByReservation(reservation.id).length} payments</p>
                             </div>
                           </td>
@@ -1222,22 +1237,22 @@ const BillingInvoice = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payment ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Guest</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Type</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Method</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Reference</th>
+                  <thead className="bg-[#0f2742]">
+                    <tr className="border-b border-[#c9a24a]">
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Payment ID</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Guest</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Amount</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Type</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Method</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Date</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Reference</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody>
                     {payments.map((payment) => {
                       const reservation = reservations.find(r => r.id === payment.reservationId);
                       return (
-                        <tr key={payment.id} className="hover:bg-gray-50">
+                        <tr key={payment.id} className="border-b border-[#c9a24a]/20 hover:bg-[#f6edd6]/30">
                           <td className="px-6 py-4 text-sm font-mono text-blue-600">{payment.id}</td>
                           <td className="px-6 py-4">
                             <div>
@@ -1276,24 +1291,24 @@ const BillingInvoice = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Invoice #</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Guest</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Date</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Total</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Paid</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Balance</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                  <thead className="bg-[#0f2742]">
+                    <tr className="border-b border-[#c9a24a]">
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Invoice #</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Guest</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Date</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Total</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Paid</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Balance</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Status</th>
+                      <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody>
                     {uniqueInvoices.map((invoice) => {
                       const reservation = invoice.reservation;
                       const balance = invoice.total - invoice.paidAmount;
                       return (
-                        <tr key={invoice.id} className="hover:bg-gray-50">
+                        <tr key={invoice.id} className="border-b border-[#c9a24a]/20 hover:bg-[#f6edd6]/30">
                           <td className="px-6 py-4 text-sm font-mono text-blue-600">{invoice.invoiceNumber}</td>
                           <td className="px-6 py-4">
                             <div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import {
@@ -34,7 +34,7 @@ import {
 import { API_BASE_URL } from '../../apiconfig';
 import { queryClient } from '../../lib/queryClient';
 
-const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`; 
+const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 
 // Error Boundary
@@ -53,11 +53,11 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Something went wrong.</h3>
-          <p className="text-gray-600 mb-6">Please try refreshing the page or contact support.</p>
+          <h3 className="text-lg font-medium text-[#0f2742] mb-2">Something went wrong.</h3>
+          <p className="text-slate-500 mb-6">Please try refreshing the page or contact support.</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456]"
           >
             Refresh Page
           </button>
@@ -150,11 +150,11 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactive': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'active': return 'bg-emerald-50 text-emerald-700 border border-emerald-100 border-green-200';
+      case 'inactive': return 'bg-gray-100 text-gray-800 border-[#c9a24a]/30';
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'expired': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-[#c9a24a]/30';
     }
   };
 
@@ -232,10 +232,10 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-          await axios.delete(`${RATES_API_BASE_URL}/${id}`);
-          const nextRates = rates.filter(item => item._id !== id && item.id !== id);
-          setRates(nextRates);
-          queryClient.setQueryData(['room-rates'], nextRates);
+        await axios.delete(`${RATES_API_BASE_URL}/${id}`);
+        const nextRates = rates.filter(item => item._id !== id && item.id !== id);
+        setRates(nextRates);
+        queryClient.setQueryData(['room-rates'], nextRates);
       } catch (error) {
         console.error('Error deleting rate:', error);
       }
@@ -335,19 +335,19 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     const modalContent = (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
         <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <div className="p-6 border-b border-[#c9a24a]/30 bg-[#0f2742] text-white flex items-center justify-between">
+            <div className="flex items-center justify-between flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
                 {item ? 'Edit' : 'Add New'} {formData.rateType === 'ratePlan' ? 'Rate Plan' : formData.rateType === 'seasonal' ? 'Seasonal Rate' : formData.rateType === 'discount' ? 'Discount' : 'Corporate Rate'}
               </h2>
-              <button onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-lg text-white">
                 <X className="h-4 w-4 sm:h-5 w-5" />
               </button>
             </div>
           </div>
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {!item && (
                   <div>
@@ -401,8 +401,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             </div>
             {formData.rateType === 'ratePlan' && (
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Rate Plan Details</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Rate Plan Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
@@ -463,7 +463,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                       id="refundable"
                       checked={formData.refundable || false}
                       onChange={(e) => setFormData({ ...formData, refundable: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-[#0f2742] focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label htmlFor="refundable" className="text-sm font-medium text-gray-700">
                       Refundable
@@ -475,7 +475,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                       id="breakfast"
                       checked={formData.breakfastIncluded || false}
                       onChange={(e) => setFormData({ ...formData, breakfastIncluded: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-[#0f2742] focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label htmlFor="breakfast" className="text-sm font-medium text-gray-700">
                       Breakfast Included
@@ -483,12 +483,12 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Inclusions</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Inclusions</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {['wifi', 'tv', 'ac', 'minibar', 'phone', 'balcony', 'oceanview', 'bathtub', 'sofa', 'work_desk'].map(inclusion => (
                       <label
                         key={inclusion}
-                        className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${formData.inclusions?.includes(inclusion) ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                        className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${formData.inclusions?.includes(inclusion) ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-[#c9a24a]/30 hover:bg-gray-50/50'}`}
                       >
                         <input
                           type="checkbox"
@@ -509,8 +509,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             )}
             {formData.rateType === 'seasonal' && (
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Seasonal Rate Details</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Seasonal Rate Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Season</label>
@@ -560,7 +560,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Applicable Room Types</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Applicable Room Types</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {roomTypes.map(roomType => {
                       const IconComponent = roomType.icon || Bed;
@@ -568,7 +568,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                       return (
                         <label
                           key={roomType.id}
-                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-[#c9a24a]/30 hover:bg-gray-50/50'}`}
                         >
                           <input
                             type="checkbox"
@@ -591,8 +591,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             )}
             {formData.rateType === 'discount' && (
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Discount Details</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Discount Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Discount Type</label>
@@ -640,7 +640,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Applicable Room Types</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Applicable Room Types</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {roomTypes.map(roomType => {
                       const IconComponent = roomType.icon || Bed;
@@ -648,7 +648,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                       return (
                         <label
                           key={roomType.id}
-                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-[#c9a24a]/30 hover:bg-gray-50/50'}`}
                         >
                           <input
                             type="checkbox"
@@ -671,8 +671,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             )}
             {formData.rateType === 'corporate' && (
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Corporate Details</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Corporate Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
@@ -741,7 +741,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Applicable Room Types</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Applicable Room Types</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {roomTypes.map(roomType => {
                       const IconComponent = roomType.icon || Bed;
@@ -749,7 +749,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                       return (
                         <label
                           key={roomType.id}
-                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                          className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 text-blue-900' : 'bg-white border-[#c9a24a]/30 hover:bg-gray-50/50'}`}
                         >
                           <input
                             type="checkbox"
@@ -772,8 +772,8 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             )}
             {(formData.rateType === 'ratePlan' || formData.rateType === 'discount' || formData.rateType === 'corporate') && (
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Validity Period</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Validity Period</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -806,17 +806,17 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-3 pt-4 sm:pt-6 border-t border-[#c9a24a]/30">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 sm:px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base"
+                className="px-4 sm:px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50/50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
+                className="px-4 sm:px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] text-sm sm:text-base"
               >
                 {item ? 'Update' : 'Create'}
               </button>
@@ -830,27 +830,27 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   };
 
   const RateDetails = ({ rate, onClose }) => {
-    const Icon = rate.rateType === 'ratePlan' ? getRoomTypeIcon(rate.roomType) : 
-                rate.rateType === 'seasonal' ? Calendar : 
-                rate.rateType === 'discount' ? Tag : Building;
+    const Icon = rate.rateType === 'ratePlan' ? getRoomTypeIcon(rate.roomType) :
+      rate.rateType === 'seasonal' ? Calendar :
+        rate.rateType === 'discount' ? Tag : Building;
     const SafeIcon = Icon || Bed;
     const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
 
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
         <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+          <div className="p-6 border-b border-[#c9a24a]/30 bg-[#0f2742] text-white flex items-center justify-between">
+            <div className="flex items-center justify-between flex-1">
               <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 sm:p-3 rounded-xl">
-                  <SafeIcon className="h-5 w-5 sm:h-6 w-6 text-white" />
+                <div className="bg-[#c9a24a]/20 p-2 sm:p-3 rounded-xl">
+                  <SafeIcon className="h-5 w-5 sm:h-6 w-6 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{rate.name || 'Unnamed Rate'}</h2>
-                  <p className="text-xs sm:text-sm text-gray-600">{rate.description || 'No description'}</p>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">{rate.name || 'Unnamed Rate'}</h2>
+                  <p className="text-xs sm:text-sm text-slate-300">{rate.description || 'No description'}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg text-white">
                 <X className="h-4 w-4 sm:h-5 w-5" />
               </button>
             </div>
@@ -869,7 +869,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                     setShowRateForm(true);
                     setShowRateDetails(false);
                   }}
-                  className="p-1 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  className="p-1 sm:p-2 text-[#0f2742] hover:bg-gray-50 rounded-lg"
                 >
                   <Edit className="h-4 w-4 sm:h-5 w-5" />
                 </button>
@@ -882,13 +882,13 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               </div>
             </div>
             {rate.rateType === 'ratePlan' && selectedRoom && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Assigned Room</h3>
+              <div className="bg-gray-50/50 rounded-lg p-4">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Assigned Room</h3>
                 <div className="flex items-center space-x-3">
-                  <Bed className="h-5 w-5 text-blue-600" />
+                  <Bed className="h-5 w-5 text-[#0f2742]" />
                   <div>
-                    <p className="font-medium text-gray-900">{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</p>
-                    <p className="text-sm text-gray-600">{getRoomTypeName(selectedRoom.type)} • {selectedRoom.capacity} guests</p>
+                    <p className="font-medium text-[#0f2742]">{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</p>
+                    <p className="text-sm text-slate-500">{getRoomTypeName(selectedRoom.type)} â€¢ {selectedRoom.capacity} guests</p>
                   </div>
                 </div>
               </div>
@@ -897,22 +897,22 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Pricing Details</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Pricing Details</h3>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                        <span className="text-sm text-gray-600">Base Price:</span>
-                        <span className="text-sm font-medium text-gray-900">${rate.basePrice || 0}/night</span>
+                        <span className="text-sm text-slate-500">Base Price:</span>
+                        <span className="text-sm font-medium text-[#0f2742]">${rate.basePrice || 0}/night</span>
                       </div>
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                        <span className="text-sm text-gray-600">Weekend Price:</span>
-                        <span className="text-sm font-medium text-gray-900">${rate.weekendPrice || 0}/night</span>
+                        <span className="text-sm text-slate-500">Weekend Price:</span>
+                        <span className="text-sm font-medium text-[#0f2742]">${rate.weekendPrice || 0}/night</span>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Policies</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Policies</h3>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         {rate.refundable ? (
@@ -920,7 +920,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                         ) : (
                           <X className="h-4 w-4 sm:h-5 w-5 text-red-500" />
                         )}
-                        <span className="text-sm text-gray-900">{rate.refundable ? 'Refundable' : 'Non-refundable'}</span>
+                        <span className="text-sm text-[#0f2742]">{rate.refundable ? 'Refundable' : 'Non-refundable'}</span>
                       </div>
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         {rate.breakfastIncluded ? (
@@ -928,7 +928,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                         ) : (
                           <X className="h-4 w-4 sm:h-5 w-5 text-gray-400" />
                         )}
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-[#0f2742]">
                           Breakfast {rate.breakfastIncluded ? 'Included' : 'Not included'}
                         </span>
                       </div>
@@ -937,22 +937,22 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Restrictions</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Restrictions</h3>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                        <span className="text-sm text-gray-600">Min Stay:</span>
-                        <span className="text-sm font-medium text-gray-900">{rate.restrictions?.minStay || 1} nights</span>
+                        <span className="text-sm text-slate-500">Min Stay:</span>
+                        <span className="text-sm font-medium text-[#0f2742]">{rate.restrictions?.minStay || 1} nights</span>
                       </div>
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                        <span className="text-sm text-gray-600">Max Stay:</span>
-                        <span className="text-sm font-medium text-gray-900">{rate.restrictions?.maxStay || 14} nights</span>
+                        <span className="text-sm text-slate-500">Max Stay:</span>
+                        <span className="text-sm font-medium text-[#0f2742]">{rate.restrictions?.maxStay || 14} nights</span>
                       </div>
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Clock className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                        <span className="text-sm text-gray-600">Cancellation:</span>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm text-slate-500">Cancellation:</span>
+                        <span className="text-sm font-medium text-[#0f2742]">
                           {rate.restrictions?.cancellationDeadline || 24}h before
                         </span>
                       </div>
@@ -964,12 +964,12 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
             {rate.rateType === 'seasonal' && (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Seasonal Rate Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Seasonal Rate Details</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Date Range:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Date Range:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.dateRange?.start && rate.dateRange?.end
                           ? `${new Date(rate.dateRange.start).toLocaleDateString()} - ${new Date(rate.dateRange.end).toLocaleDateString()}`
                           : 'No date range'}
@@ -977,7 +977,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Rate Adjustment:</span>
+                      <span className="text-sm text-slate-500">Rate Adjustment:</span>
                       <span className={`text-sm font-medium ${rate.rateAdjustment > 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {rate.rateAdjustment > 0 ? '+' : ''}${rate.rateAdjustment || 0}
                       </span>
@@ -989,31 +989,31 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
             {rate.rateType === 'discount' && (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Discount Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Discount Details</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Tag className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Promo Code:</span>
-                      <span className="text-sm font-medium text-gray-900 font-mono">{rate.code || 'N/A'}</span>
+                      <span className="text-sm text-slate-500">Promo Code:</span>
+                      <span className="text-sm font-medium text-[#0f2742] font-mono">{rate.code || 'N/A'}</span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Discount:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Discount:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.type === 'percentage' ? `${rate.value || 0}% off` : `${rate.value || 0} off`}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Valid From:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Valid From:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.validFrom ? new Date(rate.validFrom).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Valid To:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Valid To:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.validTo ? new Date(rate.validTo).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
@@ -1024,36 +1024,36 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
             {rate.rateType === 'corporate' && (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Corporate Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Corporate Details</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Building className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Company:</span>
-                      <span className="text-sm font-medium text-gray-900">{rate.companyName || 'N/A'}</span>
+                      <span className="text-sm text-slate-500">Company:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">{rate.companyName || 'N/A'}</span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Users className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Contact Person:</span>
-                      <span className="text-sm font-medium text-gray-900">{rate.contactPerson || 'N/A'}</span>
+                      <span className="text-sm text-slate-500">Contact Person:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">{rate.contactPerson || 'N/A'}</span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <DollarSign className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Discount:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Discount:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.discountType === 'percentage' ? `${rate.discount || 0}% off` : `${rate.discount || 0} off`}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Contract Start:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Contract Start:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.contractStart ? new Date(rate.contractStart).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <Calendar className="h-4 w-4 sm:h-5 w-5 text-gray-500" />
-                      <span className="text-sm text-gray-600">Contract End:</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-slate-500">Contract End:</span>
+                      <span className="text-sm font-medium text-[#0f2742]">
                         {rate.contractEnd ? new Date(rate.contractEnd).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
@@ -1063,16 +1063,16 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
             )}
             {(rate.applicableRoomTypes?.length > 0 || rate.roomType) && (
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Applicable Room Types</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-3">Applicable Room Types</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {(rate.applicableRoomTypes || (rate.roomType ? [rate.roomType] : [])).map(roomTypeId => {
                     const roomType = roomTypes.find(rt => rt.id === roomTypeId);
                     if (!roomType) return null;
                     const IconComponent = roomType.icon || Bed;
                     return (
-                      <div key={roomTypeId} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
-                        <IconComponent className="h-4 w-4 sm:h-5 w-5 text-blue-600" />
-                        <span className="text-sm text-gray-900">{roomType.name}</span>
+                      <div key={roomTypeId} className="flex items-center space-x-2 p-2 bg-gray-50/50 rounded-lg">
+                        <IconComponent className="h-4 w-4 sm:h-5 w-5 text-[#0f2742]" />
+                        <span className="text-sm text-[#0f2742]">{roomType.name}</span>
                       </div>
                     );
                   })}
@@ -1092,7 +1092,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   return (
     <ErrorBoundary>
       <div
-        className="min-h-screen bg-gray-50 transition-all duration-300 ease-in-out"
+        className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out"
         style={{
           marginLeft: `${sidebarOffset}rem`,
           width: `calc(100% - ${sidebarOffset}rem)`,
@@ -1106,7 +1106,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           ></div>
         )}
 
-        <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200 sticky top-[4rem] z-20">
+        <div className="px-4 sm:px-6 py-4 bg-white border-b border-[#c9a24a]/30 sticky top-[4rem] z-20">
           <div className="flex flex-col items-start sm:items-center justify-between space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
@@ -1116,15 +1116,14 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                   placeholder={`Search ${activeTab.replace(/([A-Z])/g, ' $1').toLowerCase()}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
               <div className="flex items-center space-x-2 w-full sm:w-auto">
-                <Filter className="h-4 w-4 text-gray-500" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -1137,7 +1136,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 >
                   <option value="all">All Room Types</option>
                   {roomTypes.map(type => (
@@ -1175,7 +1174,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
             <div className="flex items-center space-x-4 w-full sm:w-auto">
               <button
                 onClick={() => setShowRateForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto text-sm sm:text-base"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 w-full sm:w-auto text-sm sm:text-base"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add New Rate</span>
@@ -1183,27 +1182,27 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
+                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-slate-500'}`}
                 >
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
+                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : 'text-slate-500'}`}
                 >
                   <List className="h-4 w-4" />
                 </button>
               </div>
               <button
                 onClick={() => refreshData({ background: true })}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                className="p-2 text-slate-500 hover:text-[#0f2742] hover:bg-gray-100 rounded-lg"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <div className="bg-white shadow-sm border-b border-[#c9a24a]/30 sticky top-0 z-30">
           <div className="px-4 sm:px-6">
             <nav className="flex flex-wrap gap-1 sm:gap-0 sm:space-x-1">
               {[
@@ -1220,15 +1219,14 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                     setFilterType('all');
                     setFilterStatus('all');
                   }}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-3 sm:py-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 rounded-t-lg ${
-                    activeTab === tab.id
-                      ? 'border-purple-500 text-purple-600 bg-purple-50'
-                      : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-300'
-                  }`}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-3 sm:py-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 rounded-t-lg ${activeTab === tab.id
+                    ? 'border-[#c9a24a] text-[#0f2742] bg-gray-50/50'
+                    : 'border-transparent text-slate-500 hover:text-[#0f2742] hover:border-[#c9a24a]/50'
+                    }`}
                 >
                   <tab.icon className="h-4 w-4" />
                   <span className="sm:inline">{tab.label}</span>
-                  <span className="bg-gray-100 text-gray-600 py-1 px-2 rounded-full text-xs">
+                  <span className="bg-[#0f2742]/10 text-[#0f2742] py-1 px-2 rounded-full text-xs font-semibold">
                     {rates.filter(rate => rate.rateType === tab.id).length}
                   </span>
                 </button>
@@ -1240,23 +1238,23 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           {loading && rates.length === 0 ? (
             <div className="flex justify-center items-center h-64">
               <div className="grid w-full max-w-5xl grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="h-40 rounded-xl bg-white border border-gray-200" />
-                <div className="h-40 rounded-xl bg-white border border-gray-200" />
-                <div className="h-40 rounded-xl bg-white border border-gray-200" />
+                <div className="h-40 rounded-xl bg-white border border-[#c9a24a]/30" />
+                <div className="h-40 rounded-xl bg-white border border-[#c9a24a]/30" />
+                <div className="h-40 rounded-xl bg-white border border-[#c9a24a]/30" />
               </div>
             </div>
           ) : filteredRates.length === 0 ? (
             <div className="text-center py-12">
               <Bed className="h-12 w-12 sm:h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No {activeTab.replace(/([A-Z])/g, ' $1').toLowerCase()} found</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-6">
+              <h3 className="text-base sm:text-lg font-medium text-[#0f2742] mb-2">No {activeTab.replace(/([A-Z])/g, ' $1').toLowerCase()} found</h3>
+              <p className="text-sm sm:text-base text-slate-500 mb-6">
                 {searchQuery || filterType !== 'all' || filterStatus !== 'all'
                   ? `No ${activeTab.replace(/([A-Z])/g, ' $1').toLowerCase()} match your current filters.`
                   : `Get started by adding your first ${activeTab.replace(/([A-Z])/g, ' $1').toLowerCase()}.`}
               </p>
               <button
                 onClick={() => setShowRateForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto text-sm sm:text-base"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 mx-auto text-sm sm:text-base"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add New Rate</span>
@@ -1265,145 +1263,144 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredRates.map(rate => {
-                const Icon = rate.rateType === 'ratePlan' ? getRoomTypeIcon(rate.roomType) : 
-                            rate.rateType === 'seasonal' ? Calendar : 
-                            rate.rateType === 'discount' ? Tag : Building;
+                const Icon = rate.rateType === 'ratePlan' ? getRoomTypeIcon(rate.roomType) :
+                  rate.rateType === 'seasonal' ? Calendar :
+                    rate.rateType === 'discount' ? Tag : Building;
                 const SafeIcon = Icon || Bed;
                 const StatusIcon = getStatusIcon(rate.status);
                 const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
                 return (
-                  <div key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="p-4 sm:p-6">
-                      <div className="flex items-start justify-between mb-3 sm:mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <SafeIcon className="h-5 w-5 sm:h-6 w-6 text-blue-600" />
-                            <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">{rate.name || 'Unnamed Rate'}</h3>
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(rate.status)}`}>
-                              {rate.status}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 truncate">{rate.description || 'No description'}</p>
-                          {rate.rateType === 'ratePlan' && (
-                            <div className="space-y-2">
-                              {selectedRoom && (
-                                <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                  <Bed className="h-4 w-4" />
-                                  <span>{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</span>
-                                </div>
-                              )}
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <DollarSign className="h-4 w-4" />
-                                <span>Base: ${rate.basePrice || 0}/night</span>
-                                {rate.weekendPrice > rate.basePrice && (
-                                  <span className="text-blue-600">+${(rate.weekendPrice || 0) - (rate.basePrice || 0)} weekends</span>
-                                )}
-                              </div>
-                              <div className="flex flex-wrap items-center space-x-4 text-xs sm:text-sm text-gray-600 gap-2">
-                                <div className="flex items-center space-x-1">
-                                  {rate.refundable ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <X className="h-4 w-4 text-red-500" />
-                                  )}
-                                  <span>{rate.refundable ? 'Refundable' : 'Non-refundable'}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  {rate.breakfastIncluded ? (
-                                    <Coffee className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <X className="h-4 w-4 text-gray-400" />
-                                  )}
-                                  <span>Breakfast {rate.breakfastIncluded ? 'Included' : 'Not included'}</span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {rate.rateType === 'seasonal' && (
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <Calendar className="h-4 w-4" />
-                                <span>
-                                  {rate.dateRange?.start && rate.dateRange?.end
-                                    ? `${new Date(rate.dateRange.start).toLocaleDateString()} - ${new Date(rate.dateRange.end).toLocaleDateString()}`
-                                    : 'No date range'}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <DollarSign className="h-4 w-4" />
-                                <span className={(rate.rateAdjustment || 0) > 0 ? 'text-green-600' : 'text-red-600'}>
-                                  {(rate.rateAdjustment || 0) > 0 ? '+' : ''}${rate.rateAdjustment || 0}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          {rate.rateType === 'discount' && (
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <Tag className="h-4 w-4" />
-                                <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">{rate.code || 'N/A'}</span>
-                                <button
-                                  onClick={() => handleCopyCode(rate.code)}
-                                  className="p-1 hover:bg-gray-100 rounded"
-                                  title="Copy code"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </button>
-                              </div>
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <DollarSign className="h-4 w-4" />
-                                <span>{rate.type === 'percentage' ? `${rate.value || 0}% off` : `${rate.value || 0} off`}</span>
-                              </div>
-                            </div>
-                          )}
-                          {rate.rateType === 'corporate' && (
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <Building className="h-4 w-4" />
-                                <span>{rate.companyName || 'N/A'}</span>
-                              </div>
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <DollarSign className="h-4 w-4" />
-                                <span>{rate.discountType === 'percentage' ? `${rate.discount || 0}% discount` : `${rate.discount || 0} off`}</span>
-                              </div>
-                              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                                <Users className="h-4 w-4" />
-                                <span>{rate.contactPerson || 'N/A'}</span>
-                              </div>
-                            </div>
-                          )}
+                  <div key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="bg-white rounded-xl shadow-sm border border-[#c9a24a]/30 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+                    <div className="h-1 w-full bg-[#c9a24a]" />
+                    <div className="p-3 sm:p-4 flex flex-col h-full">
+                      {/* Header with Status Badge and Actions */}
+                      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          <SafeIcon className="h-5 w-5 sm:h-6 sm:w-6 text-[#0f2742] flex-shrink-0" />
+                          <h3 className="font-semibold text-[#0f2742] text-sm sm:text-base truncate flex-1">{rate.name || 'Unnamed Rate'}</h3>
                         </div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(rate.status)} flex-shrink-0`}>
+                          {rate.status}
+                        </span>
                       </div>
-                      <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100 px-4 sm:px-6">
+
+                      {/* Rate Type Badge */}
+                      <div className="mb-2 sm:mb-3">
+                        <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-[#0f2742] rounded font-medium">
+                          {rate.rateType.charAt(0).toUpperCase() + rate.rateType.slice(1)}
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3 truncate">{rate.description || 'No description'}</p>
+
+                      {/* Rate Type Specific Content */}
+                      <div className="space-y-2 flex-1">
+                        {rate.rateType === 'ratePlan' && (
+                          <div className="space-y-1">
+                            {selectedRoom && (
+                              <div className="flex items-center space-x-2 text-xs text-slate-600">
+                                <Bed className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">{`${selectedRoom.roomNumber} - ${selectedRoom.name}`}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <DollarSign className="h-4 w-4 flex-shrink-0" />
+                              <span>${rate.basePrice || 0}/night</span>
+                              {rate.weekendPrice > rate.basePrice && (
+                                <span className="text-[#0f2742] font-medium">+${(rate.weekendPrice || 0) - (rate.basePrice || 0)} WE</span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              {rate.refundable && (
+                                <span className="inline-flex items-center space-x-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded">
+                                  <CheckCircle className="h-3 w-3" />
+                                  <span>Refundable</span>
+                                </span>
+                              )}
+                              {rate.breakfastIncluded && (
+                                <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
+                                  <Coffee className="h-3 w-3" />
+                                  <span>Breakfast</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {rate.rateType === 'seasonal' && (
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <Calendar className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">
+                                {rate.dateRange?.start && rate.dateRange?.end
+                                  ? `${new Date(rate.dateRange.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(rate.dateRange.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                                  : 'No dates'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs">
+                              <DollarSign className="h-4 w-4 flex-shrink-0" />
+                              <span className={(rate.rateAdjustment || 0) > 0 ? 'text-green-600 font-medium' : (rate.rateAdjustment || 0) < 0 ? 'text-red-600 font-medium' : 'text-slate-600'}>
+                                {(rate.rateAdjustment || 0) > 0 ? '+' : ''}{rate.rateAdjustment || 0}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {rate.rateType === 'discount' && (
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2 text-xs">
+                              <Tag className="h-4 w-4 flex-shrink-0" />
+                              <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">{rate.code || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <DollarSign className="h-4 w-4 flex-shrink-0" />
+                              <span className="font-medium">{rate.type === 'percentage' ? `${rate.value || 0}%` : `$${rate.value || 0}`} OFF</span>
+                            </div>
+                          </div>
+                        )}
+                        {rate.rateType === 'corporate' && (
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <Building className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">{rate.companyName || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <DollarSign className="h-4 w-4 flex-shrink-0" />
+                              <span className="font-medium">{rate.discountType === 'percentage' ? `${rate.discount || 0}%` : `$${rate.discount || 0}`}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs text-slate-600">
+                              <Users className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">{rate.contactPerson || 'Contact'}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
                         <button
                           onClick={() => {
                             setSelectedRate(rate);
                             setShowRateDetails(true);
                           }}
-                          className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
+                          className="px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-100 rounded hover:bg-blue-200 transition-colors font-medium whitespace-nowrap"
                         >
-                          <Eye className="h-4 w-4" />
-                          <span>View Details</span>
+                          View
                         </button>
-                        <div className="flex items-center space-x-1">
-                          <button
-                            onClick={() => {
-                              setEditingRate(rate);
-                              setShowRateForm(true);
-                            }}
-                            className="p-1 text-gray-400 hover:text-blue-600 rounded"
-                            title="Edit"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rate._id)}
-                            className="p-1 text-gray-400 hover:text-red-600 rounded"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => {
+                            setEditingRate(rate);
+                            setShowRateForm(true);
+                          }}
+                          className="px-2 py-1 text-xs bg-amber-50 text-amber-700 border border-amber-100 rounded hover:bg-amber-200 transition-colors font-medium whitespace-nowrap"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(rate._id)}
+                          className="px-2 py-1 text-xs bg-red-50 text-red-700 border border-red-100 rounded hover:bg-red-200 transition-colors font-medium whitespace-nowrap"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1411,56 +1408,56 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-[#c9a24a]/30 overflow-x-auto">
               <table className="w-full min-w-[640px]">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Name</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Type</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Type</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Status</th>
                     {activeTab === 'ratePlan' && (
                       <>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Base Price</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Weekend Price</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Base Price</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Weekend Price</th>
                       </>
                     )}
                     {activeTab === 'seasonal' && (
                       <>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Rate Adjustment</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Date Range</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Rate Adjustment</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Date Range</th>
                       </>
                     )}
                     {activeTab === 'discount' && (
                       <>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Code</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Value</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Code</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Value</th>
                       </>
                     )}
                     {activeTab === 'corporate' && (
                       <>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Company</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Discount</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Company</th>
+                        <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Discount</th>
                       </>
                     )}
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 text-sm sm:text-base">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#0f2742] text-sm sm:text-base">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRates.map(rate => {
                     const selectedRoom = rate.rateType === 'ratePlan' ? rooms.find(r => r.id === rate.roomId) : null;
                     return (
-                      <tr key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={rate._id || rate.id || `${rate.rateType}-${rate.name}`} className="border-b border-gray-100 hover:bg-gray-50/50">
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{rate.name || 'Unnamed Rate'}</p>
-                            <p className="text-xs sm:text-sm text-gray-600 truncate">{rate.description || 'No description'}</p>
+                            <p className="font-medium text-[#0f2742] text-sm sm:text-base truncate">{rate.name || 'Unnamed Rate'}</p>
+                            <p className="text-xs sm:text-sm text-slate-500 truncate">{rate.description || 'No description'}</p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-xs sm:text-sm text-gray-900 capitalize">
+                          <span className="text-xs sm:text-sm text-[#0f2742] capitalize">
                             {rate.rateType === 'ratePlan' ? (selectedRoom ? `${selectedRoom.roomNumber} - ${selectedRoom.name}` : getRoomTypeName(rate.roomType)) :
-                             rate.rateType === 'seasonal' ? rate.season :
-                             rate.rateType === 'discount' ? rate.type : 'Corporate'}
+                              rate.rateType === 'seasonal' ? rate.season :
+                                rate.rateType === 'discount' ? rate.type : 'Corporate'}
                           </span>
                         </td>
                         <td className="py-3 px-4">
@@ -1471,10 +1468,10 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                         {rate.rateType === 'ratePlan' && (
                           <>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">${rate.basePrice || 0}</span>
+                              <span className="text-xs sm:text-sm text-[#0f2742]">${rate.basePrice || 0}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">${rate.weekendPrice || 0}</span>
+                              <span className="text-xs sm:text-sm text-[#0f2742]">${rate.weekendPrice || 0}</span>
                             </td>
                           </>
                         )}
@@ -1486,7 +1483,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">
+                              <span className="text-xs sm:text-sm text-[#0f2742]">
                                 {rate.dateRange?.start && rate.dateRange?.end
                                   ? `${new Date(rate.dateRange.start).toLocaleDateString()} - ${new Date(rate.dateRange.end).toLocaleDateString()}`
                                   : 'N/A'}
@@ -1498,7 +1495,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                           <>
                             <td className="py-3 px-4">
                               <div className="flex items-center space-x-2">
-                                <span className="text-xs sm:text-sm font-mono text-gray-900">{rate.code || 'N/A'}</span>
+                                <span className="text-xs sm:text-sm font-mono text-[#0f2742]">{rate.code || 'N/A'}</span>
                                 <button
                                   onClick={() => handleCopyCode(rate.code)}
                                   className="p-1 hover:bg-gray-100 rounded"
@@ -1509,7 +1506,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                               </div>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">
+                              <span className="text-xs sm:text-sm text-[#0f2742]">
                                 {rate.type === 'percentage' ? `${rate.value || 0}%` : `$${rate.value || 0}`}
                               </span>
                             </td>
@@ -1518,10 +1515,10 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                         {rate.rateType === 'corporate' && (
                           <>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">{rate.companyName || 'N/A'}</span>
+                              <span className="text-xs sm:text-sm text-[#0f2742]">{rate.companyName || 'N/A'}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-xs sm:text-sm text-gray-900">
+                              <span className="text-xs sm:text-sm text-[#0f2742]">
                                 {rate.discountType === 'percentage' ? `${rate.discount || 0}%` : `$${rate.discount || 0}`}
                               </span>
                             </td>
@@ -1534,7 +1531,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                                 setSelectedRate(rate);
                                 setShowRateDetails(true);
                               }}
-                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              className="p-1 text-gray-400 hover:text-[#0f2742] rounded"
                               title="View Details"
                             >
                               <Eye className="h-4 w-4" />
@@ -1544,7 +1541,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
                                 setEditingRate(rate);
                                 setShowRateForm(true);
                               }}
-                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              className="p-1 text-gray-400 hover:text-[#0f2742] rounded"
                               title="Edit"
                             >
                               <Edit className="h-4 w-4" />
@@ -1588,3 +1585,6 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
 };
 
 export default RoomRate;
+
+
+

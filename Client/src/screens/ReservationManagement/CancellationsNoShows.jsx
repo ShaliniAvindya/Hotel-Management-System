@@ -209,7 +209,7 @@ const CancellationsNoShows = () => {
 
   const getFilteredData = () => {
     let data = [];
-    
+
     switch (view) {
       case 'active':
         data = activeBookings;
@@ -268,13 +268,23 @@ const CancellationsNoShows = () => {
     };
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="cancel-form-title">
-        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 id="cancel-form-title" className="text-xl font-semibold text-gray-900">Cancel Booking</h2>
-            <button onClick={onCancel} className="p-2 hover:bg-gray-200 rounded-full" aria-label="Close cancellation form">
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onCancel}>
+        <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <XCircle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 id="cancel-form-title" className="text-xl sm:text-2xl font-bold text-white">Cancel Booking</h2>
+                  <p className="text-sm text-white/70 font-normal">{booking?.guestName} - {booking?.bookingReference}</p>
+                </div>
+              </div>
+              <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors" aria-label="Close cancellation form">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -283,21 +293,21 @@ const CancellationsNoShows = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-red-700">Guest:</span>
-                  <span className="font-medium ml-2">{booking?.guestName}</span>
+                  <span className="ml-2">{booking?.guestName}</span>
                 </div>
                 <div>
                   <span className="text-red-700">Reference:</span>
-                  <span className="font-medium ml-2">{booking?.bookingReference}</span>
+                  <span className="ml-2">{booking?.bookingReference}</span>
                 </div>
                 <div>
                   <span className="text-red-700">Room:</span>
-                  <span className="font-medium ml-2">
+                  <span className="ml-2">
                     {booking?.room?.roomNumber || 'Split Stay'} - {booking?.room?.name || 'Multiple Rooms'}
                   </span>
                 </div>
                 <div>
                   <span className="text-red-700">Total Amount:</span>
-                  <span className="font-medium ml-2">${booking?.totalAmount}</span>
+                  <span className="ml-2">${booking?.totalAmount}</span>
                 </div>
               </div>
             </div>
@@ -347,7 +357,7 @@ const CancellationsNoShows = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-semibold text-gray-900 mb-2">Cancellation Policy: {policy?.name}</h4>
               <p className="text-sm text-gray-600 mb-3">{policy?.description}</p>
-              
+
               {formData.reason && (
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex justify-between">
@@ -423,13 +433,23 @@ const CancellationsNoShows = () => {
     };
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="no-show-form-title">
-        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 id="no-show-form-title" className="text-xl font-semibold text-gray-900">Mark as No-Show</h2>
-            <button onClick={onCancel} className="p-2 hover:bg-gray-200 rounded-full" aria-label="Close no-show form">
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onCancel}>
+        <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 id="no-show-form-title" className="text-xl sm:text-2xl font-bold text-white">Mark as No-Show</h2>
+                  <p className="text-sm text-white/70 font-normal">{booking?.guestName} - {booking?.bookingReference}</p>
+                </div>
+              </div>
+              <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors" aria-label="Close no-show form">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -438,19 +458,19 @@ const CancellationsNoShows = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-orange-700">Guest:</span>
-                  <span className="font-medium ml-2">{booking?.guestName}</span>
+                  <span className="font-semibold ml-2">{booking?.guestName}</span>
                 </div>
                 <div>
                   <span className="text-orange-700">Reference:</span>
-                  <span className="font-medium ml-2">{booking?.bookingReference}</span>
+                  <span className="font-semibold ml-2">{booking?.bookingReference}</span>
                 </div>
                 <div>
                   <span className="text-orange-700">Check-in Date:</span>
-                  <span className="font-medium ml-2">{moment(booking?.checkInDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}</span>
+                  <span className="font-semibold ml-2">{moment(booking?.checkInDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}</span>
                 </div>
                 <div>
                   <span className="text-orange-700">Total Amount:</span>
-                  <span className="font-medium ml-2">${booking?.totalAmount}</span>
+                  <span className="font-semibold ml-2">${booking?.totalAmount}</span>
                 </div>
               </div>
             </div>
@@ -545,29 +565,30 @@ const CancellationsNoShows = () => {
     const room = booking.room || rooms.find(r => r.id === booking.roomId);
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4" role="dialog" aria-labelledby="details-modal-title">
-        <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg ${
-                type === 'cancelled' ? 'bg-red-100' : 
-                type === 'no-shows' ? 'bg-orange-100' : 'bg-blue-100'
-              }`}>
-                {type === 'cancelled' ? <XCircle className="h-6 w-6 text-red-600" /> :
-                 type === 'no-shows' ? <AlertTriangle className="h-6 w-6 text-orange-600" /> :
-                 <CheckCircle className="h-6 w-6 text-blue-600" />}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
+        <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${type === 'cancelled' ? 'bg-rose-500' :
+                  type === 'no-shows' ? 'bg-amber-500' : 'bg-blue-1000'
+                  }`}>
+                  {type === 'cancelled' ? <XCircle className="h-6 w-6 text-white" /> :
+                    type === 'no-shows' ? <AlertTriangle className="h-6 w-6 text-white" /> :
+                      <CheckCircle className="h-6 w-6 text-white" />}
+                </div>
+                <div>
+                  <h2 id="details-modal-title" className="text-xl sm:text-2xl font-bold text-white">
+                    {type === 'cancelled' ? 'Cancelled Booking' :
+                      type === 'no-shows' ? 'No-Show Record' : 'Booking Details'}
+                  </h2>
+                  <p className="text-sm text-white/70 font-normal">{booking.bookingReference}</p>
+                </div>
               </div>
-              <div>
-                <h2 id="details-modal-title" className="text-xl font-semibold text-gray-900">
-                  {type === 'cancelled' ? 'Cancelled Booking' :
-                   type === 'no-shows' ? 'No-Show Record' : 'Booking Details'}
-                </h2>
-                <p className="text-sm text-gray-600">{booking.bookingReference}</p>
-              </div>
+              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors" aria-label="Close details modal">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full" aria-label="Close details modal">
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
           </div>
 
           <div className="p-6 space-y-6">
@@ -619,7 +640,9 @@ const CancellationsNoShows = () => {
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Total Amount:</span>
-                    <span className="text-sm font-medium">${booking.totalAmount}</span>
+                    <span className="text-xl font-semibold text-gray-900">${booking.totalAmount}</span>
+                    <div>
+                </div>
                   </div>
                 </div>
               </div>
@@ -658,9 +681,8 @@ const CancellationsNoShows = () => {
                       <span className="text-sm font-medium text-red-600">${item.penaltyFee}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        item.status === 'processed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${item.status === 'processed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                       </span>
                     </div>
@@ -708,9 +730,8 @@ const CancellationsNoShows = () => {
                       <span className="text-sm font-medium text-red-600">${item.refundAmount}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        item.status === 'confirmed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${item.status === 'confirmed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                       </span>
                     </div>
@@ -736,106 +757,93 @@ const CancellationsNoShows = () => {
     const bookingData = booking.originalBookingId || booking;
 
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="font-semibold text-gray-900 text-lg">{bookingData.guestName}</h3>
-            <p className="text-sm text-gray-600">{bookingData.bookingReference}</p>
-          </div>
-          {type === 'active' && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => onCancel(booking)}
-                className="p-1 text-red-600 hover:bg-red-50 rounded"
-                title="Cancel Booking"
-                aria-label={`Cancel booking for ${bookingData.guestName}`}
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onNoShow(booking)}
-                className="p-1 text-orange-600 hover:bg-orange-50 rounded"
-                title="Mark as No-Show"
-                aria-label={`Mark ${bookingData.guestName} as no-show`}
-              >
-                <AlertTriangle className="h-4 w-4" />
-              </button>
+      <div className="bg-white border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4 flex-1">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="font-bold text-[#0f2742] text-base sm:text-lg group-hover:text-[#c9a24a] transition-colors line-clamp-1">{bookingData.guestName}</h3>
+              <p className="text-sm text-gray-600 font-medium">{bookingData.bookingReference}</p>
             </div>
-          )}
+            {type === 'active' && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onCancel(booking)}
+                  className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                  title="Cancel Booking"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => onNoShow(booking)}
+                  className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                  title="Mark as No-Show"
+                >
+                  <AlertTriangle className="h-5 w-5" />
+                </button>
+              </div>
+            )}
+            {type === 'cancelled' && (
+              <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-rose-100 text-rose-700 uppercase tracking-wider border border-rose-200">
+                Cancelled
+              </span>
+            )}
+            {type === 'no-shows' && (
+              <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 uppercase tracking-wider border border-amber-200">
+                No-Show
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-3 mb-4 text-sm text-gray-600 font-medium">
+            <div className="flex items-center">
+              <Bed className="h-4 w-4 mr-2 text-[#c9a24a]" />
+              <span className="truncate">{room?.roomNumber || 'Split Stay'} - {room?.name || 'Multiple Rooms'}</span>
+            </div>
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-[#c9a24a]" />
+              <span>{moment(bookingData.checkInDate).format('MMM DD')} - {moment(bookingData.checkOutDate).format('MMM DD, YYYY')}</span>
+            </div>
+            <div className="flex items-center">
+              <Users className="h-4 w-4 mr-2 text-[#c9a24a]" />
+              <span>{bookingData.guests} Guest{bookingData.guests !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex items-center text-[#0f2742]">
+              <DollarSign className="h-4 w-4 mr-2 text-[#c9a24a]" />
+              <span className='text-green-600'>Total Amount: ${bookingData.totalAmount}</span>
+            </div>
+          </div>
+
           {type === 'cancelled' && (
-            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-              Cancelled
-            </span>
+            <div className="mb-3 p-3 bg-rose-50 rounded-lg border border-rose-100">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-rose-800">Refund: <span className="text-emerald-600 ml-1">${booking.refundAmount}</span></span>
+                {booking.penaltyFee > 0 && <span className="text-rose-800">Penalty: <span className="text-rose-600 ml-1">${booking.penaltyFee}</span></span>}
+              </div>
+            </div>
           )}
+
           {type === 'no-shows' && (
-            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-              No-Show
-            </span>
+            <div className="mb-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="text-xs font-bold text-amber-800">
+                <span>Contact attempts:</span>
+                <span className="ml-1 px-2 py-0.5 bg-amber-200 rounded-full">{booking.contactAttempts}</span>
+              </div>
+            </div>
           )}
         </div>
-        
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center space-x-2 text-sm">
-            <Bed className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Room:</span>
-            <span className="font-medium">{room?.roomNumber || 'Split Stay'} - {room?.name || 'Multiple Rooms'}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Stay:</span>
-            <span className="font-medium">
-              {moment(bookingData.checkInDate).tz('Asia/Kolkata').format('MM/DD/YYYY')} - {moment(bookingData.checkOutDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm">
-            <Users className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Guests:</span>
-            <span className="font-medium">{bookingData.guests}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm">
-            <DollarSign className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Amount:</span>
-            <span className="font-semibold text-green-600">${bookingData.totalAmount}</span>
-          </div>
-        </div>
 
-        {type === 'cancelled' && (
-          <div className="mb-3 p-2 bg-red-50 rounded border-l-4 border-red-400">
-            <div className="text-sm">
-              <span className="font-medium text-red-800">Refunded:</span>
-              <span className="text-green-600 ml-1">${booking.refundAmount}</span>
-              {booking.penaltyFee > 0 && (
-                <>
-                  <span className="text-red-800 ml-2">Penalty:</span>
-                  <span className="text-red-600 ml-1">${booking.penaltyFee}</span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {type === 'no-shows' && (
-          <div className="mb-3 p-2 bg-orange-50 rounded border-l-4 border-orange-400">
-            <div className="text-sm text-orange-800">
-              <span className="font-medium">Contact attempts:</span>
-              <span className="ml-1">{booking.contactAttempts}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="text-xs text-gray-500">
-            {type === 'cancelled' && `Cancelled: ${moment(booking.cancellationDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
-            {type === 'no-shows' && `No-show: ${moment(booking.noShowDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
-            {type === 'active' && `Check-in: ${moment(bookingData.checkInDate).tz('Asia/Kolkata').format('MM/DD/YYYY')}`}
+        <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="text-[10px] font-bold text-slate-400 uppercase">
+            {type === 'cancelled' && `Date: ${moment(booking.cancellationDate).format('MMM DD, YYYY')}`}
+            {type === 'no-shows' && `Date: ${moment(booking.noShowDate).format('MMM DD, YYYY')}`}
+            {type === 'active' && `Check-in: ${moment(bookingData.checkInDate).format('MMM DD, YYYY')}`}
           </div>
           <button
-            onClick={() => onView(booking, type)}
-            className="p-1 text-gray-400 hover:text-blue-600"
-            title="View Details"
-            aria-label={`View details for ${bookingData.guestName}`}
-          >
-            <Eye className="h-4 w-4" />
+          onClick={() => onView(request)}
+          className="p-2 text-slate-400 hover:text-[#0f2742] hover:bg-[#0f2742]/5 rounded-lg transition-all"
+          title="View Details">
+          <Eye className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -845,165 +853,92 @@ const CancellationsNoShows = () => {
   const filteredData = getFilteredData();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4 flex-wrap">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setView('active')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  view === 'active' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-                aria-label="View active bookings"
-              >
-                Active Bookings
-              </button>
-              <button
-                onClick={() => setView('cancelled')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  view === 'cancelled' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-                aria-label="View cancelled bookings"
-              >
-                Cancelled
-              </button>
-              <button
-                onClick={() => setView('no-shows')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  view === 'no-shows' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-                aria-label="View no-shows"
-              >
-                No-Shows
-              </button>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search bookings..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                aria-label="Search bookings by guest name, reference, or email"
-              />
-            </div>
-
-            {(view === 'cancelled' || view === 'no-shows') && (
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-48 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  aria-label="Filter by status"
+    <div className="min-h-screen bg-slate-50/50 transition-all duration-300 ease-in-out">
+        <div className="px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-4 flex-1 w-full">
+              <div className="flex items-center bg-[#0f2742]/5 rounded-lg p-1">
+                <button
+                  onClick={() => setView('active')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    view === 'active' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                  }`}
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="processed">Processed</option>
-                  {view === 'no-shows' && <option value="confirmed">Confirmed</option>}
-                </select>
+                  Active Bookings
+                </button>
+                <button
+                  onClick={() => setView('cancelled')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    view === 'cancelled' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                  }`}
+                >
+                  Cancelled
+                </button>
+                <button
+                  onClick={() => setView('no-shows')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    view === 'no-shows' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                  }`}
+                >
+                  No-Shows
+                </button>
               </div>
-            )}
-          </div>
 
-          <div className="flex items-center space-x-3">
-            <div className="text-sm text-gray-600">
-              {filteredData.length} {view === 'active' ? 'active bookings' : view}
-            </div>
-            <button
-              onClick={() => {
-                queryClient.invalidateQueries({ queryKey: ['rooms'] });
-                queryClient.invalidateQueries({ queryKey: ['bookings'] });
-                queryClient.invalidateQueries({ queryKey: ['cancellations'] });
-              }}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-              title="Refresh"
-              aria-label="Refresh data"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search bookings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                />
+              </div>
 
-      {/* Messages */}
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg">
-          <AlertCircle className="h-4 w-4 inline mr-2" />
-          <span>{error}</span>
-        </div>
-      )}
-      {success && (
-        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">
-          <CheckCircle className="h-4 w-4 inline mr-2" />
-          <span>{success}</span>
-        </div>
-      )}
-
-      {/* Statistics */}
-      <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Active Bookings</p>
-                <p className="text-xl font-semibold text-gray-900">{activeBookings.length}</p>
-              </div>
+              {(view === 'cancelled' || view === 'no-shows') && (
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processed">Processed</option>
+                    {view === 'no-shows' && <option value="confirmed">Confirmed</option>}
+                  </select>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-600" />
+            <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {filteredData.length} {view === 'active' ? 'active bookings' : view}
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Cancelled</p>
-                <p className="text-xl font-semibold text-gray-900">{cancellations.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">No-Shows</p>
-                <p className="text-xl font-semibold text-gray-900">{noShows.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Refunded</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  ${cancellations.reduce((sum, c) => sum + c.refundAmount, 0).toLocaleString()}
-                </p>
-              </div>
+              <button
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['rooms'] });
+                  queryClient.invalidateQueries({ queryKey: ['bookings'] });
+                  queryClient.invalidateQueries({ queryKey: ['cancellations'] });
+                }}
+                className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+                title="Refresh Data"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {(isRoomsLoading || isBookingsLoading || isCancellationsLoading) ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
-              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
-              <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
-            </div>
-          ) : (
+      {/* Main Content */}
+      <div className="p-6">
+        {(isRoomsLoading || isBookingsLoading || isCancellationsLoading) ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+            <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+            <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
+          </div>
+        ) : (
           filteredData.length === 0 ? (
             <div className="text-center py-12">
               {view === 'active' && <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />}
@@ -1017,7 +952,7 @@ const CancellationsNoShows = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {filteredData.map((item) => (
                 <BookingCard
                   key={item.id || item.originalBookingId?.id}
@@ -1039,8 +974,7 @@ const CancellationsNoShows = () => {
               ))}
             </div>
           )
-          )}
-        </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -1075,6 +1009,20 @@ const CancellationsNoShows = () => {
             setSelectedBooking(null);
           }}
         />
+      )}
+
+      {/* Message Toasts */}
+      {error && (
+        <div className="fixed bottom-4 right-4 bg-rose-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-slide-up z-50">
+          <AlertCircle className="h-5 w-5 text-rose-200" />
+          <span className="text-sm">{error}</span>
+        </div>
+      )}
+      {success && (
+        <div className="fixed bottom-4 right-4 bg-[#0f2742] text-white px-6 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-slide-up z-50">
+          <CheckCircle className="h-5 w-5 text-[#c9a24a]" />
+          <span className="text-sm">{success}</span>
+        </div>
       )}
     </div>
   );

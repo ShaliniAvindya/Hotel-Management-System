@@ -3,8 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  height: 100%; 
+html,
+body {
+  height: 100%;
   background: #f6f8fb;
   color: #172033;
   font-family: Inter, Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
@@ -34,7 +35,10 @@ code {
     --hotel-page: #f6f8fb;
   }
 
-  button, input, select, textarea {
+  button,
+  input,
+  select,
+  textarea {
     font: inherit;
   }
 
@@ -44,81 +48,411 @@ code {
 }
 
 @layer components {
+
+  /* ─── Page background ───────────────────────────────── */
   .hotel-page {
     min-height: 100vh;
     background:
-      radial-gradient(circle at top left, rgba(201, 162, 74, 0.12), transparent 34rem),
+      radial-gradient(circle at top left, rgba(201, 162, 74, 0.09), transparent 30rem),
+      radial-gradient(circle at bottom right, rgba(15, 39, 66, 0.04), transparent 28rem),
       linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
   }
 
+  /* ─── Cards ─────────────────────────────────────────── */
   .hotel-card {
-    background: rgba(255, 255, 255, 0.94);
+    background: transparent;
     border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 8px;
-    box-shadow: 0 18px 45px rgba(15, 39, 66, 0.08);
+    border-radius: 12px;
+    box-shadow:
+      0 4px 20px rgba(15, 39, 66, 0.07),
+      0 1px 4px rgba(15, 39, 66, 0.04);
+    transition: box-shadow 250ms ease, transform 250ms ease;
+  }
+
+  .hotel-card:hover {
+    box-shadow:
+      0 10px 36px rgba(15, 39, 66, 0.11),
+      0 2px 8px rgba(15, 39, 66, 0.05);
   }
 
   .hotel-panel {
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.93);
     border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(15, 39, 66, 0.06);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(15, 39, 66, 0.06);
   }
 
+  .hotel-glass {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 14px;
+    box-shadow:
+      0 8px 32px rgba(15, 39, 66, 0.11),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+
+  /* Premium stat card — pair with border + bg classes */
+  .hotel-stat-card {
+    border-radius: 14px;
+    box-shadow:
+      0 4px 20px rgba(15, 39, 66, 0.07),
+      0 1px 4px rgba(15, 39, 66, 0.04);
+    transition: transform 260ms cubic-bezier(.22, .68, 0, 1.2), box-shadow 260ms ease;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hotel-stat-card:hover {
+    transform: translateY(-3px) scale(1.005);
+    box-shadow:
+      0 14px 40px rgba(15, 39, 66, 0.13),
+      0 4px 10px rgba(15, 39, 66, 0.06);
+  }
+
+  /* ─── Buttons ────────────────────────────────────────── */
   .hotel-button-primary {
-    background: linear-gradient(135deg, var(--hotel-navy), var(--hotel-navy-soft));
+    background: linear-gradient(135deg, var(--hotel-navy) 0%, var(--hotel-navy-soft) 100%);
     color: #fff;
     border-radius: 8px;
-    box-shadow: 0 10px 22px rgba(15, 39, 66, 0.18);
+    box-shadow: 0 4px 14px rgba(15, 39, 66, 0.22);
     transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
   }
 
   .hotel-button-primary:hover {
     transform: translateY(-1px);
-    filter: brightness(1.04);
-    box-shadow: 0 14px 28px rgba(15, 39, 66, 0.22);
+    filter: brightness(1.07);
+    box-shadow: 0 8px 22px rgba(15, 39, 66, 0.28);
   }
 
+  .hotel-button-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(15, 39, 66, 0.18);
+  }
+
+  .hotel-button-secondary {
+    background: #ffffff;
+    color: var(--hotel-ink);
+    border: 1.5px solid var(--hotel-border);
+    border-radius: 8px;
+    transition: border-color 180ms ease, background 180ms ease,
+      box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .hotel-button-secondary:hover {
+    border-color: var(--hotel-gold);
+    background: #fffaf0;
+    box-shadow: 0 4px 12px rgba(201, 162, 74, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .hotel-button-gold {
+    background: linear-gradient(135deg, #c9a24a 0%, #e8c471 55%, #c9a24a 100%);
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(201, 162, 74, 0.3);
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  }
+
+  .hotel-button-gold:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.07);
+    box-shadow: 0 8px 24px rgba(201, 162, 74, 0.38);
+  }
+
+  /* ─── Inputs ─────────────────────────────────────────── */
   .hotel-input {
-    border: 1px solid var(--hotel-border);
+    border: 1.5px solid var(--hotel-border);
     background: #fff;
     border-radius: 8px;
+    color: var(--hotel-ink);
     transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .hotel-input:hover:not(:focus) {
+    border-color: #c8c8c8;
   }
 
   .hotel-input:focus {
     border-color: var(--hotel-gold);
-    box-shadow: 0 0 0 4px rgba(201, 162, 74, 0.16);
+    box-shadow: 0 0 0 4px rgba(201, 162, 74, 0.15);
     outline: none;
   }
 
+  /* ─── Tabs ───────────────────────────────────────────── */
   .hotel-tab {
     border-radius: 8px;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+    transition: background-color 180ms ease, color 180ms ease,
+      transform 180ms ease, box-shadow 180ms ease;
   }
 
   .hotel-tab:hover {
     transform: translateY(-1px);
   }
 
+  /* ─── Premium table ──────────────────────────────────── */
+  .hotel-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .hotel-table thead th {
+    background: #f8fafc;
+    color: #667085;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 10px 16px;
+    border-bottom: 1.5px solid #e5e9f0;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .hotel-table tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  .hotel-table tbody tr:hover td {
+    background: #fffaf0;
+  }
+
+  .hotel-table tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+    color: #334155;
+    background: #fff;
+    transition: background-color 160ms ease;
+  }
+
+  .hotel-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ─── Badges ─────────────────────────────────────────── */
+  .hotel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hotel-badge-navy {
+    background: rgba(15, 39, 66, 0.08);
+    color: #0f2742;
+    border: 1px solid rgba(15, 39, 66, 0.15);
+  }
+
+  .hotel-badge-gold {
+    background: rgba(201, 162, 74, 0.12);
+    color: #9a7624;
+    border: 1px solid rgba(201, 162, 74, 0.3);
+  }
+
+  .hotel-badge-success {
+    background: rgba(16, 185, 129, 0.10);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.24);
+  }
+
+  .hotel-badge-warning {
+    background: rgba(245, 158, 11, 0.10);
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.24);
+  }
+
+  .hotel-badge-danger {
+    background: rgba(239, 68, 68, 0.10);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.24);
+  }
+
+  .hotel-badge-info {
+    background: rgba(59, 130, 246, 0.10);
+    color: #1e40af;
+    border: 1px solid rgba(59, 130, 246, 0.24);
+  }
+
+  /* ─── Toggle (gold when on) ──────────────────────────── */
+  .hotel-toggle {
+    position: relative;
+    display: inline-flex;
+    height: 24px;
+    width: 44px;
+    flex-shrink: 0;
+    align-items: center;
+    border-radius: 9999px;
+    transition: background-color 220ms ease;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    padding: 0;
+  }
+
+  .hotel-toggle:focus-visible {
+    box-shadow: 0 0 0 3px rgba(201, 162, 74, 0.4);
+  }
+
+  .hotel-toggle-on {
+    background: linear-gradient(135deg, #c9a24a, #e8c36a);
+    box-shadow: 0 2px 8px rgba(201, 162, 74, 0.35);
+  }
+
+  .hotel-toggle-off {
+    background: #cbd5e1;
+  }
+
+  .hotel-toggle-thumb {
+    display: inline-block;
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    background: white;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.24);
+    transition: transform 220ms cubic-bezier(.22, .68, 0, 1.2);
+    transform: translateX(3px);
+  }
+
+  .hotel-toggle-thumb-on {
+    transform: translateX(23px);
+  }
+
+  /* Smaller toggle variant (for notification type rows) */
+  .hotel-toggle-sm {
+    height: 20px;
+    width: 36px;
+  }
+
+  .hotel-toggle-sm .hotel-toggle-thumb {
+    height: 14px;
+    width: 14px;
+    transform: translateX(3px);
+  }
+
+  .hotel-toggle-sm .hotel-toggle-thumb-on {
+    transform: translateX(19px);
+  }
+
+  /* ─── Settings sidebar nav ───────────────────────────── */
+  .hotel-settings-nav-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+    border-left: 3px solid transparent;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    gap: 10px;
+  }
+
+  .hotel-settings-nav-item:hover {
+    background: #f8fafc;
+    border-left-color: rgba(201, 162, 74, 0.38);
+    color: var(--hotel-navy);
+  }
+
+  .hotel-settings-nav-item.active {
+    background: #fffaf0;
+    border-left-color: var(--hotel-gold);
+    color: #9a7624;
+  }
+
+  /* ─── Skeleton loader ────────────────────────────────── */
   .hotel-skeleton {
     position: relative;
     overflow: hidden;
-    background: #e9eef5;
+    background: #eef1f7;
+    border-radius: 8px;
   }
 
   .hotel-skeleton::after {
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-    animation: hotel-shimmer 1.4s infinite;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+    animation: hotel-shimmer 1.5s infinite;
     content: "";
   }
 
+  /* ─── Dividers ───────────────────────────────────────── */
+  .hotel-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e5e9f0 20%, #e5e9f0 80%, transparent);
+  }
+
+  .hotel-divider-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 162, 74, 0.4) 20%, rgba(201, 162, 74, 0.4) 80%, transparent);
+  }
+
+  /* ─── Live indicator dot ─────────────────────────────── */
+  .hotel-live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    flex-shrink: 0;
+    animation: hotel-pulse-green 2.4s ease-in-out infinite;
+  }
+
+  /* ─── Animations ─────────────────────────────────────── */
   @keyframes hotel-shimmer {
     100% {
       transform: translateX(100%);
     }
+  }
+
+  @keyframes hotel-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes hotel-pulse-green {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+    }
+
+    50% {
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+  }
+
+  @keyframes hotel-pulse-gold {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(201, 162, 74, 0.5);
+    }
+
+    50% {
+      box-shadow: 0 0 0 6px rgba(201, 162, 74, 0);
+    }
+  }
+
+  .hotel-animate-fade-up {
+    animation: hotel-fade-up 0.38s ease forwards;
   }
 }

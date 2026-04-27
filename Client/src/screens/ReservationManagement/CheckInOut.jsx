@@ -220,48 +220,48 @@ const CheckInCheckOut = () => {
   const CheckInModal = () => (
     createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-[#c9a24a]/20 flex items-center justify-between bg-[#0f2742]">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Check-In Guest</h2>
-                <p className="text-sm text-gray-600">{selectedBooking?.guestName} - {selectedBooking?.bookingReference}</p>
+                <h2 className="text-xl font-medium text-white">Check-In Guest</h2>
+                <p className="text-sm text-[#c9a24a]/80">{selectedBooking?.guestName} - {selectedBooking?.bookingReference}</p>
               </div>
             </div>
             <button
               onClick={() => setShowCheckInModal(false)}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           <div className="p-6 space-y-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Booking Details</h3>
+            <div className="bg-[#f6edd6] rounded-lg p-4 border border-[#ead8a8]">
+              <h3 className="text-lg font-medium text-[#8a681b] mb-2">Booking Details</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-blue-700">Room:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
+                  <span className="text-[#8a681b] font-medium">Room:</span>
+                  <span className="ml-2">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Guests:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.guests}</span>
+                  <span className="text-[#8a681b] font-medium">Guests:</span>
+                  <span className="ml-2">{selectedBooking?.guests}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Scheduled Check-in:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.checkInTime || '14:00'}</span>
+                  <span className="text-[#8a681b] font-medium">Scheduled Check-in:</span>
+                  <span className="ml-2">{selectedBooking?.checkInTime || '14:00'}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Total Amount:</span>
-                  <span className="ml-2 font-medium">${selectedBooking?.totalAmount}</span>
+                  <span className="text-[#8a681b] font-medium">Total Amount:</span>
+                  <span className="ml-2">${selectedBooking?.totalAmount}</span>
                 </div>
               </div>
               {selectedBooking?.isEarlyCheckIn && (
-                <div className="mt-2 flex items-center space-x-2 text-orange-700">
+                <div className="mt-2 flex items-center space-x-2 text-[#c9a24a]">
                   <Timer className="h-4 w-4" />
                   <span className="text-sm font-medium">Early Check-in Requested</span>
                 </div>
@@ -275,7 +275,7 @@ const CheckInCheckOut = () => {
                   type="datetime-local"
                   value={checkInData.actualCheckInTime}
                   onChange={(e) => setCheckInData({...checkInData, actualCheckInTime: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                 />
               </div>
               <div>
@@ -286,7 +286,7 @@ const CheckInCheckOut = () => {
                     type="text"
                     value={checkInData.keyCardNumber}
                     onChange={(e) => setCheckInData({...checkInData, keyCardNumber: e.target.value})}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -300,7 +300,7 @@ const CheckInCheckOut = () => {
                     step="0.01"
                     value={checkInData.depositAmount}
                     onChange={(e) => setCheckInData({...checkInData, depositAmount: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -312,15 +312,15 @@ const CheckInCheckOut = () => {
                 value={checkInData.notes}
                 onChange={(e) => setCheckInData({...checkInData, notes: e.target.value})}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                 placeholder="Any additional notes or observations..."
               />
             </div>
 
             {selectedBooking?.specialRequests && (
-              <div className="bg-yellow-50 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-yellow-800 mb-1">Special Requests</h4>
-                <p className="text-sm text-yellow-700">{selectedBooking.specialRequests}</p>
+              <div className="bg-[#f6edd6] rounded-lg p-3 border border-[#ead8a8]">
+                <h4 className="text-sm font-medium text-[#8a681b] mb-1">Special Requests</h4>
+                <p className="text-sm text-[#8a681b]/80">{selectedBooking.specialRequests}</p>
               </div>
             )}
 
@@ -344,7 +344,7 @@ const CheckInCheckOut = () => {
               </button>
               <button
                 onClick={confirmCheckIn}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#0f2742]/90 flex items-center space-x-2 transition-colors"
               >
                 <CheckCircle className="h-4 w-4" />
                 <span>Complete Check-In</span>
@@ -360,48 +360,48 @@ const CheckInCheckOut = () => {
   const CheckOutModal = () => (
     createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-[#c9a24a]/20 flex items-center justify-between bg-[#0f2742]">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <LogOut className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                <LogOut className="h-6 w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Check-Out Guest</h2>
-                <p className="text-sm text-gray-600">{selectedBooking?.guestName} - {selectedBooking?.bookingReference}</p>
+                <h2 className="text-xl font-medium text-white">Check-Out Guest</h2>
+                <p className="text-sm text-[#c9a24a]/80">{selectedBooking?.guestName} - {selectedBooking?.bookingReference}</p>
               </div>
             </div>
             <button
               onClick={() => setShowCheckOutModal(false)}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           <div className="p-6 space-y-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Stay Summary</h3>
+            <div className="bg-[#f6edd6] rounded-lg p-4 border border-[#ead8a8]">
+              <h3 className="text-lg font-medium text-[#8a681b] mb-2">Stay Summary</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-blue-700">Room:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
+                  <span className="text-[#8a681b] font-medium">Room:</span>
+                  <span className="ml-2">{selectedBooking?.room?.roomNumber || 'Split Stay'} - {selectedBooking?.room?.name || 'Multiple Rooms'}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Check-in:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.actualCheckInTime ? new Date(selectedBooking.actualCheckInTime).toLocaleDateString() : 'Not checked in'}</span>
+                  <span className="text-[#8a681b] font-medium">Check-in:</span>
+                  <span className="ml-2">{selectedBooking?.actualCheckInTime ? new Date(selectedBooking.actualCheckInTime).toLocaleDateString() : 'Not checked in'}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Original Total:</span>
-                  <span className="ml-2 font-medium">${selectedBooking?.totalAmount}</span>
+                  <span className="text-[#8a681b] font-medium">Original Total:</span>
+                  <span className="ml-2">${selectedBooking?.totalAmount}</span>
                 </div>
                 <div>
-                  <span className="text-blue-700">Scheduled Check-out:</span>
-                  <span className="ml-2 font-medium">{selectedBooking?.checkOutTime || '12:00'}</span>
+                  <span className="text-[#8a681b] font-medium">Scheduled Check-out:</span>
+                  <span className="ml-2">{selectedBooking?.checkOutTime || '12:00'}</span>
                 </div>
               </div>
               {selectedBooking?.isLateCheckOut && (
-                <div className="mt-2 flex items-center space-x-2 text-orange-700">
+                <div className="mt-2 flex items-center space-x-2 text-[#c9a24a]">
                   <Timer className="h-4 w-4" />
                   <span className="text-sm font-medium">Late Check-out Approved</span>
                 </div>
@@ -415,13 +415,13 @@ const CheckInCheckOut = () => {
                   type="datetime-local"
                   value={checkOutData.actualCheckOutTime}
                   onChange={(e) => setCheckOutData({...checkOutData, actualCheckOutTime: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                 />
               </div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Additional Charges</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Additional Charges</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Damage Charges</label>
@@ -440,7 +440,7 @@ const CheckInCheckOut = () => {
                           finalAmount: selectedBooking.totalAmount + newCharges + checkOutData.minibarCharges + checkOutData.additionalServices
                         });
                       }}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -461,7 +461,7 @@ const CheckInCheckOut = () => {
                           finalAmount: selectedBooking.totalAmount + checkOutData.damageCharges + newCharges + checkOutData.additionalServices
                         });
                       }}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -482,17 +482,17 @@ const CheckInCheckOut = () => {
                           finalAmount: selectedBooking.totalAmount + checkOutData.damageCharges + checkOutData.minibarCharges + newCharges
                         });
                       }}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-[#f6edd6] rounded-lg p-4 border border-[#ead8a8]">
               <div className="flex items-center justify-between">
-                <span className="text-lg font-medium text-green-900">Final Amount:</span>
-                <span className="text-xl font-bold text-green-900">${checkOutData.finalAmount.toFixed(2)}</span>
+                <span className="text-lg font-medium text-[#8a681b]">Final Amount:</span>
+                <span className="text-xl font-semibold text-[#8a681b]">${checkOutData.finalAmount.toFixed(2)}</span>
               </div>
             </div>
 
@@ -502,7 +502,7 @@ const CheckInCheckOut = () => {
                 value={checkOutData.notes}
                 onChange={(e) => setCheckOutData({...checkOutData, notes: e.target.value})}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c9a24a] focus:border-transparent"
                 placeholder="Room condition, lost items, feedback, etc..."
               />
             </div>
@@ -527,7 +527,7 @@ const CheckInCheckOut = () => {
               </button>
               <button
                 onClick={confirmCheckOut}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#0f2742]/90 flex items-center space-x-2 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Complete Check-Out</span>
@@ -541,11 +541,46 @@ const CheckInCheckOut = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-slate-50/50 transition-all duration-300 ease-in-out">
+      {/* Filter Section */}
+      <div className="px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4 flex-1 w-full">
+            <div className="flex items-center bg-[#0f2742]/5 rounded-lg p-1">
+              <button
+                onClick={() => setViewFilter('today')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  viewFilter === 'today' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                Today's Activity
+              </button>
+              <button
+                onClick={() => setViewFilter('arriving')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  viewFilter === 'arriving' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                Arrivals
+              </button>
+              <button
+                onClick={() => setViewFilter('departing')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  viewFilter === 'departing' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                Departures
+              </button>
+              <button
+                onClick={() => setViewFilter('all')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  viewFilter === 'all' ? 'bg-[#0f2742] text-white shadow-md' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                }`}
+              >
+                All Bookings
+              </button>
+            </div>
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -553,46 +588,12 @@ const CheckInCheckOut = () => {
                 placeholder="Search guests or rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
               />
             </div>
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewFilter('today')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  viewFilter === 'today' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-              >
-                Today's Activity
-              </button>
-              <button
-                onClick={() => setViewFilter('arriving')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  viewFilter === 'arriving' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-              >
-                Arrivals
-              </button>
-              <button
-                onClick={() => setViewFilter('departing')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  viewFilter === 'departing' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-              >
-                Departures
-              </button>
-              <button
-                onClick={() => setViewFilter('all')}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  viewFilter === 'all' ? 'bg-white shadow-sm font-medium' : 'text-gray-600'
-                }`}
-              >
-                All Bookings
-              </button>
-            </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="text-sm text-gray-600">
+          <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
               {filteredBookings.length} bookings
             </div>
             <button
@@ -600,74 +601,17 @@ const CheckInCheckOut = () => {
                 queryClient.invalidateQueries({ queryKey: ['rooms'] });
                 queryClient.invalidateQueries({ queryKey: ['bookings'] });
               }}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
               title="Refresh"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-5 w-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stats Dashboard */}
       <div className="px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Today's Arrivals</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {bookings.filter(b => isToday(b.checkInDate) && b.status === 'confirmed').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <LogOut className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Today's Departures</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {bookings.filter(b => isToday(b.checkOutDate) && b.status === 'checked-in').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Bed className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Occupied Rooms</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {rooms.filter(r => r.occupancyStatus === 'occupied').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <ClipboardCheck className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Cleaning Required</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {rooms.filter(r => r.status === 'cleaning').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm border border-[#c9a24a]/30">
           {(isRoomsLoading || isBookingsLoading) ? (
             <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
               <div className="h-36 rounded-xl bg-gray-50 border border-gray-200" />
@@ -688,20 +632,20 @@ const CheckInCheckOut = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Guest</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Room</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Check-In</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Check-Out</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Special Notes</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                <thead className="bg-[#0f2742]">
+                  <tr className="border-b border-[#c9a24a]">
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Guest</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Room</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Check-In</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Check-Out</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Special Notes</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={booking.id} className="border-b border-[#c9a24a]/20 hover:bg-[#f6edd6]/30">
                       <td className="py-4 px-4">
                         <div>
                           <p className="font-medium text-gray-900">{booking.guestName}</p>

@@ -166,21 +166,27 @@ const Homescreen = () => {
   const revenueFromOrders = dashboardSummary?.revenueFromOrders ?? ordersData.reduce((s, o) => s + safeNumber(o.total || o.amount || o.grandTotal), 0);
   const revenueCollected = revenueFromPayments + revenueFromOrders;
 
-  // bookings time series (last 30 days)
-  const recentDays = 30;
-  const bookingsByDayMap = {};
-  for (let i = recentDays - 1; i >= 0; i--) {
+  // bookings time series (last 12 months)
+  const recentMonths = 12;
+  const bookingsByMonthMap = {};
+  for (let i = recentMonths - 1; i >= 0; i--) {
     const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    bookingsByDayMap[key] = 0;
+    d.setMonth(d.getMonth() - i);
+    const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+    bookingsByMonthMap[key] = 0;
   }
   bookingsData.forEach((b) => {
-    const k = b.createdAt?.slice?.(0, 10) || b.checkInDate?.slice?.(0, 10);
-    if (k && bookingsByDayMap.hasOwnProperty(k)) bookingsByDayMap[k] += 1;
+    const kStr = b.createdAt || b.checkInDate;
+    if (kStr) {
+      const d = new Date(kStr);
+      if (!isNaN(d.getTime())) {
+        const k = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+        if (bookingsByMonthMap.hasOwnProperty(k)) bookingsByMonthMap[k] += 1;
+      }
+    }
   });
-  const bookingsLabels = dashboardSummary?.bookingsSeries?.map((item) => item.date.slice(5)) ?? Object.keys(bookingsByDayMap).map((k) => k.slice(5)); // MM-DD
-  const bookingsValues = dashboardSummary?.bookingsSeries?.map((item) => item.count) ?? Object.values(bookingsByDayMap);
+  const bookingsLabels = Object.keys(bookingsByMonthMap);
+  const bookingsValues = Object.values(bookingsByMonthMap);
 
   const revenueSplit = [
     { label: 'Payments', value: revenueFromPayments },
@@ -189,9 +195,6 @@ const Homescreen = () => {
 
   const statStyles = {
     navy: { card: 'bg-white border-slate-200', icon: 'bg-[#0f2742] text-white', accent: 'text-[#0f2742]' },
-    gold: { card: 'bg-[#fffaf0] border-[#ead8a8]', icon: 'bg-[#c9a24a] text-white', accent: 'text-[#9a7624]' },
-    emerald: { card: 'bg-emerald-50 border-emerald-200', icon: 'bg-emerald-600 text-white', accent: 'text-emerald-700' },
-    rose: { card: 'bg-rose-50 border-rose-200', icon: 'bg-rose-600 text-white', accent: 'text-rose-700' },
   };
 
   const roomStatusStyles = {
@@ -310,44 +313,51 @@ const Homescreen = () => {
     </button>
   );
 
-  const StatCard = ({ title, value, subtitle, tone = "navy", trend, icon: Icon = Activity }) => {
-    const styles = statStyles[tone] || statStyles.navy;
+  const StatCard = ({ title, value, subtitle, icon: Icon = Activity }) => {
     return (
-    <div className={`group p-6 rounded-lg relative overflow-hidden border hover:shadow-xl transition-all duration-300 ${styles.card}`}>
-      <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-white/80 to-transparent opacity-70 rounded-bl-full"></div>
-      <div className="relative">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className={`text-3xl font-bold mb-1 ${styles.accent}`}>{value}</p>
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+      <div className="hotel-stat-card bg-white border border-[#c9a24a]/40 p-6 hover:border-[#c9a24a]/60 transition-colors duration-300 shadow-sm rounded-xl">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-gray-500 mb-2">{title}</p>
+            <p className="text-4xl font-bold mb-1.5 tracking-tight text-[#0f2742] leading-none">{value}</p>
+            {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           </div>
-          <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${styles.icon}`}>
-            <Icon className="h-6 w-6" />
+          <div className="h-13 w-13 rounded-xl bg-[#0f2742] flex items-center justify-center flex-shrink-0 ml-3 shadow-md" style={{ height: 52, width: 52 }}>
+            <Icon className="h-6 w-6 text-white" />
           </div>
         </div>
-        {trend && (
-          <div className="flex items-center space-x-2 pt-3 border-t border-gray-100">
-            <div className="flex items-center space-x-1 text-green-600">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">{trend}</span>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
     );
   };
 
-  const RoomStatusIndicator = ({ status, count }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-[#fffaf0] transition-colors duration-200">
-      <div className="flex items-center space-x-3">
-        <div className={`w-3.5 h-3.5 rounded-full ${roomStatusStyles[status] || 'bg-slate-400'} shadow-sm`}></div>
-        <span className="text-sm font-medium text-gray-700 capitalize">{status}</span>
+  const RoomStatusIndicator = ({ status, count }) => {
+    const icons = {
+      occupied: <Bed className="w-4 h-4 text-rose-500" />,
+      available: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+      cleaning: <RefreshCw className="w-4 h-4 text-amber-500" />,
+      maintenance: <Wrench className="w-4 h-4 text-orange-500" />
+    };
+    const subtitles = {
+      occupied: 'Currently in use',
+      available: 'Ready for check-in',
+      cleaning: 'Housekeeping',
+      maintenance: 'Needs attention'
+    };
+    return (
+      <div className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+            {icons[status] || <Bed className="w-4 h-4 text-[#0f2742]" />}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-gray-900 capitalize">{status}</p>
+            <p className="text-xs text-gray-500 font-medium">{subtitles[status]}</p>
+          </div>
+        </div>
+        <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{count}</div>
       </div>
-      <span className="text-sm font-bold text-gray-900 bg-white px-3 py-1 rounded-lg border border-slate-100">{count}</span>
-    </div>
-  );
+    );
+  };
 
   const NotificationItem = ({ notification }) => {
     const getNotificationIcon = (type) => {
@@ -399,11 +409,10 @@ const Homescreen = () => {
         sidebarMinimized={sidebarMinimized}
         setSidebarMinimized={setSidebarMinimized}
       />
-      
+
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72'}`}>
-        {/* Enhanced Header */}
-        <header className="bg-white/88 backdrop-blur-xl shadow-sm border-b border-slate-200 sticky top-0 z-30">
+        <header className="bg-white sticky top-0 z-30 border-b border-slate-200 shadow-sm">
           <div className="px-4 sm:px-6 py-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex items-center space-x-6">
@@ -414,17 +423,21 @@ const Homescreen = () => {
                   <Menu size={24} />
                 </button>
                 <div className="flex items-center space-x-4">
-                  <div className="bg-[#0f2742] p-3 rounded-lg shadow-lg">
-                    <ChefHat className="h-8 w-8 text-white" />
+                  <div className="bg-[#0f2742] p-3 rounded-xl shadow-lg">
+                    <ChefHat className="h-8 w-8 text-[#f4d891]" />
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-[#9a7624] font-semibold">Operations Dashboard</p>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-[#172033]">The Luxury</h1>
-                    <p className="text-gray-600 font-medium">Hotel Management System</p>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-[#9a7624] font-bold">Operations Dashboard</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-[#172033] leading-tight">The Luxury</h1>
+                    <p className="text-sm text-gray-500 font-medium">
+                      {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {' · '}
+                      {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                 <div className="relative w-full md:w-auto" ref={searchRef}>
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -476,7 +489,7 @@ const Homescreen = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div className="p-3 border-t border-gray-100 flex items-center justify-between">
                         <button onClick={() => { runSearch(searchQuery); }} className="text-sm text-blue-600"></button>
                         <button onClick={() => { setSuggestionsVisible(false); setSearchQuery(''); }} className="text-sm text-gray-500">Close</button>
@@ -484,20 +497,20 @@ const Homescreen = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <button onClick={() => { navigate('/settings'); setSuggestionsVisible(false); }} className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200">
                     <Settings className="h-5 w-5" />
                   </button>
                 </div>
-                
+
                 <div className="flex items-center space-x-4 md:ml-3 md:pl-5 md:border-l border-gray-200">
                   <div className="text-right hidden md:block">
                     <p className="text-sm font-semibold text-gray-900">{user?.name || 'Guest'}</p>
                     <p className="text-xs text-gray-600">{user?.role ? (user.role === 'admin' ? 'Administrator' : user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Guest'}</p>
                   </div>
                   <div className="h-10 w-10 bg-[#c9a24a] rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm font-bold">{(user?.name || 'G').split(' ').map(n => n[0]).slice(0,2).join('')}</span>
+                    <span className="text-white text-sm font-bold">{(user?.name || 'G').split(' ').map(n => n[0]).slice(0, 2).join('')}</span>
                   </div>
                   <button
                     onClick={() => {
@@ -515,163 +528,277 @@ const Homescreen = () => {
           </div>
         </header>
 
-        <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-          {/* Enhanced Key Metrics */}
+        <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-slate-50/50">
+          {/* Welcome Banner */}
+          <div className="bg-[#0f2742] rounded-2xl p-8 flex items-center justify-between shadow-sm border border-[#0f2742]">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back, {user?.name?.split(' ')[0] || 'Shalini'}!</h2>
+              <p className="text-[#c9a24a] text-sm sm:text-base font-medium">Here is your property overview for {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</p>
+            </div>
+            <div className="hidden sm:block p-4 bg-white/10 rounded-xl">
+              <CalendarIcon className="w-8 h-8 text-white opacity-80" />
+            </div>
+          </div>
+
+          {/* Key Metrics - Top Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms/totalRooms)*100) : 0}% occupied`} tone="navy" icon={Bed} />
-            <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${dashboardSummary?.totalBookings ?? bookingsData.length} total bookings`} tone="emerald" icon={CalendarIcon} />
-            <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} tone="gold" icon={DollarSign} />
-            <StatCard title="Active Orders" value={activeOrders} subtitle={`${dashboardSummary?.totalOrders ?? ordersData.length} total orders`} tone="rose" icon={Utensils} />
+            <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms / totalRooms) * 100) : 0}% occupied`} tone="navy" icon={Bed} />
+            <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${dashboardSummary?.totalBookings ?? bookingsData.length} total bookings`} tone="navy" icon={CalendarIcon} />
+            <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} tone="navy" icon={DollarSign} />
+            <StatCard title="Active Orders" value={activeOrders} subtitle={`${dashboardSummary?.totalOrders ?? ordersData.length} total orders`} tone="navy" icon={Utensils} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Room Status Overview */}
-            <div className="hotel-card p-6">
+          {/* Second Row: Main Chart & Action Required */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Bookings Chart (Wider) */}
+            <div className="lg:col-span-2 hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <h2 className="text-lg font-bold text-gray-900">Room Status</h2>
-                </div>
-                <button onClick={() => navigate('/room-management')} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200">
-                  <Eye className="h-5 w-5" />
-                </button>
+                <h2 className="text-lg font-bold text-gray-900">Bookings Trend (Last 12 Months)</h2>
+                <div className="text-sm text-gray-500 bg-slate-50 px-3 py-1 rounded-full">Updated just now</div>
               </div>
-              <div className="space-y-3">
-                <RoomStatusIndicator status="occupied" count={occupiedRooms} />
-                <RoomStatusIndicator status="available" count={availableRooms} />
-                <RoomStatusIndicator status="cleaning" count={roomsData.filter(r => r.status === 'cleaning' || r.needsCleaning).length} />
-                <RoomStatusIndicator status="maintenance" count={roomsData.filter(r => r.status === 'maintenance' || r.needsMaintenance).length} />
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600">
-                Ready for guests: <span className="font-semibold text-green-600">{availableRooms} rooms</span>
-              </div>
-            </div>
-
-            {/* Restaurant Activity */}
-            <div className="hotel-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <h2 className="text-lg font-bold text-gray-900">Restaurant Activity</h2>
-                </div>
-                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">Live</span>
-              </div>
-              <div className="space-y-3 text-sm text-gray-700">
-                <div className="flex items-center justify-between"><span>Active Orders</span><strong>{activeOrders}</strong></div>
-                <div className="flex items-center justify-between"><span>Pending Orders</span><strong>{dashboardSummary?.pendingOrders ?? ordersData.filter(o => o.status === 'pending').length}</strong></div>
-                <div className="flex items-center justify-between"><span>Tables Occupied</span><strong>{ordersData.filter(o => o.table || o.tableId).map(o => o.table || o.tableId).length}</strong></div>
-                <div className="mt-3 text-sm text-gray-600">Today's F&B Revenue: <span className="font-semibold text-gray-900">${ordersData.reduce((s,o)=>s+safeNumber(o.total||o.amount),0).toLocaleString()}</span></div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button onClick={() => navigate('/restaurant-bar-management')} className="w-full text-left p-3 text-sm bg-[#fffaf0] rounded-lg hover:bg-[#f6edd6] transition">Open Restaurant Panel</button>
-              </div>
-            </div>
-
-            {/* Notifications (maintenance / cleaning) */}
-            <div className="hotel-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <h2 className="text-lg font-bold text-gray-900">Notifications</h2>
-                </div>
-                <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg">{maintenanceData.length} maintenance</span>
-              </div>
-              <div className="space-y-2 max-h-56 overflow-auto">
-                {maintenanceData.length ? (
-                  maintenanceData.slice(0, 8).map((m) => (
-                    <div key={m._id || m.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-xl">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{m.title || m.issue || 'Maintenance request'}</p>
-                        <p className="text-xs text-gray-500">Room: {m.room || m.roomNumber || '—'} • {m.createdAt ? new Date(m.createdAt).toLocaleString() : (m.time || '—')}</p>
-                      </div>
-                      <div className="text-xs text-gray-500">{m.status || (m.resolved ? 'resolved' : 'pending')}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-gray-500">No maintenance notifications</div>
-                )}
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button onClick={() => navigate('/room-management')} className="w-full text-left p-3 text-sm bg-slate-100 rounded-lg hover:bg-[#f6edd6] transition">View maintenance</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Bookings chart (wider) */}
-            <div className="xl:col-span-2 hotel-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Bookings (last {recentDays} days)</h2>
-                <div className="text-sm text-gray-500">Updated just now</div>
-              </div>
-              <div style={{height: 260}}>
+              <div style={{ height: 280, width: '100%' }}>
                 <canvas ref={bookingsChartRef} />
               </div>
             </div>
 
-            {/* Revenue split & quick summary */}
-            <div className="hotel-card p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Breakdown</h3>
-              <div style={{height: 220}}>
-                <canvas ref={revenueChartRef} />
+            {/* Notifications & Action Required (Side column) */}
+            <div className="hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-gray-900">Action Required</h2>
+                <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100">{maintenanceData.length} Tickets</span>
               </div>
-              <div className="mt-4 space-y-2 text-sm text-gray-700">
-                <div className="flex items-center justify-between">
-                  <span>Payments</span>
-                  <span className="font-semibold">${revenueFromPayments.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Orders</span>
-                  <span className="font-semibold">${revenueFromOrders.toLocaleString()}</span>
-                </div>
-                <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-sm">
-                  <span className="font-medium">Total</span>
-                  <span className="font-bold">${revenueCollected.toLocaleString()}</span>
-                </div>
+              <div className="space-y-3 max-h-[300px] overflow-auto pr-2">
+                {maintenanceData.length ? (
+                  maintenanceData.slice(0, 8).map((m) => (
+                    <div key={m._id || m.id} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                          <Wrench className="w-4 h-4 text-rose-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{m.title || m.issue || 'Maintenance'}</p>
+                          <p className="text-xs text-gray-500 font-medium">Room {m.room || m.roomNumber || '—'}</p>
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">{m.status || (m.resolved ? 'resolved' : 'pending')}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                    <CheckCircle className="w-8 h-8 text-emerald-300 mb-2" />
+                    <p className="text-sm text-gray-500 font-medium">All clear! No pending maintenance.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Recent Bookings & Operational summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 hotel-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Recent Bookings</h3>
-                <button onClick={() => navigate('/reservation-management')} className="text-sm text-[#0f2742] font-semibold hover:text-[#9a7624]">View all</button>
+          {/* Third Row: Recent Reservations & Room Status */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Recent Bookings Table */}
+            <div className="lg:col-span-2 hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Recent Arrivals</h3>
+                <button onClick={() => navigate('/reservation-management')} className="text-sm text-[#0f2742] font-bold hover:text-[#c9a24a] bg-slate-50 px-4 py-2 rounded-lg transition-colors border border-slate-100">View All</button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-gray-600">
-                    <tr>
-                      <th className="pb-2">Guest</th>
-                      <th className="pb-2">Room</th>
-                      <th className="pb-2">Check-in</th>
-                      <th className="pb-2">Check-out</th>
-                      <th className="pb-2">Status</th>
+              <div className="overflow-x-auto -mx-2">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-l-lg border-y border-slate-100">Guest Name</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-slate-100">Room</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-slate-100">Check-in</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-slate-100">Check-out</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-r-lg border-y border-slate-100">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {bookingsData.slice(0, 10).map((b) => (
-                      <tr key={b._id || b.id} className="border-t border-gray-100">
-                        <td className="py-3">{b.guestName || b.guest?.name || '—'}</td>
-                        <td className="py-3">{resolveRoomLabel(b)}</td>
-                        <td className="py-3">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '—'}</td>
-                        <td className="py-3">{b.checkOutDate ? new Date(b.checkOutDate).toLocaleDateString() : '—'}</td>
-                        <td className="py-3">{b.status || 'booked'}</td>
-                      </tr>
-                    ))}
+                    {bookingsData.slice(0, 6).map((b) => {
+                      const status = b.status || 'booked';
+                      const statusClass = status === 'confirmed' || status === 'checked-in'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : status === 'cancelled' || status === 'no-show'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                          : status === 'checked-out'
+                            ? 'bg-slate-50 text-slate-700 border border-slate-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100';
+                      return (
+                        <tr key={b._id || b.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                          <td className="px-4 py-4 font-semibold text-[#172033]">{b.guestName || b.guest?.name || '—'}</td>
+                          <td className="px-4 py-4 text-gray-600 font-medium">{resolveRoomLabel(b)}</td>
+                          <td className="px-4 py-4 text-gray-500 text-sm">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '—'}</td>
+                          <td className="px-4 py-4 text-gray-500 text-sm">{b.checkOutDate ? new Date(b.checkOutDate).toLocaleDateString() : '—'}</td>
+                          <td className="px-4 py-4"><span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold capitalize ${statusClass}`}>{status}</span></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className="hotel-card p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Operational Summary</h3>
-              <div className="space-y-3 text-sm text-gray-700">
-                <div className="flex items-center justify-between"><span>Occupied Rooms</span><strong>{occupiedRooms}</strong></div>
-                <div className="flex items-center justify-between"><span>Available Rooms</span><strong>{availableRooms}</strong></div>
-                <div className="flex items-center justify-between"><span>Pending Maintenance</span><strong>{pendingMaintenance}</strong></div>
-                <div className="flex items-center justify-between"><span>Staff on Roster</span><strong>{staffCount}</strong></div>
-                <div className="flex items-center justify-between"><span>Active Orders</span><strong>{activeOrders}</strong></div>
+            {/* Room Status Overview (Side column) */}
+            <div className="hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">Live Room Status</h2>
+                <button onClick={() => navigate('/room-management')} className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-50 rounded-xl transition-all duration-200 border border-transparent hover:border-slate-200">
+                  <Eye className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-3 mt-4">
+                <RoomStatusIndicator status="occupied" count={occupiedRooms} />
+                <RoomStatusIndicator status="available" count={availableRooms} />
+                <RoomStatusIndicator status="cleaning" count={roomsData.filter(r => r.status === 'cleaning' || r.needsCleaning).length} />
+                <RoomStatusIndicator status="maintenance" count={roomsData.filter(r => r.status === 'maintenance' || r.needsMaintenance).length} />
               </div>
             </div>
+          </div>
+
+          {/* Fourth Row: Active Operations */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+            {/* Restaurant Activity */}
+            <div className="lg:col-span-2 hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-gray-900">Restaurant & Bar Operations</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Active Orders */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <Utensils className="w-5 h-5 text-[#c9a24a]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Active</p>
+                      <p className="text-xs text-gray-500 font-medium">Current orders</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{activeOrders}</div>
+                </div>
+
+                {/* Pending Prep */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <ChefHat className="w-5 h-5 text-[#9a7624]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Pending</p>
+                      <p className="text-xs text-gray-500 font-medium">To be prepared</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{dashboardSummary?.pendingOrders ?? ordersData.filter(o => o.status === 'pending').length}</div>
+                </div>
+
+                {/* Occupied Tables */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <Coffee className="w-5 h-5 text-[#0f2742]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Tables</p>
+                      <p className="text-xs text-gray-500 font-medium">Occupied</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{ordersData.filter(o => o.table || o.tableId).map(o => o.table || o.tableId).length}</div>
+                </div>
+
+                {/* F&B Revenue */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <DollarSign className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Revenue</p>
+                      <p className="text-xs text-gray-500 font-medium">F&B Total</p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-emerald-700 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toLocaleString()}</div>
+                </div>
+
+                {/* Completed Orders */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Completed</p>
+                      <p className="text-xs text-gray-500 font-medium">Served orders</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{ordersData.filter(o => o.status === 'completed' || o.status === 'delivered').length}</div>
+                </div>
+
+                {/* Total Orders */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <ClipboardList className="w-5 h-5 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Total</p>
+                      <p className="text-xs text-gray-500 font-medium">All orders</p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">{ordersData.length}</div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-center border-t border-slate-100 pt-6">
+                <button onClick={() => navigate('/restaurant-bar-management')} className="bg-gradient-to-r from-[#c9a24a] to-gray-100 text-[#0f2742] px-10 py-3 font-bold text-sm uppercase tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center space-x-3">
+                  <Utensils className="w-4 h-4" />
+                  <span>Manage Orders</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Revenue Breakdown */}
+            <div className="hotel-card border border-[#c9a24a]/30 p-6 shadow-sm bg-white">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Revenue Split</h3>
+                <div className="p-2 bg-[#fffaf0] rounded-lg border border-[#ead8a8]/30">
+                  <DollarSign className="w-4 h-4 text-[#c9a24a]" />
+                </div>
+              </div>
+
+              <div style={{ height: 260, width: '100%' }} className="mb-6 flex justify-center items-center relative">
+                <canvas ref={revenueChartRef} />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <Bed className="w-4 h-4 text-[#0f2742]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Payments</p>
+                      <p className="text-[11px] text-gray-500 font-medium">Room charges</p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromPayments.toLocaleString()}</div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
+                      <Utensils className="w-4 h-4 text-[#9a7624]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">F&B Orders</p>
+                      <p className="text-[11px] text-gray-500 font-medium">Restaurant</p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

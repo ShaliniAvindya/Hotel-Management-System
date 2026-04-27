@@ -82,37 +82,37 @@ const ReservationManagement = () => {
   }, []);
 
   const tabs = [
-    { 
-      id: 'booking', 
-      label: 'Booking Management', 
+    {
+      id: 'booking',
+      label: 'Booking Management',
       icon: Calendar,
       component: BookingManagement,
       color: 'blue'
     },
-    { 
-      id: 'guests', 
-      label: 'Guest Management', 
+    {
+      id: 'guests',
+      label: 'Guest Management',
       icon: Users,
       component: GuestManagement,
       color: 'purple'
     },
-    { 
-      id: 'checkinout', 
-      label: 'Check-In / Check-Out', 
+    {
+      id: 'checkinout',
+      label: 'Check-In / Check-Out',
       icon: UserCheck,
       component: CheckInOut,
       color: 'teal'
     },
-    { 
-      id: 'cancellations', 
-      label: 'Cancellations & No-Shows', 
+    {
+      id: 'cancellations',
+      label: 'Cancellations & No-Shows',
       icon: XCircle,
       component: CancellationsNoShows,
       color: 'red'
     },
-    { 
-      id: 'requests', 
-      label: 'Special Requests', 
+    {
+      id: 'requests',
+      label: 'Special Requests',
       icon: Heart,
       component: SpecialRequests,
       color: 'pink'
@@ -139,33 +139,33 @@ const ReservationManagement = () => {
       />
 
       <div className={`flex-1 ${mainMargin} transition-all duration-300`}>
-        <div className="bg-white/88 backdrop-blur-xl shadow-sm border-b border-slate-200 sticky top-0 z-30">
+        <div className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
           <div className="px-4 sm:px-6 py-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-slate-100"
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-[#0f2742] p-3 rounded-lg shadow-lg">
-                  <Calendar className="h-8 w-8 text-white" />
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <Calendar className="h-8 w-8 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#9a7624] font-semibold">Front Desk</p>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-[#172033]">Reservation Management</h1>
-                  <p className="text-gray-600">Fast booking, check-in, guest requests and cancellations.</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Front Desk</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">Reservation Management</h1>
+                  <p className="text-white/60">Fast booking, check-in, guest requests and cancellations.</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:flex gap-2 text-sm">
-                <button onClick={() => setActiveTab('booking')} className="hotel-button-primary px-4 py-2">New Booking</button>
-                <button onClick={() => setActiveTab('checkinout')} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-[#fffaf0] text-slate-700">Check-In Desk</button>
-              </div>
+              {/* <div className="grid grid-cols-2 sm:flex gap-2 text-sm">
+                <button onClick={() => setActiveTab('booking')} className="bg-[#c9a24a] text-[#0f2742] rounded-lg font-medium hover:bg-[#d4b55f] transition-colors shadow-sm border border-[#c9a24a] px-4 py-2">New Booking</button>
+                <button onClick={() => setActiveTab('checkinout')} className="px-4 py-2 rounded-lg border border-[#c9a24a]/30 bg-white/10 hover:bg-white/20 text-white">Check-In Desk</button>
+              </div> */}
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 pb-4 overflow-x-auto">
+          <div className="px-4 sm:px-6 pt-2 pb-5 overflow-x-auto">
             <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   Home,
   Plus,
@@ -73,44 +73,44 @@ const RoomManagement = () => {
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
   const tabs = [
-    { 
-      id: 'inventory', 
-      label: 'Inventory', 
+    {
+      id: 'inventory',
+      label: 'Inventory',
       icon: Bed,
       component: RoomInventory,
       color: 'blue'
     },
-    { 
-      id: 'calendar', 
-      label: 'Availability Calendar', 
+    {
+      id: 'calendar',
+      label: 'Availability Calendar',
       icon: Calendar,
       component: AvailabilityCalendar,
       color: 'green'
     },
-    { 
-      id: 'status', 
-      label: 'Status', 
+    {
+      id: 'status',
+      label: 'Status',
       icon: CheckCircle,
       component: RoomStatus,
       color: 'yellow'
     },
-    { 
-      id: 'rates', 
-      label: 'Rates', 
+    {
+      id: 'rates',
+      label: 'Rates',
       icon: DollarSign,
       component: RoomRate,
       color: 'purple'
     },
-    { 
-      id: 'maintenance', 
-      label: 'Maintenance', 
+    {
+      id: 'maintenance',
+      label: 'Maintenance',
       icon: Wrench,
       component: Maintenance,
       color: 'orange'
     },
-    { 
-      id: 'concierge', 
-      label: 'Concierge Services', 
+    {
+      id: 'concierge',
+      label: 'Concierge Services',
       icon: Briefcase,
       component: ConciergeServices,
       color: 'red'
@@ -120,7 +120,7 @@ const RoomManagement = () => {
   const getTabStyles = (tab, isActive) => {
     return isActive
       ? 'bg-[#0f2742] text-white border-[#c9a24a] shadow-sm'
-      : 'bg-white text-slate-600 border-slate-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]';
+      : 'bg-white text-slate-600 border-gray-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]';
   };
 
   const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
@@ -137,32 +137,32 @@ const RoomManagement = () => {
       />
 
       <div className={`flex-1 ${mainMargin} transition-all duration-300`}>
-        <div className="bg-white/88 backdrop-blur-xl shadow-sm border-b border-slate-200 sticky top-0 z-30">
+        <div className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
           <div className="px-4 sm:px-6 py-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-slate-100"
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-[#0f2742] p-3 rounded-lg shadow-lg">
-                  <Home className="h-8 w-8 text-white" />
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <Home className="h-8 w-8 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-[#9a7624] font-semibold">Rooms Division</p>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-[#172033]">Room Management</h1>
-                  <p className="text-gray-600">Inventory, rates, housekeeping status and maintenance control.</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Rooms Division</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">Room Management</h1>
+                  <p className="text-white/60">Inventory, rates, housekeeping status and maintenance control.</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:flex gap-2 text-sm">
-                <button onClick={() => setActiveTab('inventory')} className="hotel-button-primary px-4 py-2">Manage Rooms</button>
-                <button onClick={() => setActiveTab('status')} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-[#fffaf0] text-slate-700">Room Status</button>
-              </div>
+              {/* <div className="grid grid-cols-2 sm:flex gap-2 text-sm">
+                <button onClick={() => setActiveTab('inventory')} className="bg-[#c9a24a] text-[#0f2742] rounded-lg font-medium hover:bg-[#d4b55f] transition-colors shadow-sm border border-[#c9a24a] px-4 py-2">Manage Rooms</button>
+                <button onClick={() => setActiveTab('status')} className="px-4 py-2 rounded-lg border border-[#c9a24a]/30 bg-white/10 hover:bg-white/20 text-white">Room Status</button>
+              </div> */}
             </div>
           </div>
-          <div className="px-4 sm:px-6 pb-4 overflow-x-auto">
+          <div className="px-4 sm:px-6 py-3 overflow-x-auto">
             <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -203,3 +203,6 @@ const RoomManagement = () => {
 };
 
 export default RoomManagement;
+
+
+

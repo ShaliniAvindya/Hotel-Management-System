@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChefHat,
@@ -35,7 +35,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../apiconfig';
 import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
-const Modal = ({ isOpen, onClose, children, title }) => {
+const Modal = ({ isOpen, onClose, children, title, headerActions }) => {
   const modalRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -77,17 +77,20 @@ const Modal = ({ isOpen, onClose, children, title }) => {
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl"
+        className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl border border-[#c9a24a]/30"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 flex items-center justify-between bg-[#0f2742] rounded-t-xl">
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <div className="flex items-center gap-2">
+            {headerActions}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
@@ -308,20 +311,20 @@ const KitchenDisplay = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Customer Details</h3>
+            <h3 className="text-base font-bold text-[#0f2742] uppercase tracking-wide">Customer Details</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{order.customerPhone}</span>
+                <Phone className="h-4 w-4 text-[#c9a24a]" />
+                <span className="text-sm text-[#0f2742]">{order.customerPhone}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{getLocationInfo(order)}</span>
+                <MapPin className="h-4 w-4 text-[#c9a24a]" />
+                <span className="text-sm text-[#0f2742]">{getLocationInfo(order)}</span>
               </div>
             </div>
           </div>
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Order Details</h3>
+            <h3 className="text-base font-bold text-[#0f2742] uppercase tracking-wide">Order Details</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Calendar className="h-4 w-4 text-gray-500" />
@@ -341,7 +344,7 @@ const KitchenDisplay = () => {
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items ({totalItems})</h3>
+          <h3 className="text-base font-bold text-[#0f2742] mb-4 uppercase tracking-wide">Order Items ({totalItems})</h3>
           <div className="space-y-3">
             {order.items.map((item, index) => {
               const CategoryIcon = getCategoryIcon(item.category);
@@ -384,8 +387,8 @@ const KitchenDisplay = () => {
                   </div>
                   {item.notes && (
                     <div className="flex items-start space-x-2 mt-2">
-                      <MessageCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-blue-700 bg-blue-50 px-3 py-2 rounded">
+                      <MessageCircle className="h-4 w-4 text-[#c9a24a] mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-[#8a681b] bg-[#fffaf0] border border-[#ead8a8] px-3 py-2 rounded">
                         {item.notes}
                       </span>
                     </div>
@@ -421,70 +424,22 @@ const KitchenDisplay = () => {
             </div>
           </div>
         )}
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+          <h3 className="text-base font-bold text-[#0f2742] mb-4 uppercase tracking-wide">Order Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+              <span className="text-[#0f2742]/60">Subtotal:</span>
+              <span className="font-medium text-[#0f2742]">${order.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tax:</span>
-              <span className="font-medium">${order.tax.toFixed(2)}</span>
+              <span className="text-[#0f2742]/60">Tax:</span>
+              <span className="font-medium text-[#0f2742]">${order.tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-lg font-semibold border-t border-gray-200 pt-2">
-              <span>Total:</span>
-              <span>${order.total.toFixed(2)}</span>
+            <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
+              <span className="text-[#0f2742]">Total:</span>
+              <span className="text-[#0f2742]">${order.total.toFixed(2)}</span>
             </div>
           </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4 border-t border-gray-200">
-          {order.status === 'new' || order.status === 'confirmed' ? (
-            <button
-              onClick={() => {
-                handleStatusChange(order._id, 'preparing');
-                closeOrderModal();
-              }}
-              className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center space-x-2 transition-colors font-medium"
-            >
-              <Play className="h-5 w-5" />
-              <span>Start Preparing</span>
-            </button>
-          ) : order.status === 'preparing' ? (
-            <>
-              <button
-                onClick={() => {
-                  handleStatusChange(order._id, 'ready');
-                  closeOrderModal();
-                }}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center justify-center space-x-2 transition-colors font-medium"
-              >
-                <Check className="h-5 w-5" />
-                <span>Mark Ready</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleStatusChange(order._id, 'delayed');
-                  closeOrderModal();
-                }}
-                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center space-x-2 transition-colors font-medium"
-              >
-                <Pause className="h-5 w-5" />
-                <span>Mark Delayed</span>
-              </button>
-            </>
-          ) : order.status === 'delayed' ? (
-            <button
-              onClick={() => {
-                handleStatusChange(order._id, 'preparing');
-                closeOrderModal();
-              }}
-              className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center space-x-2 transition-colors font-medium"
-            >
-              <RefreshCw className="h-5 w-5" />
-              <span>Resume Preparing</span>
-            </button>
-          ) : null}
         </div>
       </div>
     );
@@ -571,8 +526,8 @@ const KitchenDisplay = () => {
                 </div>
                 {item.notes && (
                   <div className="flex items-start space-x-2 mt-2">
-                    <MessageCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded">
+                    <MessageCircle className="h-4 w-4 text-[#c9a24a] mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-[#8a681b] bg-[#fffaf0] border border-[#ead8a8] px-2 py-1 rounded">
                       {item.notes}
                     </span>
                   </div>
@@ -631,7 +586,7 @@ const KitchenDisplay = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => openOrderModal(order)}
-              className="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center space-x-1 transition-colors"
+              className="px-3 py-2 bg-[#0f2742] text-white rounded text-sm hover:bg-[#153456] flex items-center space-x-1 transition-colors font-medium"
               title="View Order Details"
             >
               <Eye className="h-3 w-3" />
@@ -692,18 +647,18 @@ const KitchenDisplay = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
+      <div className="bg-white border-b border-[#c9a24a]/30 shadow-sm sticky top-0 z-10">
         <div className="px-4 sm:px-6 py-4">
-          <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex flex-wrap gap-1 bg-[#0f2742]/5 p-1 rounded-lg">
             {stations.map((station) => (
               <button
                 key={station.id}
                 onClick={() => setSelectedStation(station.id)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wide transition-all ${
                   selectedStation === station.id
-                    ? 'bg-white shadow-sm text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-[#0f2742] shadow-sm text-white'
+                    : 'text-[#0f2742]/60 hover:text-[#0f2742] hover:bg-[#0f2742]/10'
                 }`}
               >
                 {station.name}
@@ -715,9 +670,9 @@ const KitchenDisplay = () => {
       <div className="p-4 sm:p-6">
         {sortedOrders.length === 0 ? (
           <div className="text-center py-12">
-            <ChefHat className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders for this station</h3>
-            <p className="text-gray-600">
+            <ChefHat className="h-16 w-16 text-[#c9a24a]/40 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-[#0f2742] mb-2">No orders for this station</h3>
+            <p className="text-[#0f2742]/60">
               {selectedStation === 'all'
                 ? 'No active orders in the kitchen right now.'
                 : `No orders for the ${stations.find((s) => s.id === selectedStation)?.name} station.`}
@@ -731,7 +686,47 @@ const KitchenDisplay = () => {
           </div>
         )}
       </div>
-      <Modal isOpen={isModalOpen} onClose={closeOrderModal} title={`Order #${selectedOrder?.id || ''}`}>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeOrderModal}
+        title={`Order #${selectedOrder?.id || ''}`}
+        headerActions={selectedOrder && (
+          (selectedOrder.status === 'new' || selectedOrder.status === 'confirmed') ? (
+            <button
+              onClick={() => { handleStatusChange(selectedOrder._id, 'preparing'); closeOrderModal(); }}
+              className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+            >
+              <Play className="h-4 w-4" />
+              <span>Start Preparing</span>
+            </button>
+          ) : selectedOrder.status === 'preparing' ? (
+            <>
+              <button
+                onClick={() => { handleStatusChange(selectedOrder._id, 'ready'); closeOrderModal(); }}
+                className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+              >
+                <Check className="h-4 w-4" />
+                <span>Mark Ready</span>
+              </button>
+              <button
+                onClick={() => { handleStatusChange(selectedOrder._id, 'delayed'); closeOrderModal(); }}
+                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+              >
+                <Pause className="h-4 w-4" />
+                <span>Delay</span>
+              </button>
+            </>
+          ) : selectedOrder.status === 'delayed' ? (
+            <button
+              onClick={() => { handleStatusChange(selectedOrder._id, 'preparing'); closeOrderModal(); }}
+              className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Resume</span>
+            </button>
+          ) : null
+        )}
+      >
         <OrderDetailsContent order={selectedOrder} />
       </Modal>
     </div>
@@ -739,3 +734,6 @@ const KitchenDisplay = () => {
 };
 
 export default KitchenDisplay;
+
+
+

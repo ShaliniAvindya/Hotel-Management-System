@@ -165,21 +165,23 @@ const GuestForm = ({ guest, onSave, onCancel, rooms }) => {
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {guest ? 'Edit Guest' : 'Add New Guest'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onCancel}>
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              {guest ? 'Edit Guest' : 'Add New Guest'}
+            </h2>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
           {/* Personal Information */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h3>
@@ -398,11 +400,10 @@ const GuestForm = ({ guest, onSave, onCancel, rooms }) => {
                       return (
                         <label
                           key={option.id}
-                          className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                            selectedPreferences.includes(option.id)
-                              ? 'bg-blue-100 border-blue-300 text-blue-900'
-                              : 'bg-white border-gray-200 hover:bg-gray-50'
-                          }`}
+                          className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${selectedPreferences.includes(option.id)
+                            ? 'bg-blue-100 border-blue-300 text-blue-900'
+                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -552,54 +553,45 @@ const GuestDetails = ({ guest, rooms, onClose, onEdit, onDelete }) => {
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg ${
-              vipLevel.color === 'yellow' ? 'bg-yellow-100' :
-              vipLevel.color === 'purple' ? 'bg-purple-100' :
-              vipLevel.color === 'orange' ? 'bg-orange-100' :
-              'bg-blue-100'
-            }`}>
-              <VipIcon className={`h-5 w-5 ${
-                vipLevel.color === 'yellow' ? 'text-yellow-600' :
-                vipLevel.color === 'purple' ? 'text-purple-600' :
-                vipLevel.color === 'orange' ? 'text-orange-600' :
-                'text-blue-600'
-              }`} />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{guest.firstName} {guest.lastName}</h2>
-              <div className="flex items-center space-x-2">
-                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                  vipLevel.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                  vipLevel.color === 'purple' ? 'bg-purple-100 text-purple-800' :
-                  vipLevel.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                  'bg-gray-100 text-gray-800'
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${vipLevel.color === 'yellow' ? 'bg-yellow-100' :
+                vipLevel.color === 'purple' ? 'bg-purple-100' :
+                  vipLevel.color === 'orange' ? 'bg-orange-100' :
+                    'bg-blue-100'
                 }`}>
-                  {vipLevel.name}
-                </span>
-                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                  statusInfo.color === 'green' ? 'bg-green-100 text-green-800' :
-                  statusInfo.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                  statusInfo.color === 'red' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {statusInfo.name}
-                </span>
+                <VipIcon className={`h-6 w-6 ${vipLevel.color === 'yellow' ? 'text-yellow-600' :
+                  vipLevel.color === 'purple' ? 'text-purple-600' :
+                    vipLevel.color === 'orange' ? 'text-orange-600' :
+                      'text-blue-600'
+                  }`} />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{guest.firstName} {guest.lastName}</h2>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${vipLevel.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                    vipLevel.color === 'purple' ? 'bg-purple-100 text-purple-800' :
+                      vipLevel.color === 'orange' ? 'bg-orange-100 text-orange-800' :
+                        'bg-white/10 text-white border-white/20'
+                    }`}>
+                    {vipLevel.name}
+                  </span>
+                </div>
               </div>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Guest Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 rounded-lg p-4">
@@ -792,11 +784,10 @@ const GuestDetails = ({ guest, rooms, onClose, onEdit, onDelete }) => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-green-600">${stay.amount}</p>
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                            stay.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${stay.status === 'completed' ? 'bg-green-100 text-green-800' :
                             stay.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                              'bg-gray-100 text-gray-800'
+                            }`}>
                             {stay.status.charAt(0).toUpperCase() + stay.status.slice(1)}
                           </span>
                         </div>
@@ -849,94 +840,94 @@ const GuestCard = ({ guest, onView, onEdit, onDelete }) => {
   ];
   const vipLevel = vipLevels.find(v => v.id === guest.vipLevel) || vipLevels[0];
   const statusInfo = guestStatuses.find(s => s.id === guest.status) || guestStatuses[0];
-  const VipIcon = vipLevel.icon;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <div>
-            <h3 className="font-semibold text-gray-900 text-lg">
+    <div className="bg-white border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 group">
+      <div className="h-1 w-full bg-[#c9a24a]" />
+      <div className="p-4 flex flex-col h-full">
+        {/* Header: Guest Name and VIP/Status */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-[#0f2742] text-base sm:text-lg mb-1 truncate group-hover:text-[#c9a24a] transition-colors">
               {guest.firstName} {guest.lastName}
             </h3>
-            <p className="text-sm text-gray-600">{guest.email}</p>
+            <p className="text-sm text-gray-600 font-medium truncate">{guest.email}</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-1">
-          {guest.vipLevel !== 'none' && (
-            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-              vipLevel.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-              vipLevel.color === 'purple' ? 'bg-purple-100 text-purple-800' :
-              vipLevel.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {vipLevel.name}
+          <div className="flex flex-col items-end gap-1.5 ml-2">
+            {guest.vipLevel !== 'none' && (
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${vipLevel.color === 'yellow' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+                vipLevel.color === 'purple' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+                  vipLevel.color === 'orange' ? 'bg-orange-50 border-orange-200 text-orange-700' :
+                    'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
+                {vipLevel.name}
+              </span>
+            )}
+            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${statusInfo.color === 'green' ? 'bg-green-50 border-green-200 text-green-700' :
+              statusInfo.color === 'blue' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                statusInfo.color === 'red' ? 'bg-red-50 border-red-200 text-red-700' :
+                  'bg-slate-50 border-slate-200 text-slate-700'
+              }`}>
+              {statusInfo.name}
             </span>
-          )}
-          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-            statusInfo.color === 'green' ? 'bg-green-100 text-green-800' :
-            statusInfo.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-            statusInfo.color === 'red' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {statusInfo.name}
-          </span>
-        </div>
-      </div>
-      
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center space-x-2 text-sm">
-          <Phone className="h-4 w-4 text-gray-500" />
-          <span className="text-gray-600">Phone:</span>
-          <span className="font-medium">{guest.phone}</span>
-        </div>
-        <div className="flex items-start space-x-2 text-sm">
-          <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-          <span className="text-gray-600">Address:</span>
-          <span className="font-medium">{guest.address || 'Not provided'}</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm">
-          <Calendar className="h-4 w-4 text-gray-500" />
-          <span className="text-gray-600">Total Stays:</span>
-          <span className="font-medium">{guest.totalStays}</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm">
-          <CreditCard className="h-4 w-4 text-gray-500" />
-          <span className="text-gray-600">Total Spent:</span>
-          <span className="font-semibold text-green-600">${guest.totalSpent}</span>
-        </div>
-        {guest.lastStay && (
-          <div className="flex items-center space-x-2 text-sm">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Last Stay:</span>
-            <span className="font-medium">{new Date(guest.lastStay).toLocaleDateString()}</span>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="flex justify-end items-center">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => onView(guest)}
-            className="p-1 text-gray-400 hover:text-blue-600"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onEdit(guest)}
-            className="p-1 text-gray-400 hover:text-blue-600"
-            title="Edit Guest"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onDelete(guest.id)}
-            className="p-1 text-gray-400 hover:text-red-600"
-            title="Delete Guest"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        {/* Guest Info List */}
+        <div className="space-y-3 mb-5 text-sm text-gray-600 font-medium">
+          <div className="flex items-center space-x-3">
+            <Phone size={16} className="text-[#c9a24a]" />
+            <span>{guest.phone}</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <MapPin size={16} className="text-[#c9a24a]" />
+            <span className="truncate">{guest.address || 'No address'}</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Calendar size={16} className="text-[#c9a24a]" />
+            <span>Total Stays: {guest.totalStays}</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <CreditCard size={16} className="text-[#c9a24a]" />
+            <span className="font-bold text-green-600">Total Spent: ${guest.totalSpent}</span>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100">
+          <div className="flex items-center gap-1.5">
+            {guest.lastStay && (
+              <>
+                <Clock size={12} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Last: {new Date(guest.lastStay).toLocaleDateString()}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => onView(guest)}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-50 rounded-lg transition-all"
+              title="View Details"
+            >
+              <Eye size={18} />
+            </button>
+            <button
+              onClick={() => onEdit(guest)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            <button
+              onClick={() => onDelete(guest.id)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -966,18 +957,16 @@ const GuestListItem = ({ guest, onView, onEdit, onDelete }) => {
     <tr className="border-b border-gray-100 hover:bg-gray-50">
       <td className="py-4 px-4">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${
-            vipLevel.color === 'yellow' ? 'bg-yellow-100' :
+          <div className={`p-2 rounded-lg ${vipLevel.color === 'yellow' ? 'bg-yellow-100' :
             vipLevel.color === 'purple' ? 'bg-purple-100' :
-            vipLevel.color === 'orange' ? 'bg-orange-100' :
-            'bg-blue-100'
-          }`}>
-            <VipIcon className={`h-4 w-4 ${
-              vipLevel.color === 'yellow' ? 'text-yellow-600' :
+              vipLevel.color === 'orange' ? 'bg-orange-100' :
+                'bg-blue-100'
+            }`}>
+            <VipIcon className={`h-4 w-4 ${vipLevel.color === 'yellow' ? 'text-yellow-600' :
               vipLevel.color === 'purple' ? 'text-purple-600' :
-              vipLevel.color === 'orange' ? 'text-orange-600' :
-              'text-blue-600'
-            }`} />
+                vipLevel.color === 'orange' ? 'text-orange-600' :
+                  'text-blue-600'
+              }`} />
           </div>
           <div>
             <p className="font-medium text-gray-900">{guest.firstName} {guest.lastName}</p>
@@ -992,22 +981,20 @@ const GuestListItem = ({ guest, onView, onEdit, onDelete }) => {
         <span className="text-sm text-gray-900">{guest.address || 'Not provided'}</span>
       </td>
       <td className="py-4 px-4">
-        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-          vipLevel.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${vipLevel.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
           vipLevel.color === 'purple' ? 'bg-purple-100 text-purple-800' :
-          vipLevel.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+            vipLevel.color === 'orange' ? 'bg-orange-100 text-orange-800' :
+              'bg-gray-100 text-gray-800'
+          }`}>
           {vipLevel.name}
         </span>
       </td>
       <td className="py-4 px-4">
-        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-          statusInfo.color === 'green' ? 'bg-green-100 text-green-800' :
+        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color === 'green' ? 'bg-green-100 text-green-800' :
           statusInfo.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-          statusInfo.color === 'red' ? 'bg-red-100 text-red-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+            statusInfo.color === 'red' ? 'bg-red-100 text-red-800' :
+              'bg-gray-100 text-gray-800'
+          }`}>
           {statusInfo.name}
         </span>
       </td>
@@ -1155,119 +1142,61 @@ const GuestManagement = () => {
   if (error) return <div className="text-center py-12 text-red-600">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Stats */}
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
+    <div className="min-h-screen bg-slate-50/50 transition-all duration-300 ease-in-out">
+        <div className="px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-4 flex-1 w-full">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search guests..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Guests</p>
-                <p className="text-xl font-semibold text-gray-900">{totalGuests}</p>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                >
+                  {guestStatuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+              <button
+                onClick={() => setShowGuestForm(true)}
+                className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors text-sm w-full sm:w-auto"
+              >
+                <Plus size={18} className="mr-2" />
+                New Guest
+              </button>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Crown className="h-5 w-5 text-yellow-600" />
+            <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {filteredGuests.length} guests
               </div>
-              <div>
-                <p className="text-sm text-gray-600">VIP Guests</p>
-                <p className="text-xl font-semibold text-gray-900">{vipGuests}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <UserCheck className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Active Guests</p>
-                <p className="text-xl font-semibold text-gray-900">{activeGuests}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Avg Stays</p>
-                <p className="text-xl font-semibold text-gray-900">{avgStaysPerGuest}</p>
-              </div>
+              <button
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['guests'] });
+                }}
+                className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+                title="Refresh"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Filters and Controls */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search guests..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {guestStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={() => setShowGuestForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add New Guest</span>
-            </button>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-600'}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
-            <button
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['guests'] })}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {filteredGuests.length === 0 ? (
             <div className="text-center py-12">
               <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -1286,7 +1215,7 @@ const GuestManagement = () => {
               </button>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {filteredGuests.map((guest) => (
                 <GuestCard
                   key={guest.id}
@@ -1339,10 +1268,9 @@ const GuestManagement = () => {
               </table>
             </div>
           )}
-        </div>
       </div>
 
-           {/* Modals */}
+      {/* Modals */}
       {showGuestForm && (
         <GuestForm
           guest={editingGuest}

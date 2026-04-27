@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
@@ -98,7 +98,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   const statusConfig = {
     available: { color: 'bg-green-100 border-green-300 text-green-800', icon: CheckCircle, label: 'Available' },
     occupied: { color: 'bg-red-100 border-red-300 text-red-800', icon: Users, label: 'Occupied' },
-    reserved: { color: 'bg-blue-100 border-blue-300 text-blue-800', icon: Calendar, label: 'Reserved' },
+    reserved: { color: 'bg-gray-100 border-blue-300 text-blue-800', icon: Calendar, label: 'Reserved' },
     checkout: { color: 'bg-yellow-100 border-yellow-300 text-yellow-800', icon: Clock, label: 'Check-out' },
     cleaning: { color: 'bg-purple-100 border-purple-300 text-purple-800', icon: RefreshCw, label: 'Cleaning' },
     maintenance: { color: 'bg-orange-100 border-orange-300 text-orange-800', icon: Wrench, label: 'Maintenance' },
@@ -308,8 +308,8 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
             status: statusData.status === 'available' ? 'clean' : statusData.status,
             occupancyStatus:
               statusData.status === 'occupied' ? 'occupied' :
-              statusData.status === 'maintenance' ? 'out-of-order' :
-              statusData.status === 'blocked' ? 'out-of-order' : 'vacant',
+                statusData.status === 'maintenance' ? 'out-of-order' :
+                  statusData.status === 'blocked' ? 'out-of-order' : 'vacant',
             guestName: statusData.guest || null,
             checkInDate: statusData.checkIn || null,
             expectedCheckOut: statusData.checkOut || null,
@@ -352,13 +352,13 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 className="text-xl font-semibold text-gray-900">Update Room Status</h2>
+          <div className="p-6 border-b border-[#c9a24a]/30 flex items-center justify-between bg-[#0f2742]">
+            <h2 className="text-xl font-semibold text-white">Update Room Status</h2>
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-600" />
+
             </button>
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -367,7 +367,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {Object.entries(statusConfig).map(([status, config]) => (
                   <option key={status} value={status}>{config.label}</option>
@@ -382,7 +382,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                     type="text"
                     value={formData.guest}
                     onChange={(e) => setFormData({ ...formData, guest: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 {formData.status === 'occupied' && (
@@ -393,7 +393,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                         type="date"
                         value={formData.checkIn}
                         onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                     <div>
@@ -402,7 +402,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                         type="date"
                         value={formData.checkOut}
                         onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </>
@@ -415,7 +415,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                     step="0.01"
                     value={formData.rate}
                     onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </>
@@ -427,7 +427,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             )}
@@ -435,13 +435,13 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-0 py-2 text-slate-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-0 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456]"
               >
                 Update Status
               </button>
@@ -461,190 +461,192 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+          <div className="p-6 border-b border-[#c9a24a]/30 flex flex-col sm:flex-row items-center justify-between bg-[#0f2742] gap-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Bed className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-gray-100 rounded-lg">
+
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{selectedRoom.name}</h2>
-                <p className="text-sm text-gray-600">
-                  Room {selectedRoom.roomNumber} • {roomTypes.find((rt) => rt.id === selectedRoom.type)?.name || 'Unknown'}
+                <h2 className="text-xl font-semibold text-white">{selectedRoom.name}</h2>
+                <p className="text-sm text-slate-400">
+                  Room {selectedRoom.roomNumber} â€¢ {roomTypes.find((rt) => rt.id === selectedRoom.type)?.name || 'Unknown'}
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowRoomDetails(false)}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setShowStatusForm(true);
+                  setShowRoomDetails(false);
+                }}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center space-x-2 transition-colors border border-white/10"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="text-sm">Edit Status</span>
+              </button>
+              <div className="w-px h-8 bg-white/10 mx-1" />
+              <button
+                onClick={() => setShowRoomDetails(false)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+
+              </button>
+            </div>
           </div>
           <div className="p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <p className="text-lg font-semibold text-gray-900">
-                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <div className="flex items-center space-x-2">
-                <StatusIcon className="h-5 w-5 text-gray-600" />
-                <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full border ${statusConfig[roomData.status]?.color}`}>
-                  {statusConfig[roomData.status]?.label}
-                </span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-[10px] font-bold text-[#9a7624] uppercase tracking-[0.2em] mb-1">Date</label>
+                <p className="text-base font-semibold text-[#0f2742]">
+                  {selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-[#9a7624] uppercase tracking-[0.2em] mb-1">Status</label>
+                <div className="flex items-center space-x-2">
+                  <StatusIcon className="h-4 w-4 text-slate-400" />
+                  <span className={`inline-flex px-3 py-0.5 text-xs font-bold rounded-full border ${statusConfig[roomData.status]?.color}`}>
+                    {statusConfig[roomData.status]?.label}
+                  </span>
+                </div>
               </div>
             </div>
+
             {selectedRoom.maintenanceNotes && roomData.status === 'maintenance' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Maintenance Notes</label>
-                <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">{selectedRoom.maintenanceNotes}</p>
+                <label className="block text-[10px] font-bold text-[#9a7624] uppercase tracking-[0.2em] mb-1">Maintenance Notes</label>
+                <p className="text-sm text-[#0f2742] bg-gray-50 p-4 rounded-lg border border-gray-100">{selectedRoom.maintenanceNotes}</p>
               </div>
             )}
+
             {selectedRoom.images && selectedRoom.images.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Images</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <h3 className="text-base font-bold text-[#0f2742] mb-3">Room Images</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {selectedRoom.images.map((image, index) => (
                     <img
                       key={index}
                       src={image}
                       alt={`${selectedRoom.name} ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="w-full h-32 object-cover rounded-lg border border-gray-100 shadow-sm"
                     />
                   ))}
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-50">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Room Information</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Home className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Floor:</span>
-                    <span className="text-sm font-medium">{selectedRoom.floor}</span>
+                <h3 className="text-base font-bold text-[#0f2742] mb-4 flex items-center space-x-2">
+
+                  <span>Room Information</span>
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+
+                      <span className="text-sm text-slate-500">Floor Level</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#0f2742]">{selectedRoom.floor}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Capacity:</span>
-                    <span className="text-sm font-medium">
-                      {selectedRoom.capacity} guests (Max: {selectedRoom.maxCapacity})
-                    </span>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      <span className="text-sm text-slate-500">Guest Capacity</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#0f2742]">{selectedRoom.capacity} Guests (Max: {selectedRoom.maxCapacity})</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Size:</span>
-                    <span className="text-sm font-medium">{selectedRoom.size} sq ft</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Bookings:</span>
-                    <span className="text-sm font-medium">{selectedRoom.bookingHistory} total</span>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4 text-slate-400" />
+                      <span className="text-sm text-slate-500">Room Size</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#0f2742]">{selectedRoom.size} sq ft</span>
                   </div>
                 </div>
               </div>
+
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Pricing</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Base Price:</span>
-                    <span className="text-sm font-medium">${selectedRoom.basePrice}/night</span>
+                <h3 className="text-base font-bold text-[#0f2742] mb-4 flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4 text-[#c9a24a]" />
+                  <span>Pricing Details</span>
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Base Nightly Rate</span>
+                    <span className="text-sm font-bold text-[#0f2742]">${selectedRoom.basePrice}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Weekend Price:</span>
-                    <span className="text-sm font-medium">${selectedRoom.weekendPrice}/night</span>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Weekend Rate</span>
+                    <span className="text-sm font-bold text-[#0f2742]">${selectedRoom.weekendPrice}</span>
                   </div>
                 </div>
               </div>
             </div>
+
             {selectedRoom.description && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedRoom.description}</p>
+              <div className="pt-6 border-t border-gray-50">
+                <h3 className="text-base font-bold text-[#0f2742] mb-3">Room Description</h3>
+                <p className="text-sm text-slate-600 leading-relaxed bg-gray-50 p-4 rounded-lg">{selectedRoom.description}</p>
               </div>
             )}
+
             {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Amenities</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="pt-6 border-t border-gray-50">
+                <h3 className="text-base font-bold text-[#0f2742] mb-3">Amenities & Features</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {selectedRoom.amenities.map((amenityId) => {
                     const amenity = availableAmenities.find((a) => a.id === amenityId);
                     if (!amenity) return null;
                     const IconComponent = amenity.icon;
                     return (
-                      <div
-                        key={amenityId}
-                        className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
-                      >
-                        <IconComponent className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm">{amenity.name}</span>
+                      <div key={amenityId} className="flex items-center space-x-2 p-2 bg-white border border-gray-100 rounded-lg shadow-sm">
+                        <IconComponent className="h-3.5 w-3.5 text-[#c9a24a]" />
+                        <span className="text-xs text-slate-600 font-medium">{amenity.name}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
+
             {(roomData.guest || roomData.checkIn || roomData.checkOut || roomData.rate || roomData.notes) && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Booking Details</h3>
-                <div className="space-y-3">
+              <div className="pt-6 border-t border-[#c9a24a]/20">
+                <h3 className="text-base font-bold text-[#0f2742] mb-4">Active Booking / Status Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-5 rounded-xl border border-gray-100">
                   {roomData.guest && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Guest</label>
-                      <p className="text-sm text-gray-900">{roomData.guest}</p>
-                    </div>
-                  )}
-                  {(roomData.checkIn || roomData.checkOut) && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {roomData.checkIn && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
-                          <p className="text-sm text-gray-900">
-                            {new Date(roomData.checkIn).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
-                      {roomData.checkOut && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
-                          <p className="text-sm text-gray-900">
-                            {new Date(roomData.checkOut).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#9a7624] uppercase tracking-widest mb-1">Guest Name</span>
+                      <span className="text-sm font-bold text-[#0f2742]">{roomData.guest}</span>
                     </div>
                   )}
                   {roomData.rate && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Rate</label>
-                      <p className="text-sm text-gray-900">${roomData.rate}</p>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#9a7624] uppercase tracking-widest mb-1">Applied Rate</span>
+                      <span className="text-sm font-bold text-[#0f2742]">${roomData.rate}</span>
+                    </div>
+                  )}
+                  {roomData.checkIn && (
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#9a7624] uppercase tracking-widest mb-1">Check-in</span>
+                      <span className="text-sm font-bold text-[#0f2742]">{new Date(roomData.checkIn).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {roomData.checkOut && (
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-[#9a7624] uppercase tracking-widest mb-1">Check-out</span>
+                      <span className="text-sm font-bold text-[#0f2742]">{new Date(roomData.checkOut).toLocaleDateString()}</span>
                     </div>
                   )}
                   {roomData.notes && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                      <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">{roomData.notes}</p>
+                    <div className="col-span-full flex flex-col pt-2 border-t border-gray-200/50 mt-2">
+                      <span className="text-[10px] font-bold text-[#9a7624] uppercase tracking-widest mb-1">Status Notes</span>
+                      <span className="text-sm text-[#0f2742] italic">"{roomData.notes}"</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setShowStatusForm(true);
-                  setShowRoomDetails(false);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit Status</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>,
@@ -659,7 +661,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 transition-all duration-300 ease-in-out"
+      className="h-screen bg-gray-50 transition-all duration-300 ease-in-out flex flex-col pb-12"
       style={{ marginLeft: `${sidebarOffset}rem`, width: `calc(100% - ${sidebarOffset}rem)` }}
     >
       {sidebarOpen && (
@@ -669,11 +671,11 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
         ></div>
       )}
       {error && (
-        <div className="px-6 py-4 bg-red-100 border-b border-red-200">
+        <div className="px-0 py-3 bg-red-100 border-b border-red-200">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      <div className="px-6 py-4 bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="px-6 py-3 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
@@ -681,7 +683,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Status</option>
                 {Object.entries(statusConfig).map(([status, config]) => (
@@ -694,7 +696,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               <select
                 value={filterRoomType}
                 onChange={(e) => setFilterRoomType(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="all">All Room Types</option>
                 {roomTypes.map((type) => (
@@ -707,7 +709,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 setFilterStatus('all');
                 setFilterRoomType('all');
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 text-sm"
+              className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 text-sm"
             >
               <RefreshCw className="h-4 w-4" />
               <span>Reset Filters</span>
@@ -737,43 +739,43 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
             </button>
             <button
               onClick={() => fetchData({ background: true })}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-slate-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
             >
               <RefreshCw className="h-5 w-5" />
             </button>
           </div>
         </div>
       </div>
-      <div className="px-6 py-4 bg-blue-50 border-b border-blue-200">
+      <div className="px-6 py-3 bg-gray-50 border-b border-[#c9a24a]/20">
         <div className="flex flex-wrap gap-4">
           {Object.entries(statusConfig).map(([status, config]) => {
             const Icon = config.icon;
             return (
               <div key={status} className="flex items-center space-x-2">
                 <div className={`w-4 h-4 rounded border ${config.color}`}></div>
-                <Icon className="h-4 w-4 text-gray-600" />
+
                 <span className="text-sm text-gray-700">{config.label}</span>
               </div>
             );
           })}
           <div className="flex items-center space-x-2">
-            <Split className="h-4 w-4 text-yellow-600" />
+
             <span className="text-sm text-gray-700">Split Stay</span>
           </div>
         </div>
       </div>
-      <div className="px-6 py-2">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-          <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200">
-            <div className="p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-gray-50 z-10 text-sm">Room</div>
+      <div className="flex-1 flex flex-col min-h-0 px-0 py-0">
+        <div className="bg-white border-t border-[#c9a24a]/30 overflow-x-auto flex-1">
+          <div className="grid grid-cols-[120px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200">
+            <div className="p-2 font-bold text-[#0f2742] border-r border-[#c9a24a]/10 sticky left-0 bg-gray-50 z-10 text-sm text-center">Room</div>
             {weekDays.map((day, index) => (
               <div key={day} className="p-4 font-medium text-gray-900 text-center border-r border-gray-200 last:border-r-0 text-sm">
                 {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-[150px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200"></div>
-          <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
+          <div className="grid grid-cols-[120px_repeat(7,1fr)] bg-gray-50 border-b border-gray-200"></div>
+          <div className="flex-1 overflow-y-auto overflow-y-auto">
             {loading && rooms.length === 0 ? (
               <div className="grid gap-3 p-4">
                 <div className="h-16 rounded-lg bg-white border border-gray-200" />
@@ -782,9 +784,9 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
               </div>
             ) : filteredRooms.length === 0 ? (
               <div className="text-center py-12">
-                <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
-                <p className="text-sm text-gray-600">No rooms match your current filters.</p>
+                <p className="text-sm text-slate-400">No rooms match your current filters.</p>
               </div>
             ) : (
               filteredRooms.map((room) => {
@@ -799,17 +801,13 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                 });
 
                 return weeks.map((week, weekIndex) => (
-                  <div key={`${room.id}-${weekIndex}`} className="grid grid-cols-[150px_repeat(7,1fr)] border-b border-gray-100 hover:bg-gray-50">
+                  <div key={`${room.id}-${weekIndex}`} className="grid grid-cols-[120px_repeat(7,1fr)] border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
                     <div className="p-4 border-r border-gray-200 bg-white sticky left-0 z-10">
                       {weekIndex === 0 && (
-                        <div className="flex items-center space-x-3">
-                          <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white text-sm font-medium">{room.roomNumber}</span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-gray-900">{room.name}</p>
-                            <p className="text-xs text-gray-600">{roomTypes.find((rt) => rt.id === room.type)?.name || 'Unknown'}</p>
-                          </div>
+                        <div className="flex flex-col space-y-0.5 items-center text-center">
+                          <span className="text-[10px] font-bold text-[#9a7624] tracking-widest uppercase">Room {room.roomNumber}</span>
+                          <p className="font-semibold text-xs text-[#0f2742] leading-tight line-clamp-2">{room.name}</p>
+                          <p className="text-[9px] text-slate-400 font-medium uppercase">{roomTypes.find((rt) => rt.id === room.type)?.name || 'Unknown'}</p>
                         </div>
                       )}
                     </div>
@@ -844,10 +842,10 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
                                       <p className="text-xs font-medium truncate">{roomStatus.guest}</p>
                                       <p className="text-xs truncate opacity-90">{roomStatus.booking?.bookingReference || 'N/A'}</p>
                                       <div className="flex items-center justify-center space-x-1 mt-1">
-                                        <Users className="h-3 w-3" />
+
                                         <span className="text-xs">{roomStatus.booking?.guests || 1}</span>
-                                        {isFirstDay && <Clock className="h-3 w-3 ml-1" />}
-                                        {isSplitStay && <Split className="h-3 w-3 ml-1" />}
+
+
                                       </div>
                                     </>
                                   )}
@@ -880,3 +878,6 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
 };
 
 export default AvailabilityCalendar;
+
+
+

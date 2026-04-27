@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, FileText, DollarSign, AlertCircle, Eye, Download, X, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, RefreshCw, FileText, DollarSign, AlertCircle, Eye, Download, X, Edit2, CheckCircle, XCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_BASE_URL } from '../../apiconfig';
@@ -321,18 +321,18 @@ const PackageBilling = () => {
           className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50 sticky top-0">
+          <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between bg-[#0f2742] sticky top-0">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{billing.billingId}</h2>
-                <p className="text-sm text-gray-600">Invoice Details</p>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">{billing.billingId}</h2>
+                <p className="text-sm text-white/60">Invoice Details</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+            <button onClick={onClose} className="p-2 sm:p-3 hover:bg-white/10 rounded-lg transition-colors text-white">
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
 
@@ -486,18 +486,18 @@ const PackageBilling = () => {
           className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50 sticky top-0">
+          <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between bg-[#0f2742] sticky top-0">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Edit2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                <Edit2 className="h-5 w-5 sm:h-6 sm:w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Update Payment</h2>
-                <p className="text-sm text-gray-600">Modify Payment Details</p>
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Update Payment</h2>
+                <p className="text-sm text-white/60">Modify Payment Details</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+            <button onClick={onClose} className="p-2 sm:p-3 hover:bg-white/10 rounded-lg transition-colors text-white">
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
           
@@ -615,7 +615,7 @@ const PackageBilling = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
       {/* Notification */}
       {notification && (
         <div className="fixed top-4 right-4 z-[9999]">
@@ -634,70 +634,83 @@ const PackageBilling = () => {
 
       {/* Summary Cards */}
       <div className="px-4 sm:px-6 py-6 space-y-6">
-        <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Billing Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Total Revenue</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <DollarSign size={32} className="text-green-600" />
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="hotel-stat-card bg-white border border-[#c9a24a]/40 p-6 hover:border-[#c9a24a]/60 transition-colors duration-300 shadow-sm rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-gray-500 mb-2">Total Revenue</p>
+                <p className="text-4xl font-bold mb-1.5 tracking-tight text-[#0f2742] leading-none">${totalRevenue.toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-[#0f2742] flex items-center justify-center flex-shrink-0 ml-3 shadow-md" style={{ height: 52, width: 52 }}>
+                <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Pending Payments</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">${pendingPayments.toFixed(2)}</p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <FileText size={32} className="text-yellow-600" />
-                </div>
+          </div>
+          <div className="hotel-stat-card bg-white border border-[#c9a24a]/40 p-6 hover:border-[#c9a24a]/60 transition-colors duration-300 shadow-sm rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-gray-500 mb-2">Pending Payments</p>
+                <p className="text-4xl font-bold mb-1.5 tracking-tight text-[#0f2742] leading-none">${pendingPayments.toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-[#0f2742] flex items-center justify-center flex-shrink-0 ml-3 shadow-md" style={{ height: 52, width: 52 }}>
+                <FileText className="h-6 w-6 text-white" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Total Invoices</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{billings.length}</p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FileText size={32} className="text-blue-600" />
-                </div>
+          </div>
+          <div className="hotel-stat-card bg-white border border-[#c9a24a]/40 p-6 hover:border-[#c9a24a]/60 transition-colors duration-300 shadow-sm rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.1em] font-bold text-gray-500 mb-2">Total Invoices</p>
+                <p className="text-4xl font-bold mb-1.5 tracking-tight text-[#0f2742] leading-none">{billings.length}</p>
+              </div>
+              <div className="rounded-xl bg-[#0f2742] flex items-center justify-center flex-shrink-0 ml-3 shadow-md" style={{ height: 52, width: 52 }}>
+                <FileText className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Billing Records</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by guest or invoice ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
-              />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 sm:px-6 py-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by guest or invoice ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                />
+              </div>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="partial">Partial</option>
+                  <option value="paid">Paid</option>
+                  <option value="refunded">Refunded</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
             </div>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="partial">Partial</option>
-              <option value="paid">Paid</option>
-              <option value="refunded">Refunded</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+            <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {filteredBillings.length} records
+              </div>
+              <button
+                onClick={fetchBillings}
+                className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+                title="Refresh"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -724,21 +737,21 @@ const PackageBilling = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Invoice ID</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Guest</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Date</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Amount</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Paid</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Pending</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>
+                <thead className="bg-[#0f2742]">
+                  <tr className="border-b border-[#c9a24a]">
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Invoice ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Guest</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Amount</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Paid</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Pending</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#c9a24a]">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {filteredBillings.map(billing => (
-                    <tr key={billing._id} className="hover:bg-gray-50 transition">
+                    <tr key={billing._id} className="border-b border-[#c9a24a]/20 hover:bg-[#f6edd6]/30 transition">
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-900">{billing.billingId}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm text-gray-600">{billing.guestName}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm text-gray-600">{new Date(billing.invoiceDate).toLocaleDateString()}</td>
@@ -796,3 +809,4 @@ const PackageBilling = () => {
 };
 
 export default PackageBilling;
+

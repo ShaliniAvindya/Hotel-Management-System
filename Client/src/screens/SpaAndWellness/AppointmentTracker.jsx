@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus,
@@ -527,7 +527,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
       {notification && (
         <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
@@ -544,63 +544,57 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
       )}
 
       {/* Controls */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Appointments</h2>
-              <p className="text-sm text-gray-600">Manage spa and wellness appointments</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchAppointments}
-                className="flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition"
-                title="Refresh appointments"
-              >
-                <RefreshCw size={18} className="mr-2" /> Refresh
-              </button>
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-              >
-                <Plus size={18} className="mr-2" />
-                Book Appointment
-              </button>
-            </div>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      <div className="px-4 sm:px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search appointments..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
               >
                 <option value="all">All Status</option>
                 {statuses.map(status => (
                   <option key={status.value} value={status.value}>{status.label}</option>
                 ))}
               </select>
-
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-              />
             </div>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+            />
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors text-sm w-full sm:w-auto ml-auto"
+            >
+              <Plus size={18} className="mr-2" />
+              Book Appointment
+            </button>
+          </div>
+          <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {filteredAppointments.length} appointments
+            </div>
+            <button
+              onClick={fetchAppointments}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -623,12 +617,14 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
         ) : (
           <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3 sm:gap-4`}>
             {filteredAppointments.map((apt) => (
-              <div key={apt._id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition relative">
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-start justify-between mb-3 gap-2">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">{apt.appointmentId}</h3>
-                      <p className="text-xs text-gray-600 mt-0.5">Apt ID</p>
+              <div key={apt._id} className="border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white flex flex-col h-full">
+                <div className="h-1 w-full bg-[#c9a24a]" />
+                <div className="p-4 flex flex-col h-full">
+                  {/* Header with title and status */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-[#0f2742] text-base sm:text-lg mb-1 truncate">{apt.appointmentId}</h3>
+                      <p className="text-sm text-gray-600 font-medium">Appointment ID</p>
                     </div>
                     <select
                       value={apt.status}
@@ -653,7 +649,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                                     apt.status === 'cancelled' ? '#d1d5db' :
                                     apt.status === 'no-show' ? '#fca5a5' : '#d1d5db'
                       }}
-                      className="px-2 py-1 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2"
+                      className="flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2"
                     >
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
@@ -664,67 +660,85 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                     </select>
                   </div>
 
-                  {/* Guest Info */}
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <div className="flex items-start gap-2 mb-2">
-                      <User size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-700 truncate">{apt.guestName}</p>
-                        <p className="text-xs text-gray-500 truncate">{apt.guestPhone || 'Details syncing...'}</p>
+                  {/* Data display - 2 wise layout */}
+                  <div className="space-y-3 mb-5 text-sm text-gray-600 font-medium">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start gap-2">
+                        <User size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Guest</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{apt.guestName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Sparkles size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Service</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{apt.serviceName}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start gap-2">
+                        <Calendar size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Date</p>
+                          <p className="text-sm font-medium text-gray-900">{new Date(apt.appointmentDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Clock size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Time</p>
+                          <p className="text-sm font-medium text-gray-900">{apt.startTime}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start gap-2">
+                        <Clock size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Duration</p>
+                          <p className="text-sm font-medium text-gray-900">{apt.duration || 0} min</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <DollarSign size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Price</p>
+                          <p className="text-sm font-bold text-green-600">Rs. {apt.totalPrice.toFixed(2)}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Service Info */}
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <div className="flex items-start gap-2">
-                      <Sparkles size={14} className="text-blue-400 mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-700 truncate">{apt.serviceName}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{apt.duration || 0} min</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Date & Time */}
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <div className="flex items-start gap-2 mb-2">
-                      <Calendar size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-gray-700">{new Date(apt.appointmentDate).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Clock size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-gray-700">{apt.startTime} - {apt.endTime}</p>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="mb-4 pb-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <DollarSign size={14} className="text-green-600 flex-shrink-0" />
-                      <p className="text-sm font-semibold text-gray-900">Rs. {apt.totalPrice.toFixed(2)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 flex-wrap">
+                  {/* Action buttons at bottom */}
+                  <div className="flex items-center justify-end gap-1 pt-4 mt-auto border-t border-gray-100">
                     <button
                       onClick={() => {
                         setSelectedAppointment(apt);
                         setShowDetailModal(true);
                       }}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                      <Eye size={16} /> View
+                      className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-all"
+                      title="View Details"
+                    >
+                      <Eye size={18} />
                     </button>
                     <button
                       onClick={() => handleEditAppointment(apt)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                      <Edit size={16} /> Edit
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit"
+                    >
+                      <Edit size={18} />
                     </button>
                     <button
                       onClick={() => handleDeleteAppointment(apt._id)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete"
                     >
-                      <Trash2 size={16} /> Delete
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>
@@ -742,20 +756,18 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  {editingAppointment ? 'Edit Appointment' : 'Book Appointment'}
-                </h2>
-                <button onClick={() => {
-                  setShowModal(false);
-                  setEditingAppointment(null);
-                }} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                {editingAppointment ? 'Edit Appointment' : 'Book Appointment'}
+              </h2>
+              <button onClick={() => {
+                setShowModal(false);
+                setEditingAppointment(null);
+              }} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white" aria-label="Close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <form onSubmit={handleBookAppointment} className="p-4 sm:p-6 space-y-6">
@@ -872,7 +884,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                     <select
                       value={formData.service}
                       onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       required
                     >
                       <option value="">Select Service</option>
@@ -881,7 +893,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       ))}
                     </select>
                     {formData.service && formData.serviceName && (
-                      <p className="mt-2 text-xs text-green-600 font-medium">✓ Selected: {formData.serviceName}</p>
+                      <p className="mt-2 text-xs text-green-600 font-medium">âœ“ Selected: {formData.serviceName}</p>
                     )}
                   </div>
                   <div>
@@ -889,7 +901,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                     <select
                       value={formData.therapist}
                       onChange={(e) => setFormData({ ...formData, therapist: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                     >
                       <option value="">Select Therapist (Optional)</option>
                       {therapists.map(th => (
@@ -897,7 +909,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       ))}
                     </select>
                     {formData.therapist && formData.therapistName && (
-                      <p className="mt-2 text-xs text-green-600 font-medium">✓ Selected: {formData.therapistName}</p>
+                      <p className="mt-2 text-xs text-green-600 font-medium">âœ“ Selected: {formData.therapistName}</p>
                     )}
                   </div>
                   <div>
@@ -905,7 +917,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                     <select
                       value={formData.spaRoom}
                       onChange={(e) => setFormData({ ...formData, spaRoom: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                     >
                       <option value="">Select Room (Optional)</option>
                       {rooms.map(room => (
@@ -913,7 +925,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       ))}
                     </select>
                     {formData.spaRoom && formData.spaRoomNumber && (
-                      <p className="mt-2 text-xs text-green-600 font-medium">✓ Selected: Room {formData.spaRoomNumber}</p>
+                      <p className="mt-2 text-xs text-green-600 font-medium">âœ“ Selected: Room {formData.spaRoomNumber}</p>
                     )}
                   </div>
                   <div>
@@ -922,7 +934,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       type="date"
                       value={formData.appointmentDate}
                       onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       required
                     />
                   </div>
@@ -932,7 +944,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                       type="time"
                       value={formData.startTime}
                       onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       required
                     />
                   </div>
@@ -941,7 +953,7 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                     <textarea
                       value={formData.specialRequests}
                       onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       rows="3"
                     />
                   </div>
@@ -951,14 +963,15 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
               <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium flex items-center justify-center gap-2"
                 >
+                  <CheckCircle className="h-4 w-4" />
                   Book Appointment
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="flex-1 px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -977,14 +990,24 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  Appointment - {selectedAppointment.appointmentId}
-                </h2>
-                <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                Appointment - {selectedAppointment.appointmentId}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    handleEditAppointment(selectedAppointment);
+                    setShowDetailModal(false);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#c9a24a] hover:bg-[#b8903e] text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </button>
+                <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white" aria-label="Close">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -1048,12 +1071,6 @@ const AppointmentTracker = ({ sidebarOpen = false }) => {
                 </div>
               )}
 
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>,
@@ -1106,3 +1123,4 @@ const ConfirmationModal = ({ isOpen, title, message, onConfirm, onCancel }) => {
 };
 
 export default AppointmentTracker;
+

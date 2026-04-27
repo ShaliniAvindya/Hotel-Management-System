@@ -12,6 +12,9 @@ import {
   UserCheck,
   Users,
   Eye,
+  RefreshCw,
+  Badge,
+  Calendar,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../../apiconfig';
 import { queryClient } from '../../../lib/queryClient';
@@ -57,7 +60,7 @@ const RequestHandling = () => {
   ];
 
   const statuses = [
-    { value: 'pending', label: 'Pending', color: 'yellow' },
+    { value: 'pending', label: 'Pending', color: 'green' },
     { value: 'assigned', label: 'Assigned', color: 'blue' },
     { value: 'in-progress', label: 'In Progress', color: 'cyan' },
     { value: 'completed', label: 'Completed', color: 'green' },
@@ -93,7 +96,7 @@ const RequestHandling = () => {
 
   useEffect(() => {
     if (selectedSpecialty) {
-      const filtered = staffMembers.filter(staff => 
+      const filtered = staffMembers.filter(staff =>
         staff.specialties && staff.specialties.includes(selectedSpecialty)
       );
       setFilteredStaff(filtered);
@@ -241,7 +244,7 @@ const RequestHandling = () => {
       });
 
       if (!response.ok) throw new Error('Failed to save request');
-      
+
       await refreshData({ background: true });
       setShowModal(false);
     } catch (error) {
@@ -292,7 +295,7 @@ const RequestHandling = () => {
           'Content-Type': 'application/json',
           ...getAuthHeader(),
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           assignedTo: selectedStaff,
           status: 'assigned'
         })
@@ -355,209 +358,188 @@ const RequestHandling = () => {
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">Guest Requests</h2>
-          <button
-            onClick={handleAddNew}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus size={20} className="mr-2" />
-            New Request
-          </button>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search size={20} className="absolute left-3 top-3 text-gray-400" />
+      <div className="px-4 sm:px-6 py-4 bg-white border border-[#c9a24a]/30 rounded-xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 flex-wrap flex-1 w-full">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by guest name, room number, or request ID..."
+              placeholder="Search guest, room..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
             />
           </div>
+          
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full sm:w-auto px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
+          >
+            <option value="all">All Status</option>
+            {statuses.map(status => (
+              <option key={status.value} value={status.value}>{status.label}</option>
+            ))}
+          </select>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Status Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2">Filter by Work Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                <option value="all">All Status</option>
-                {statuses.map(status => (
-                  <option key={status.value} value={status.value}>{status.label}</option>
-                ))}
-              </select>
-            </div>
+          <select
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+            className="w-full sm:w-auto px-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all"
+          >
+            <option value="all">All Priorities</option>
+            {priorities.map(priority => (
+              <option key={priority.value} value={priority.value}>{priority.label}</option>
+            ))}
+          </select>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2">Filter by Priority</label>
-              <select
-                value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                <option value="all">All Priorities</option>
-                {priorities.map(priority => (
-                  <option key={priority.value} value={priority.value}>{priority.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <button
+            onClick={handleAddNew}
+            className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-semibold text-sm w-full sm:w-auto ml-auto"
+          >
+            <Plus size={18} className="mr-2" />
+            New Request
+          </button>
+          
+          <button
+            onClick={() => refreshData()}
+            className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg hidden sm:block"
+          >
+            <RefreshCw size={20} />
+          </button>
         </div>
       </div>
 
       {/* Requests List */}
       {loading && requests.length === 0 ? (
         <div className="grid grid-cols-1 gap-4 px-6 pb-20 md:grid-cols-2 xl:grid-cols-4">
-          <div className="h-48 rounded-xl bg-white border border-gray-200" />
-          <div className="h-48 rounded-xl bg-white border border-gray-200" />
-          <div className="h-48 rounded-xl bg-white border border-gray-200" />
-          <div className="h-48 rounded-xl bg-white border border-gray-200" />
+          <div className="h-48 rounded-xl bg-white border border-[#c9a24a]/30" />
+          <div className="h-48 rounded-xl bg-white border border-[#c9a24a]/30" />
+          <div className="h-48 rounded-xl bg-white border border-[#c9a24a]/30" />
+          <div className="h-48 rounded-xl bg-white border border-[#c9a24a]/30" />
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
           <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600">No requests found</p>
+          <p className="text-slate-500">No requests found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-8 px-6 pb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-6 pb-20">
           {filteredRequests.map((request) => (
             <div
               key={request.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col"
+              className="bg-white border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 group"
             >
-              <div className="p-4 flex flex-col flex-1">
-                <div className="mb-8 flex items-center justify-between gap-2">
-                  <h3 className="text-base font-bold text-gray-900 truncate">{request.id}</h3>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold bg-${getPriorityColor(request.priority)}-100 text-${getPriorityColor(request.priority)}-700 flex-shrink-0`}>
+              <div className="h-1 w-full bg-[#c9a24a]" />
+              <div className="p-4 flex flex-col h-full">
+                {/* Header: Title/ID and Priority */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-[#0f2742] text-base sm:text-lg mb-1 truncate group-hover:text-[#c9a24a] transition-colors">
+                      {request.guestName}
+                    </h3>
+                    <p className="text-sm text-gray-600 font-medium">#{request.id} • Room {request.roomNumber}</p>
+                  </div>
+                  <span className={`flex-shrink-0 inline-flex px-3 py-1 text-sm font-bold rounded-full border ${getPriorityColor(request.priority) === 'red' ? 'bg-red-50 border-red-200 text-red-700' : getPriorityColor(request.priority) === 'orange' ? 'bg-orange-50 border-orange-200 text-orange-700' : getPriorityColor(request.priority) === 'yellow' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
                     {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
                   </span>
                 </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-4 flex-1 text-sm">
-                  <div className="flex flex-col">
-                    <div className="flex items-start gap-2 text-gray-500 mb-1">
-                      <span className="text-xs font-semibold uppercase">Guest: <span className="text-gray-800 font-lg truncate ml-1">{request.guestName}</span></span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col">
-                    <div className="flex items-start gap-2 text-gray-500 mb-1">
-                      <span className="text-xs font-semibold uppercase">Room NO:<span className="text-gray-800 font-lg ml-1">{request.roomNumber}</span></span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col">
-                    <div className="flex items-start gap-2 text-gray-500 mb-1">
-                      <span className="text-xs font-semibold uppercase">Type:<span className="text-gray-800 font-lg capitalize truncate ml-1">{request.requestType.replace('-', ' ')}</span> </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col">
-                    <div className="flex items-start gap-2 text-gray-500 mb-1">
-                      <span className="text-xs font-semibold uppercase">Date: <span className="text-gray-800 font-lg ml-1">{new Date(request.requestDate).toLocaleDateString()}</span></span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Description */}
-                <div className="mb-4 pb-4 border-b border-gray-200">
-                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">Note: {request.description}</p>
+                <p className="text-sm sm:text-base text-gray-700 mb-5 line-clamp-2 italic leading-relaxed">
+                  "{request.description}"
+                </p>
+
+                {/* Info List - Maintenance Style */}
+                <div className="space-y-3 mb-5 text-sm text-gray-600 font-medium">
+                  <div className="flex items-center space-x-3">
+                    <Badge size={16} className="text-[#c9a24a]" />
+                    <span className="capitalize">Type: {request.requestType.replace('-', ' ')}</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Calendar size={16} className="text-[#c9a24a]" />
+                    <span>Date: {new Date(request.requestDate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <UserCheck size={16} className="text-[#c9a24a]" />
+                    <span className="truncate">Assigned: {request.assignedTo ? getAssignedStaffName(request.assignedTo) : 'Unassigned'}</span>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  {/* Assigned Status */}
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <UserCheck size={14} className="text-gray-600" />
-                      <span className="text-xs font-semibold text-gray-600 uppercase">Assigned To</span>
+                {/* Progress Section */}
+                <div className="space-y-2 mb-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progress</span>
+                    <span className={`text-sm font-bold text-${getProgressColor(request.progressPercentage || 0)}-600`}>
+                      {request.progressPercentage || 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2">
+                    <div
+                      className={`bg-${getProgressColor(request.progressPercentage || 0)}-500 h-2 rounded-full transition-all duration-300`}
+                      style={{ width: `${request.progressPercentage || 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Latest Update Note - if exists */}
+                {request.assignedTo && request.notes && (
+                  <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100/50 mb-5">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <AlertCircle size={14} className="text-blue-500" />
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Latest Update</span>
                     </div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {request.assignedTo ? getAssignedStaffName(request.assignedTo) : 'Unassigned'}
+                    <p className="text-sm text-blue-800 line-clamp-2 leading-relaxed">
+                      {request.notes}
                     </p>
                   </div>
+                )}
 
-                  {/* Progress Bar */}
-                  {request.assignedTo && (
-                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-600 uppercase">Progress</span>
-                        <span className={`text-xs font-bold text-${getProgressColor(request.progressPercentage || 0)}-600`}>
-                          {request.progressPercentage || 0}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`bg-${getProgressColor(request.progressPercentage || 0)}-500 h-2 rounded-full transition-all duration-300`}
-                          style={{ width: `${request.progressPercentage || 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {request.assignedTo && request.notes && (
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <p className="text-xs font-semibold text-blue-700 uppercase mb-1">Latest Update from {getAssignedStaffName(request.assignedTo)}</p>
-                      <p className="text-xs text-blue-800 leading-relaxed line-clamp-2">{request.notes}</p>
-                      {request.lastUpdated && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          {new Date(request.lastUpdated).toLocaleDateString()} {new Date(request.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Staff Work Status Dropdown */}
-                  {request.assignedTo && (
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Staff Work Status</label>
-                      <select
-                        value={request.status || 'pending'}
-                        onChange={(e) => handleStatusChange(request.id, e.target.value)}
-                        className={`w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-semibold bg-${getStatusColor(request.status || 'pending')}-50 text-${getStatusColor(request.status || 'pending')}-700`}
-                      >
-                        {statuses.map(status => (
-                          <option key={status.value} value={status.value}>{status.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleOpenDetailModal(request)}
-                      className="flex-1 flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold"
+                {/* Work Status Dropdown - Slim Professional */}
+                {request.assignedTo && (
+                  <div className="mb-5">
+                    <select
+                      value={request.status || 'pending'}
+                      onChange={(e) => handleStatusChange(request.id, e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#c9a24a] text-sm font-bold shadow-sm transition-all ${getStatusBadgeInfo(request.status).color === 'yellow' ? 'bg-yellow-50 text-yellow-700' : getStatusBadgeInfo(request.status).color === 'blue' ? 'bg-blue-50 text-blue-700' : getStatusBadgeInfo(request.status).color === 'cyan' ? 'bg-cyan-50 text-cyan-700' : getStatusBadgeInfo(request.status).color === 'green' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
                     >
-                      <Eye size={16} className="mr-1" />
-                      View
-                    </button>
+                      {statuses.map(status => (
+                        <option key={status.value} value={status.value}>{status.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Footer Actions */}
+                <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100">
+                  <button
+                    onClick={() => handleOpenDetailModal(request)}
+                    className="flex items-center space-x-1.5 text-[#0f2742] hover:text-[#c9a24a] text-sm sm:text-base font-bold transition-colors"
+                  >
+                    <Eye size={18} />
+                    <span>View Details</span>
+                  </button>
+                  <div className="flex items-center space-x-1">
                     <button
                       onClick={() => handleOpenAssignModal(request)}
-                      className="flex-1 flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-semibold"
+                      className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                      title="Assign Staff"
                     >
-                      <Users size={16} className="mr-1" />
-                      Assign
+                      <Users size={18} />
                     </button>
                     <button
                       onClick={() => handleEdit(request)}
-                      className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit"
                     >
-                      <Edit size={16} className="mr-1" />
-                      Edit
+                      <Edit size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(request.id)}
-                      className="flex-1 flex items-center justify-center px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-semibold"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete"
                     >
-                      <Trash2 size={16} className="mr-1" />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>
@@ -569,22 +551,22 @@ const RequestHandling = () => {
 
       {/* Modal */}
       {showModal && createPortal(
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowModal(false)}
         >
-          <div 
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto"
+          <div
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
                   {selectedRequest ? 'Edit Request' : 'New Request'}
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-white/10 rounded-lg text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -592,8 +574,8 @@ const RequestHandling = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Guest Information</h3>
+              <div className="bg-slate-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Guest Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Guest Name *</label>
@@ -643,8 +625,8 @@ const RequestHandling = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Request Details</h3>
+              <div className="bg-slate-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Request Details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
@@ -682,10 +664,10 @@ const RequestHandling = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t border-[#c9a24a]/30">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+                  className="flex-1 flex items-center justify-center px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm sm:text-base"
                 >
                   <Save size={20} className="mr-2" />
                   Save Request
@@ -706,22 +688,22 @@ const RequestHandling = () => {
 
       {/* Assignment Modal */}
       {showAssignModal && selectedRequest && createPortal(
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowAssignModal(false)}
         >
-          <div 
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto"
+          <div
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
                   Assign Request to Staff
                 </h2>
                 <button
                   onClick={() => setShowAssignModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-white/10 rounded-lg text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -730,26 +712,26 @@ const RequestHandling = () => {
 
             <div className="p-4 sm:p-6 space-y-6">
               {/* Request Details */}
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Request Information</h3>
+              <div className="bg-slate-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Request Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600"><span className="font-semibold">Request ID:</span></p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRequest.id}</p>
+                    <p className="text-sm text-slate-500"><span className="font-semibold">Request ID:</span></p>
+                    <p className="text-base font-semibold text-[#0f2742]">{selectedRequest.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600"><span className="font-semibold">Guest Name:</span></p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRequest.guestName}</p>
+                    <p className="text-sm text-slate-500"><span className="font-semibold">Guest Name:</span></p>
+                    <p className="text-base font-semibold text-[#0f2742]">{selectedRequest.guestName}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600"><span className="font-semibold">Room Number:</span></p>
-                    <p className="text-base font-semibold text-gray-900">{selectedRequest.roomNumber}</p>
+                    <p className="text-sm text-slate-500"><span className="font-semibold">Room Number:</span></p>
+                    <p className="text-base font-semibold text-[#0f2742]">{selectedRequest.roomNumber}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Staff Assignment</h3>
+              <div className="bg-slate-50/50 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4">Staff Assignment</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Select Specialty/Division *</label>
@@ -793,11 +775,11 @@ const RequestHandling = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t border-[#c9a24a]/30">
                 <button
                   onClick={handleAssignStaff}
                   disabled={!selectedStaff}
-                  className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   <UserCheck size={18} className="mr-2" />
                   Assign
@@ -817,22 +799,22 @@ const RequestHandling = () => {
 
       {/* Detail Modal */}
       {showDetailModal && detailRequest && createPortal(
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto"
           onClick={() => setShowDetailModal(false)}
         >
-          <div 
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto"
+          <div
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto border border-[#c9a24a]/30 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
                   Request Details - {detailRequest.id}
                 </h2>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-white/10 rounded-lg text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -842,45 +824,45 @@ const RequestHandling = () => {
             <div className="p-4 sm:p-6 space-y-6">
               {/* Guest Information */}
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Guest Information</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">Guest Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Guest Name</p>
-                    <p className="text-base font-semibold text-gray-900">{detailRequest.guestName}</p>
+                    <p className="text-sm text-slate-500">Guest Name</p>
+                    <p className="text-base font-semibold text-[#0f2742]">{detailRequest.guestName}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Guest ID</p>
-                    <p className="text-base font-semibold text-gray-900">{detailRequest.guestId}</p>
+                    <p className="text-sm text-slate-500">Guest ID</p>
+                    <p className="text-base font-semibold text-[#0f2742]">{detailRequest.guestId}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Room Number</p>
-                    <p className="text-base font-semibold text-gray-900">{detailRequest.roomNumber}</p>
+                    <p className="text-sm text-slate-500">Room Number</p>
+                    <p className="text-base font-semibold text-[#0f2742]">{detailRequest.roomNumber}</p>
                   </div>
                 </div>
               </div>
 
               {/* Request Information */}
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Request Information</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">Request Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Request Type</p>
-                    <p className="text-base font-semibold text-gray-900 capitalize">{detailRequest.requestType.replace('-', ' ')}</p>
+                    <p className="text-sm text-slate-500">Request Type</p>
+                    <p className="text-base font-semibold text-[#0f2742] capitalize">{detailRequest.requestType.replace('-', ' ')}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Priority</p>
+                    <p className="text-sm text-slate-500">Priority</p>
                     <p className={`text-base font-semibold inline-block px-3 py-1 rounded-full bg-${getPriorityColor(detailRequest.priority)}-100 text-${getPriorityColor(detailRequest.priority)}-700`}>
                       {detailRequest.priority.charAt(0).toUpperCase() + detailRequest.priority.slice(1)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Status</p>
+                    <p className="text-sm text-slate-500">Status</p>
                     <p className={`text-base font-semibold inline-block px-3 py-1 rounded-full bg-${getStatusColor(detailRequest.status)}-100 text-${getStatusColor(detailRequest.status)}-700`}>
                       {getStatusBadgeInfo(detailRequest.status).label}
                     </p>
                   </div>
                   <div className="sm:col-span-2">
-                    <p className="text-sm text-gray-600">Description</p>
+                    <p className="text-sm text-slate-500">Description</p>
                     <p className="text-base text-gray-800">{detailRequest.description}</p>
                   </div>
                 </div>
@@ -888,32 +870,32 @@ const RequestHandling = () => {
 
               {/* Dates */}
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Timeline</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">Timeline</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Request Date</p>
-                    <p className="text-base font-semibold text-gray-900">
+                    <p className="text-sm text-slate-500">Request Date</p>
+                    <p className="text-base font-semibold text-[#0f2742]">
                       {new Date(detailRequest.requestDate).toLocaleDateString()} {new Date(detailRequest.requestDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Required By Date</p>
-                    <p className="text-base font-semibold text-gray-900">
+                    <p className="text-sm text-slate-500">Required By Date</p>
+                    <p className="text-base font-semibold text-[#0f2742]">
                       {detailRequest.requiredByDate ? new Date(detailRequest.requiredByDate).toLocaleDateString() : 'Not specified'}
                     </p>
                   </div>
                   {detailRequest.assignedDate && (
                     <div>
-                      <p className="text-sm text-gray-600">Assigned Date</p>
-                      <p className="text-base font-semibold text-gray-900">
+                      <p className="text-sm text-slate-500">Assigned Date</p>
+                      <p className="text-base font-semibold text-[#0f2742]">
                         {new Date(detailRequest.assignedDate).toLocaleDateString()} {new Date(detailRequest.assignedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   )}
                   {detailRequest.completedDate && (
                     <div>
-                      <p className="text-sm text-gray-600">Completed Date</p>
-                      <p className="text-base font-semibold text-gray-900">
+                      <p className="text-sm text-slate-500">Completed Date</p>
+                      <p className="text-base font-semibold text-[#0f2742]">
                         {new Date(detailRequest.completedDate).toLocaleDateString()} {new Date(detailRequest.completedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -923,14 +905,14 @@ const RequestHandling = () => {
 
               {detailRequest.assignedTo && (
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Assignment & Progress</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">Assignment & Progress</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Assigned To</p>
-                      <p className="text-base font-semibold text-gray-900">{getAssignedStaffName(detailRequest.assignedTo)}</p>
+                      <p className="text-sm text-slate-500">Assigned To</p>
+                      <p className="text-base font-semibold text-[#0f2742]">{getAssignedStaffName(detailRequest.assignedTo)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Progress</p>
+                      <p className="text-sm text-slate-500">Progress</p>
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
                           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -951,14 +933,14 @@ const RequestHandling = () => {
 
               {(detailRequest.notes || detailRequest.staffNotes) && (
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Notes</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">Notes</h3>
                   <div className="space-y-3">
                     {detailRequest.notes && (
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="bg-slate-50 p-4 rounded-lg border border-[#c9a24a]/20">
                         <p className="text-sm font-semibold text-blue-700 mb-2">Latest Update Notes</p>
                         <p className="text-sm text-blue-800">{detailRequest.notes}</p>
                         {detailRequest.lastUpdated && (
-                          <p className="text-xs text-blue-600 mt-2">
+                          <p className="text-xs text-[#0f2742] mt-2">
                             Updated: {new Date(detailRequest.lastUpdated).toLocaleDateString()} {new Date(detailRequest.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
@@ -975,23 +957,23 @@ const RequestHandling = () => {
               )}
 
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">System Information</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-[#0f2742] mb-4 pb-2 border-b border-[#c9a24a]/30">System Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600">Created At</p>
-                    <p className="text-gray-900">{new Date(detailRequest.createdAt).toLocaleDateString()} {new Date(detailRequest.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-slate-500">Created At</p>
+                    <p className="text-[#0f2742]">{new Date(detailRequest.createdAt).toLocaleDateString()} {new Date(detailRequest.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Updated At</p>
-                    <p className="text-gray-900">{new Date(detailRequest.updatedAt).toLocaleDateString()} {new Date(detailRequest.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-slate-500">Updated At</p>
+                    <p className="text-[#0f2742]">{new Date(detailRequest.updatedAt).toLocaleDateString()} {new Date(detailRequest.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t border-[#c9a24a]/30">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+                  className="flex-1 px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm sm:text-base"
                 >
                   Close
                 </button>

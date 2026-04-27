@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Search, Edit, Trash2, AlertCircle, DollarSign, X, RefreshCw, Eye, Minus } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, AlertCircle, DollarSign, X, RefreshCw, Eye, Minus, Power } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
@@ -302,60 +302,59 @@ const PackageManagement = ({ sidebarOpen = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Spa Packages</h2>
-              <p className="text-sm text-gray-600">Create and manage spa service packages</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchPackages}
-                className="flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition"
-                title="Refresh packages"
-              >
-                <RefreshCw size={18} className="mr-2" /> Refresh
-              </button>
-              <button 
-                onClick={() => {
-                  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                  if (!token) {
-                    showNotification('Please login to create a package', 'error');
-                    return;
-                  }
-                  setShowModal(true);
-                }}
-                className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition">
-                <Plus size={18} className="mr-2" /> Create Package
-              </button>
-            </div>
-          </div>
-
-          {/* Search and Filter */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
+      <div className="px-4 sm:px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search packages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+              >
+                <option value="all">All Types</option>
+                <option value="single-service">Single Service</option>
+                <option value="bundle">Bundle</option>
+                <option value="membership">Membership</option>
+                <option value="package-deal">Package Deal</option>
+              </select>
+            </div>
+            <button
+              onClick={() => {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (!token) {
+                  showNotification('Please login to create a package', 'error');
+                  return;
+                }
+                setShowModal(true);
+              }}
+              className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors text-sm w-full sm:w-auto ml-auto"
             >
-              <option value="all">All Types</option>
-              <option value="single-service">Single Service</option>
-              <option value="bundle">Bundle</option>
-              <option value="membership">Membership</option>
-              <option value="package-deal">Package Deal</option>
-            </select>
+              <Plus size={18} className="mr-2" /> Create Package
+            </button>
+          </div>
+          <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {filteredPackages.length} packages
+            </div>
+            <button
+              onClick={fetchPackages}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -378,8 +377,9 @@ const PackageManagement = ({ sidebarOpen = false }) => {
         ) : (
           <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3 sm:gap-4`}>
             {filteredPackages.map(pkg => (
-              <div key={pkg._id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition relative">
-                <div className="p-4 sm:p-6">
+              <div key={pkg._id} className="border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white flex flex-col h-full group">
+                <div className="h-1 w-full bg-[#c9a24a]" />
+                <div className="p-4 sm:p-5 flex flex-col flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{pkg.packageName}</h3>
                   <p className="text-sm text-gray-600 mb-3">{pkg.description}</p>
                   {pkg.services && pkg.services.length > 0 && (
@@ -418,7 +418,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
                       </div>
                       {pkg.discountType === 'percentage' && pkg.discountValue > 0 && (
                         <>
-                          <span className="text-gray-300">→</span>
+                          <span className="text-gray-300">â†’</span>
                           <div>
                             <p className="text-xs text-green-600 mb-1">Discount: {pkg.discountValue}%</p>
                             <p className="text-sm text-green-600 font-bold">Rs. {(pkg.originalPrice * (1 - pkg.discountValue / 100)).toFixed(2)}</p>
@@ -427,7 +427,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
                       )}
                       {pkg.discountType === 'price' && pkg.discountValue > 0 && (
                         <>
-                          <span className="text-gray-300">→</span>
+                          <span className="text-gray-300">â†’</span>
                           <div>
                             <p className="text-xs text-green-600 mb-1">Final Price</p>
                             <p className="text-sm text-green-600 font-bold">Rs. {pkg.discountValue?.toFixed(2)}</p>
@@ -437,33 +437,32 @@ const PackageManagement = ({ sidebarOpen = false }) => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 flex-wrap">
-                    <button 
+                  <div className="flex items-center justify-end gap-1 pt-2 border-t border-gray-100 mt-2">
+                    <button
                       onClick={() => handleViewPackage(pkg)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                      <Eye size={16} /> View
-                    </button>
-                    <button 
-                      onClick={() => handleEditPackage(pkg)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                      <Edit size={16} /> Edit
-                    </button>
-                    <button 
-                      onClick={() => handleTogglePackage(pkg._id, pkg.isActive)}
-                      className={`flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        pkg.isActive ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
-                      title={pkg.isActive ? 'Active' : 'Inactive'}
+                      className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-all"
+                      title="View Details"
                     >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                          pkg.isActive ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
+                      <Eye size={18} />
                     </button>
-                    <button 
+                    <button
+                      onClick={() => handleEditPackage(pkg)}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleTogglePackage(pkg._id, pkg.isActive)}
+                      className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                      title={pkg.isActive ? 'Deactivate' : 'Activate'}
+                    >
+                      <Power size={18} />
+                    </button>
+                    <button
                       onClick={() => handleDeletePackage(pkg._id)}
-                      className="flex-shrink-0 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -483,22 +482,34 @@ const PackageManagement = ({ sidebarOpen = false }) => {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{selectedPackage.packageName}</h2>
-                  <p className="text-sm text-gray-600">Package Details</p>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate">{selectedPackage.packageName}</h2>
+                  <p className="text-sm text-white/60">Package Details</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowPackageDetails(false)}
-                className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowPackageDetails(false);
+                    handleEditPackage(selectedPackage);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#c9a24a] hover:bg-[#b8903e] text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowPackageDetails(false)}
+                  className="p-2 sm:p-3 hover:bg-white/10 rounded-lg transition-colors text-white"
+                >
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                </button>
+              </div>
             </div>
 
             <div className="p-4 sm:p-6 space-y-6">
@@ -604,24 +615,6 @@ const PackageManagement = ({ sidebarOpen = false }) => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    setShowPackageDetails(false);
-                    handleEditPackage(selectedPackage);
-                  }}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-                >
-                  Edit Package
-                </button>
-                <button
-                  onClick={() => setShowPackageDetails(false)}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium transition"
-                >
-                  Close
-                </button>
-              </div>
             </div>
           </div>
         </div>,
@@ -642,18 +635,16 @@ const PackageManagement = ({ sidebarOpen = false }) => {
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{editingPackage ? 'Edit Package' : 'Create Package'}</h2>
-                <button onClick={() => {
-                  setShowModal(false);
-                  setEditingPackage(null);
-                  setServiceInput({ serviceId: '', count: 1 });
-                  setFormData({ packageName: '', description: '', packageType: 'bundle', services: [], originalPrice: 0, discountType: 'percentage', discountValue: 0, totalDuration: 0, validFrom: '', validUntil: '' });
-                }} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{editingPackage ? 'Edit Package' : 'Create Package'}</h2>
+              <button onClick={() => {
+                setShowModal(false);
+                setEditingPackage(null);
+                setServiceInput({ serviceId: '', count: 1 });
+                setFormData({ packageName: '', description: '', packageType: 'bundle', services: [], originalPrice: 0, discountType: 'percentage', discountValue: 0, totalDuration: 0, validFrom: '', validUntil: '' });
+              }} className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <form onSubmit={handleAddPackage} className="p-4 sm:p-6 space-y-6">
@@ -784,7 +775,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
                         type="button"
                         onClick={handleAddService}
                         disabled={servicesLoading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition flex items-center justify-center gap-2 min-w-fit"
+                        className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] font-medium transition flex items-center justify-center gap-2 min-w-fit"
                       >
                         <Plus size={18} /> Add
                       </button>
@@ -859,7 +850,7 @@ const PackageManagement = ({ sidebarOpen = false }) => {
               <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium"
                 >
                   {editingPackage ? 'Update Package' : 'Create Package'}
                 </button>
@@ -935,3 +926,4 @@ const PackageManagement = ({ sidebarOpen = false }) => {
 };
 
 export default PackageManagement;
+

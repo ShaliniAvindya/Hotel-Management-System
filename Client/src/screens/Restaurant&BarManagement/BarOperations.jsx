@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Wine,
@@ -471,19 +471,19 @@ const BarOperations = () => {
     };
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-          <button
-            onClick={onCancel}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">
               {item ? 'Edit Stock Item' : 'Add New Stock Item'}
             </h2>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -495,7 +495,7 @@ const BarOperations = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -505,7 +505,7 @@ const BarOperations = () => {
                   required
                   value={formData.category}
                   onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 >
                   {stockCategories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -519,7 +519,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.type}
                   onChange={(e) => setFormData({...formData, type: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -530,7 +530,7 @@ const BarOperations = () => {
                   value={formData.bottleSize}
                   onChange={(e) => setFormData({...formData, bottleSize: e.target.value})}
                   placeholder="e.g., 750ml, 1L"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -542,7 +542,7 @@ const BarOperations = () => {
                   min="0"
                   value={formData.currentStock}
                   onChange={(e) => setFormData({...formData, currentStock: parseInt(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -554,7 +554,7 @@ const BarOperations = () => {
                   min="0"
                   value={formData.minimumStock}
                   onChange={(e) => setFormData({...formData, minimumStock: parseInt(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -566,7 +566,7 @@ const BarOperations = () => {
                   min="0"
                   value={formData.maximumStock}
                   onChange={(e) => setFormData({...formData, maximumStock: parseInt(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -579,7 +579,7 @@ const BarOperations = () => {
                   step="0.01"
                   value={formData.unitPrice}
                   onChange={(e) => setFormData({...formData, unitPrice: parseFloat(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -592,7 +592,7 @@ const BarOperations = () => {
                   step="0.1"
                   value={formData.alcoholContent}
                   onChange={(e) => setFormData({...formData, alcoholContent: parseFloat(e.target.value) || 0})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -603,7 +603,7 @@ const BarOperations = () => {
                   min="1"
                   value={formData.servingsPerBottle}
                   onChange={(e) => setFormData({...formData, servingsPerBottle: parseInt(e.target.value) || 1})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -613,7 +613,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.supplier}
                   onChange={(e) => setFormData({...formData, supplier: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -623,7 +623,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -633,24 +633,25 @@ const BarOperations = () => {
                   type="date"
                   value={formData.expiryDate}
                   onChange={(e) => setFormData({...formData, expiryDate: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center gap-2 transition-colors font-medium"
               >
-                {item ? 'Update' : 'Add'} Item
+                <Save className="h-4 w-4" />
+                <span>{item ? 'Update' : 'Add'} Item</span>
               </button>
             </div>
           </form>
@@ -748,17 +749,17 @@ const BarOperations = () => {
     };
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-          <button
-            onClick={onCancel}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Record New Service</h2>
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Record New Service</h2>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -770,7 +771,7 @@ const BarOperations = () => {
                   required
                   value={formData.bartender}
                   onChange={(e) => setFormData({...formData, bartender: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -780,7 +781,7 @@ const BarOperations = () => {
                   required
                   value={formData.customerType}
                   onChange={(e) => setFormData({...formData, customerType: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 >
                   <option value="walk_in">Walk-in/Bar Service</option>
                   <option value="room_service">Room Service</option>
@@ -797,7 +798,7 @@ const BarOperations = () => {
                       required
                       value={formData.roomNumber}
                       onChange={(e) => setFormData({...formData, roomNumber: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                     />
                   </div>
                   <div>
@@ -806,7 +807,7 @@ const BarOperations = () => {
                       type="text"
                       value={formData.guestName}
                       onChange={(e) => setFormData({...formData, guestName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                     />
                   </div>
                 </>
@@ -819,7 +820,7 @@ const BarOperations = () => {
                     value={formData.customerName}
                     onChange={(e) => setFormData({...formData, customerName: e.target.value})}
                     placeholder="e.g., Table 12, John Smith"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                   />
                 </div>
               )}
@@ -847,7 +848,7 @@ const BarOperations = () => {
                   <select
                     value={selectedRecipe}
                     onChange={(e) => setSelectedRecipe(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                   >
                     <option value="">Select drink/recipe</option>
                     {cocktailRecipes.filter(r => r.isActive).map(recipe => (
@@ -864,7 +865,7 @@ const BarOperations = () => {
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                     placeholder="Quantity"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                   />
                 </div>
                 <div>
@@ -872,7 +873,7 @@ const BarOperations = () => {
                     type="button"
                     onClick={addItem}
                     disabled={!selectedRecipe}
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                   >
                     Add Item
                   </button>
@@ -912,25 +913,26 @@ const BarOperations = () => {
                 value={formData.notes}
                 onChange={(e) => setFormData({...formData, notes: e.target.value})}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 placeholder="Any special instructions or notes..."
               />
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={formData.items.length === 0 || !formData.ageVerified}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
               >
-                Record Service
+                <Save className="h-4 w-4" />
+                <span>Record Service</span>
               </button>
             </div>
           </form>
@@ -1040,86 +1042,89 @@ const BarOperations = () => {
     const CategoryIcon = category?.icon || Package;
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <CategoryIcon className="h-5 w-5 text-gray-600" />
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
-              {category?.name}
-            </span>
-          </div>
-          {status === 'low' && (
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-          )}
-          {item.isExpiringSoon && (
-            <Clock className="h-5 w-5 text-orange-500" />
-          )}
-        </div>
-
-        <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-        <p className="text-sm text-gray-600 mb-3">{item.type} • {item.bottleSize}</p>
-
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Stock Level:</span>
-            <span className={`font-medium ${
-              status === 'low' ? 'text-red-600' : status === 'high' ? 'text-green-600' : 'text-gray-900'
-            }`}>
-              {item.currentStock} / {item.maximumStock}
-            </span>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full ${
-                status === 'low' ? 'bg-red-500' : status === 'high' ? 'bg-green-500' : 'bg-blue-500'
-              }`}
-              style={{ width: `${(item.currentStock / item.maximumStock) * 100}%` }}
-            />
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Unit Price:</span>
-            <span className="font-medium">${item.unitPrice.toFixed(2)}</span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Total Value:</span>
-            <span className="font-medium">${item.totalValue.toFixed(2)}</span>
-          </div>
-
-          {item.alcoholContent > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Alcohol:</span>
-              <span className="font-medium">{item.alcoholContent}%</span>
+      <div className="bg-white rounded-lg overflow-hidden border border-[#c9a24a]/30 shadow-sm hover:shadow-md transition-all duration-300 group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CategoryIcon className="h-5 w-5 text-[#c9a24a]" />
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
+                {category?.name}
+              </span>
             </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
-            <MapPin className="h-3 w-3" />
-            <span>{item.location}</span>
+            {status === 'low' && (
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+            )}
+            {item.isExpiringSoon && (
+              <Clock className="h-5 w-5 text-orange-500" />
+            )}
           </div>
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => {
-                setSelectedItem(item);
-                setModalType('stock');
-                setShowModal(true);
-              }}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-              title="Edit"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => handleStockDelete(item.id)}
-              className="p-1 text-red-600 hover:bg-red-50 rounded"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+
+          <h3 className="font-bold text-[#0f2742] mb-1 group-hover:text-[#c9a24a] transition-colors">{item.name}</h3>
+          <p className="text-sm text-[#0f2742]/60 mb-3">{item.type} • {item.bottleSize}</p>
+
+          <div className="space-y-2 mb-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-[#0f2742]/60">Stock Level:</span>
+              <span className={`font-bold ${
+                status === 'low' ? 'text-red-600' : status === 'high' ? 'text-emerald-600' : 'text-[#0f2742]'
+              }`}>
+                {item.currentStock} / {item.maximumStock}
+              </span>
+            </div>
+            
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${
+                  status === 'low' ? 'bg-red-500' : status === 'high' ? 'bg-emerald-500' : 'bg-[#c9a24a]'
+                }`}
+                style={{ width: `${(item.currentStock / item.maximumStock) * 100}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span className="text-[#0f2742]/60">Unit Price:</span>
+              <span className="font-bold text-[#0f2742]">${item.unitPrice.toFixed(2)}</span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span className="text-[#0f2742]/60">Total Value:</span>
+              <span className="font-bold text-[#0f2742]">${item.totalValue.toFixed(2)}</span>
+            </div>
+
+            {item.alcoholContent > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-[#0f2742]/60">Alcohol:</span>
+                <span className="font-bold text-[#0f2742]">{item.alcoholContent}%</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-xs text-[#0f2742]/40">
+              <MapPin className="h-3 w-3" />
+              <span>{item.location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  setSelectedItem(item);
+                  setModalType('stock');
+                  setShowModal(true);
+                }}
+                className="p-1 text-[#c9a24a] hover:bg-[#fffaf0] rounded transition-colors"
+                title="Edit"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleStockDelete(item.id)}
+                className="p-1 text-rose-400 hover:text-rose-600 rounded transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1134,15 +1139,17 @@ const BarOperations = () => {
     };
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl overflow-hidden border border-[#c9a24a]/30 shadow-sm hover:shadow-md transition-all duration-300 group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Wine className="h-5 w-5 text-gray-600" />
+            <Wine className="h-5 w-5 text-[#c9a24a]" />
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${difficultyColor[recipe.difficulty]}`}>
               {recipe.difficulty}
             </span>
             {recipe.isSpecial && (
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+              <Star className="h-4 w-4 text-[#c9a24a] fill-current" />
             )}
           </div>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -1152,38 +1159,38 @@ const BarOperations = () => {
           </span>
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-1">{recipe.name}</h3>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
+        <h3 className="font-bold text-[#0f2742] mb-1 group-hover:text-[#c9a24a] transition-colors">{recipe.name}</h3>
+        <p className="text-sm text-[#0f2742]/60 mb-3 line-clamp-2">{recipe.description}</p>
 
         <div className="space-y-2 mb-4">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Price:</span>
-            <span className="font-medium text-green-600">${recipe.price.toFixed(2)}</span>
-          </div>
-          
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Cost:</span>
-            <span className="font-medium">${recipe.cost.toFixed(2)}</span>
+            <span className="text-[#0f2742]/60">Price:</span>
+            <span className="font-bold text-emerald-600">${recipe.price.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Margin:</span>
-            <span className="font-medium text-blue-600">{recipe.margin.toFixed(1)}%</span>
+            <span className="text-[#0f2742]/60">Cost:</span>
+            <span className="font-medium text-[#0f2742]">${recipe.cost.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Prep Time:</span>
-            <span className="font-medium">{recipe.prepTime} min</span>
+            <span className="text-[#0f2742]/60">Margin:</span>
+            <span className="font-bold text-[#0f2742]">{recipe.margin.toFixed(1)}%</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Glass:</span>
-            <span className="font-medium">{recipe.glassType}</span>
+            <span className="text-[#0f2742]/60">Prep Time:</span>
+            <span className="font-medium text-[#0f2742]">{recipe.prepTime} min</span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-[#0f2742]/60">Glass:</span>
+            <span className="font-medium text-[#0f2742]">{recipe.glassType}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <div className="flex items-center space-x-2 text-xs text-[#0f2742]/40">
             <Calendar className="h-3 w-3" />
             <span>{new Date(recipe.createdAt).toLocaleDateString()}</span>
           </div>
@@ -1194,19 +1201,20 @@ const BarOperations = () => {
                 setModalType('recipe');
                 setShowModal(true);
               }}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+              className="p-1 text-[#c9a24a] hover:bg-[#fffaf0] rounded transition-colors"
               title="Edit"
             >
               <Edit className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleRecipeDelete(recipe.id)}
-              className="p-1 text-red-600 hover:bg-red-50 rounded"
+              className="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
               title="Delete"
             >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
+        </div>
         </div>
       </div>
     );
@@ -1264,19 +1272,19 @@ const BarOperations = () => {
     };
 
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
-          <button
-            onClick={onCancel}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">
               {recipe ? 'Edit Recipe' : 'Add New Recipe'}
             </h2>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -1288,7 +1296,7 @@ const BarOperations = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1297,7 +1305,7 @@ const BarOperations = () => {
                 <select
                   value={formData.difficulty}
                   onChange={(e) => setFormData({...formData, difficulty: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 >
                   <option value="Easy">Easy</option>
                   <option value="Medium">Medium</option>
@@ -1312,7 +1320,7 @@ const BarOperations = () => {
                   min="1"
                   value={formData.prepTime}
                   onChange={(e) => setFormData({...formData, prepTime: parseInt(e.target.value) || 3})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1325,7 +1333,7 @@ const BarOperations = () => {
                   step="0.1"
                   value={formData.alcoholContent}
                   onChange={(e) => setFormData({ ...formData, alcoholContent: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1337,7 +1345,7 @@ const BarOperations = () => {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1349,7 +1357,7 @@ const BarOperations = () => {
                   step="0.01"
                   value={formData.cost}
                   onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1360,7 +1368,7 @@ const BarOperations = () => {
                   value={formData.glassType}
                   onChange={(e) => setFormData({ ...formData, glassType: e.target.value })}
                   placeholder="e.g., Martini Glass, Highball"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1370,7 +1378,7 @@ const BarOperations = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1380,7 +1388,7 @@ const BarOperations = () => {
                   value={formData.method}
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1390,7 +1398,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.garnish}
                   onChange={(e) => setFormData({ ...formData, garnish: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
               </div>
 
@@ -1400,7 +1408,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.tags.join(', ')}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                   placeholder="e.g., refreshing, summer, classic"
                 />
               </div>
@@ -1411,7 +1419,7 @@ const BarOperations = () => {
                   type="text"
                   value={formData.allergens.join(', ')}
                   onChange={(e) => setFormData({ ...formData, allergens: e.target.value.split(',').map(allergen => allergen.trim()) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                   placeholder="e.g., nuts, gluten"
                 />
               </div>
@@ -1425,19 +1433,19 @@ const BarOperations = () => {
                   placeholder="Ingredient name"
                   value={ingredientInput.name}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
                 <input
                   type="number"
                   placeholder="Quantity"
                   value={ingredientInput.quantity}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, quantity: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 />
                 <select
                   value={ingredientInput.unit}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, unit: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                 >
                   <option value="ml">ml</option>
                   <option value="oz">oz</option>
@@ -1448,7 +1456,7 @@ const BarOperations = () => {
                 <button
                   type="button"
                   onClick={addIngredient}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] font-medium transition-colors"
                 >
                   Add
                 </button>
@@ -1478,32 +1486,32 @@ const BarOperations = () => {
                   type="checkbox"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-[#c9a24a] focus:ring-[#c9a24a]"
                 />
-                <span className="text-sm text-gray-700">Active</span>
+                <span className="text-sm font-medium text-[#0f2742]">Active</span>
               </label>
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   checked={formData.isSpecial}
                   onChange={(e) => setFormData({ ...formData, isSpecial: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-[#c9a24a] focus:ring-[#c9a24a]"
                 />
-                <span className="text-sm text-gray-700">House Special</span>
+                <span className="text-sm font-medium text-[#0f2742]">House Special</span>
               </label>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center gap-2 transition-colors font-medium"
               >
                 <Save className="h-4 w-4" />
                 <span>{recipe ? 'Update' : 'Add'} Recipe</span>
@@ -1555,13 +1563,13 @@ const BarOperations = () => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
-            <h2 className="text-xl font-semibold text-gray-900">Mini-Bar: Room {room.roomNumber}</h2>
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Mini-Bar: Room {room.roomNumber}</h2>
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
@@ -1624,7 +1632,7 @@ const BarOperations = () => {
                         min="0"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       />
                     </div>
                     <div className="flex items-center space-x-2">
@@ -1634,13 +1642,13 @@ const BarOperations = () => {
                         min="0"
                         value={item.consumed}
                         onChange={(e) => handleItemChange(item.id, 'consumed', e.target.value)}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => restockItem(item.id)}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-3 py-1 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm"
                     >
                       Restock
                     </button>
@@ -1659,20 +1667,20 @@ const BarOperations = () => {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
+                className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center gap-2 transition-colors font-medium"
               >
                 <Save className="h-4 w-4" />
-                <span>Save</span>
+                <span>Save Changes</span>
               </button>
             </div>
           </form>
@@ -1685,30 +1693,32 @@ const BarOperations = () => {
   const ConfirmationPopup = ({ title, message, onConfirm, onCancel }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+          <div className="bg-[#0f2742] px-6 py-4 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white">{title}</h3>
             <button
               onClick={onCancel}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-gray-600 mb-6">{message}</p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Confirm
-            </button>
+          <div className="p-6">
+            <p className="text-[#0f2742] mb-6 font-medium">{message}</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={onCancel}
+                className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors font-medium"
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       </div>,
@@ -1719,43 +1729,45 @@ const BarOperations = () => {
   const MiniBarCard = ({ room }) => {
     const totalConsumed = room.items.reduce((sum, item) => sum + item.consumed, 0);
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow hover:scale-105 transform transition-transform duration-200">
+      <div className="bg-white rounded-xl overflow-hidden border border-[#c9a24a]/30 shadow-sm hover:shadow-md transition-all duration-300 group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Package className="h-5 w-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Room {room.roomNumber}</h3>
+            <Package className="h-5 w-5 text-[#c9a24a]" />
+            <h3 className="font-bold text-[#0f2742] group-hover:text-[#c9a24a] transition-colors">Room {room.roomNumber}</h3>
           </div>
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              room.status === 'occupied' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+            className={`px-2 py-1 rounded-full text-xs font-bold border ${
+              room.status === 'occupied' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}
           >
             {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
           </span>
         </div>
 
-        <p className="text-sm text-gray-600 mb-3">{room.guestName}</p>
+        <p className="text-sm text-[#0f2742]/60 mb-3 font-medium">{room.guestName}</p>
         <div className="space-y-2 mb-4">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Items:</span>
-            <span className="font-medium">{room.items.length}</span>
+            <span className="text-[#0f2742]/60">Items:</span>
+            <span className="font-bold text-[#0f2742]">{room.items.length}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Consumed:</span>
-            <span className="font-medium text-red-600">{totalConsumed}</span>
+            <span className="text-[#0f2742]/60">Consumed:</span>
+            <span className="font-bold text-rose-600">{totalConsumed}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Total Value:</span>
-            <span className="font-medium">${room.totalValue.toFixed(2)}</span>
+            <span className="text-[#0f2742]/60">Total Value:</span>
+            <span className="font-bold text-[#0f2742]">${room.totalValue.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Consumed Value:</span>
-            <span className="font-medium">${room.consumedValue.toFixed(2)}</span>
+            <span className="text-[#0f2742]/60">Consumed Value:</span>
+            <span className="font-bold text-[#0f2742]">${room.consumedValue.toFixed(2)}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <div className="flex items-center space-x-2 text-xs text-[#0f2742]/40">
             <Calendar className="h-3 w-3" />
             <span>Check-In: {new Date(room.checkInDate).toLocaleDateString()}</span>
           </div>
@@ -1765,11 +1777,12 @@ const BarOperations = () => {
               setModalType('minibar');
               setShowModal(true);
             }}
-            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+            className="p-1 text-[#c9a24a] hover:bg-[#fffaf0] rounded transition-colors"
             title="Manage Mini-Bar"
           >
             <Edit className="h-4 w-4" />
           </button>
+        </div>
         </div>
       </div>
     );
@@ -1780,49 +1793,51 @@ const BarOperations = () => {
     const CategoryIcon = category?.icon || Wine;
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl overflow-hidden border border-[#c9a24a]/30 shadow-sm hover:shadow-md transition-all duration-300 group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <CategoryIcon className="h-5 w-5 text-gray-600" />
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <CategoryIcon className="h-5 w-5 text-[#c9a24a]" />
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#fffaf0] text-[#8a681b] border border-[#ead8a8]">
               {category.name}
             </span>
           </div>
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
             {log.paymentMethod.replace('_', ' ').toUpperCase()}
           </span>
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-1">{log.customerInfo.name}</h3>
-        <p className="text-sm text-gray-600 mb-3">{log.items.map(item => `${item.name} x${item.quantity}`).join(', ')}</p>
+        <h3 className="font-bold text-[#0f2742] mb-1 group-hover:text-[#c9a24a] transition-colors">{log.customerInfo.name}</h3>
+        <p className="text-sm text-[#0f2742]/60 mb-3">{log.items.map(item => `${item.name} x${item.quantity}`).join(', ')}</p>
 
         <div className="space-y-2 mb-4">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Total:</span>
-            <span className="font-medium text-green-600">${log.totalAmount.toFixed(2)}</span>
+            <span className="text-[#0f2742]/60">Total:</span>
+            <span className="font-bold text-emerald-600">${log.totalAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Bartender:</span>
-            <span className="font-medium">{log.bartender}</span>
+            <span className="text-[#0f2742]/60">Bartender:</span>
+            <span className="font-medium text-[#0f2742]">{log.bartender}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Time:</span>
-            <span className="font-medium">{new Date(log.timestamp).toLocaleString()}</span>
+            <span className="text-[#0f2742]/60">Time:</span>
+            <span className="font-medium text-[#0f2742]">{new Date(log.timestamp).toLocaleString()}</span>
           </div>
           {log.notes && (
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Notes:</span> {log.notes}
+            <div className="text-sm text-[#0f2742]/60">
+              <span className="font-medium text-[#0f2742]">Notes:</span> {log.notes}
             </div>
           )}
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
-            <CheckCircle className="h-3 w-3 text-green-500" />
+          <div className="flex items-center space-x-2 text-xs text-[#0f2742]/40">
+            <CheckCircle className="h-3 w-3 text-emerald-500" />
             <span>Age Verified: {log.ageVerified ? 'Yes' : 'No'}</span>
           </div>
           <button
-            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+            className="p-1 text-[#0f2742] hover:bg-slate-50 rounded transition-colors"
             title="View Details"
             onClick={() => {
               setSelectedItem(log);
@@ -1833,89 +1848,90 @@ const BarOperations = () => {
             <Eye className="h-4 w-4" />
           </button>
         </div>
+        </div>
       </div>
     );
   };
 
   const ServingDetailsModal = ({ log, onCancel }) => {
     return createPortal(
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-          <button
-            onClick={onCancel}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </button>
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Serving Details: {log.customerInfo.name}</h2>
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white">Serving Details: {log.customerInfo.name}</h2>
+            <button
+              onClick={onCancel}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Customer</label>
-                <p className="mt-1 text-gray-900">{log.customerInfo.name}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Customer</label>
+                <p className="text-[#0f2742] font-medium">{log.customerInfo.name}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Service Type</label>
-                <p className="mt-1 text-gray-900">{log.customerInfo.type.replace('_', ' ').toUpperCase()}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Service Type</label>
+                <p className="text-[#0f2742] font-medium">{log.customerInfo.type.replace('_', ' ').toUpperCase()}</p>
               </div>
               {log.customerInfo.roomNumber && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Room Number</label>
-                  <p className="mt-1 text-gray-900">{log.customerInfo.roomNumber}</p>
+                  <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Room Number</label>
+                  <p className="text-[#0f2742] font-medium">{log.customerInfo.roomNumber}</p>
                 </div>
               )}
               {log.customerInfo.guestName && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Guest Name</label>
-                  <p className="mt-1 text-gray-900">{log.customerInfo.guestName}</p>
+                  <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Guest Name</label>
+                  <p className="text-[#0f2742] font-medium">{log.customerInfo.guestName}</p>
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Bartender</label>
-                <p className="mt-1 text-gray-900">{log.bartender}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Bartender</label>
+                <p className="text-[#0f2742] font-medium">{log.bartender}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Timestamp</label>
-                <p className="mt-1 text-gray-900">{new Date(log.timestamp).toLocaleString()}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Timestamp</label>
+                <p className="text-[#0f2742] font-medium">{new Date(log.timestamp).toLocaleString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Payment Method</label>
-                <p className="mt-1 text-gray-900">{log.paymentMethod.replace('_', ' ').toUpperCase()}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Payment Method</label>
+                <p className="text-[#0f2742] font-medium">{log.paymentMethod.replace('_', ' ').toUpperCase()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Age Verified</label>
-                <p className="mt-1 text-gray-900">{log.ageVerified ? 'Yes' : 'No'}</p>
+                <label className="block text-xs font-bold text-[#0f2742] uppercase tracking-wide mb-1">Age Verified</label>
+                <p className="text-[#0f2742] font-medium">{log.ageVerified ? 'Yes' : 'No'}</p>
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Items Served</h3>
+            <div className="border-t border-gray-100 pt-4">
+              <h3 className="text-base font-bold text-[#0f2742] mb-3 uppercase tracking-wide">Items Served</h3>
               <div className="space-y-3">
                 {log.items.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
+                  <div key={index} className="flex items-center justify-between bg-slate-50 border border-slate-200 px-4 py-3 rounded-lg">
                     <div>
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-gray-600 ml-2">x{item.quantity}</span>
+                      <span className="font-bold text-[#0f2742]">{item.name}</span>
+                      <span className="text-[#0f2742]/60 ml-2 text-sm">x{item.quantity}</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <span className="font-medium">${item.totalPrice.toFixed(2)}</span>
+                      <span className="font-bold text-[#0f2742]">${item.totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
                 ))}
-                <div className="text-right text-lg font-bold">
+                <div className="text-right text-lg font-bold text-[#0f2742]">
                   Total: ${log.totalAmount.toFixed(2)}
                 </div>
               </div>
             </div>
 
             {log.notes && (
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Notes</h3>
-                <p className="text-gray-600">{log.notes}</p>
+              <div className="border-t border-gray-100 pt-4">
+                <h3 className="text-base font-bold text-[#0f2742] mb-3 uppercase tracking-wide">Notes</h3>
+                <p className="text-[#0f2742]/60">{log.notes}</p>
               </div>
             )}
           </div>
@@ -1923,7 +1939,7 @@ const BarOperations = () => {
           <div className="p-6 flex justify-end border-t border-gray-200">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-[#0f2742] border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors"
             >
               Close
             </button>
@@ -1937,59 +1953,52 @@ const BarOperations = () => {
   // Main Render
   return (
     <ErrorBoundary>
-      <div className="w-full min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-3">
+      <div className="w-full min-h-screen bg-slate-50/50 transition-all duration-300 ease-in-out">
+        <header className="bg-white border-b border-[#c9a24a]/30 shadow-sm sticky top-0 z-20">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-3 space-y-3">
             {/* Tabs */}
-            <div className="">
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-full">
-                {['Stock', 'Recipes', 'Mini-Bar', 'Serving'].map((tab, idx) => {
-                  const tabKey = tab.toLowerCase().replace(/-/g, '');
-                  return (
-                    <button
-                      key={tabKey}
-                      onClick={() => {
-                        setActiveTab(tabKey);
-                        setSearchQuery('');
-                        setFilterCategory('all');
-                        setViewMode('grid');
-                      }}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors relative ${
-                        activeTab === tabKey
-                          ? 'bg-white shadow-sm text-gray-900'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  );
-                })}
-                <div className="flex items-center space-x-4">
-                  {userRole === 'manager' && (
-                    <button
-                      onClick={() => {
-                        setModalType(activeTab === 'stock' ? 'stock' : activeTab === 'recipes' ? 'recipe' : 'serving');
-                        setSelectedItem(null);
-                        setShowModal(true);
-                      }}
-                      className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>
-                        {activeTab === 'stock' ? 'Add Stock' : activeTab === 'recipes' ? 'Add Recipe' : 'Record Service'}
-                      </span>
-                    </button>
-                  )}
-                </div>
+            <div className="flex gap-1 bg-[#0f2742]/5 p-1 rounded-lg w-full">
+              {['Stock', 'Recipes', 'Mini-Bar', 'Serving'].map((tab, idx) => {
+                const tabKey = tab.toLowerCase().replace(/-/g, '');
+                return (
+                  <button
+                    key={tabKey}
+                    onClick={() => {
+                      setActiveTab(tabKey);
+                      setSearchQuery('');
+                      setFilterCategory('all');
+                      setViewMode('grid');
+                    }}
+                    className={`px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wide transition-all relative ${
+                      activeTab === tabKey
+                        ? 'bg-[#0f2742] shadow-sm text-white'
+                        : 'text-[#0f2742]/60 hover:text-[#0f2742] hover:bg-[#0f2742]/10'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+              <div className="flex items-center gap-4 ml-auto">
+                {userRole === 'manager' && (
+                  <button
+                    onClick={() => {
+                      setModalType(activeTab === 'stock' ? 'stock' : activeTab === 'recipes' ? 'recipe' : 'serving');
+                      setSelectedItem(null);
+                      setShowModal(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>
+                      {activeTab === 'stock' ? 'Add Stock' : activeTab === 'recipes' ? 'Add Recipe' : 'Record Service'}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-3">
-          <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4 w-full sm:w-auto">
+            {/* Filters Row */}
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="relative flex-1 sm:flex-none">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -1997,14 +2006,14 @@ const BarOperations = () => {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+                  className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] w-full sm:w-64 text-sm font-medium"
                 />
               </div>
               {activeTab === 'stock' && (
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] bg-slate-50 text-[#0f2742] text-sm"
                 >
                   <option value="all">All Categories</option>
                   {stockCategories.map(category => (
@@ -2012,28 +2021,32 @@ const BarOperations = () => {
                   ))}
                 </select>
               )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Grid View"
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="List View"
-              >
-                <List className="h-4 w-4" />
-              </button>
+              <div className="flex items-center bg-[#0f2742]/5 rounded-lg p-1 ml-auto">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'grid' ? 'bg-[#0f2742] text-white shadow-sm' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                  }`}
+                  title="Grid View"
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'list' ? 'bg-[#0f2742] text-white shadow-sm' : 'text-[#0f2742]/60 hover:text-[#0f2742]'
+                  }`}
+                  title="List View"
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-3">
 
           {/* Content Rendering */}
           {activeTab === 'stock' && (

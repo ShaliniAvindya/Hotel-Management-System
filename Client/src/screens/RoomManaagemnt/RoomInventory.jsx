@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,7 +53,7 @@ import {
 import { API_BASE_URL } from '../../apiconfig';
 import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
-const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`; 
+const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
@@ -63,7 +63,7 @@ const RoomInventory = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); 
+  const [viewMode, setViewMode] = useState('grid');
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
@@ -308,7 +308,7 @@ const RoomInventory = () => {
             'https://api.imgbb.com/1/upload?key=4e08e03047ee0d48610586ad270e2b39',
             formData
           );
-          return response.data.data.url; 
+          return response.data.data.url;
         } catch (error) {
           console.error('Error uploading image to ImgBB:', error);
           return null;
@@ -342,15 +342,15 @@ const RoomInventory = () => {
     const modalContent = (
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          <div className="p-4 sm:p-6 border-b border-[#c9a24a]/30 flex flex-col sm:flex-row items-center justify-between bg-[#0f2742] gap-4">
+            <h2 className="text-sm font-semibold text-white">
               {room ? 'Edit Room' : 'Add New Room'}
             </h2>
             <button
               onClick={onCancel}
               className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
             </button>
           </div>
 
@@ -494,7 +494,7 @@ const RoomInventory = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
+                    className="px-4 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] flex items-center space-x-2 w-full sm:w-auto"
                   >
                     <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="text-sm sm:text-base">Upload Images</span>
@@ -536,11 +536,10 @@ const RoomInventory = () => {
                         return (
                           <label
                             key={amenity.id}
-                            className={`flex items-center space-x-2 p-2 sm:p-3 rounded-lg border cursor-pointer transition-colors ${
-                              selectedAmenities.includes(amenity.id)
-                                ? 'bg-blue-100 border-blue-300 text-blue-900'
-                                : 'bg-white border-gray-200 hover:bg-gray-50'
-                            }`}
+                            className={`flex items-center space-x-2 p-2 sm:p-3 rounded-lg border cursor-pointer transition-colors ${selectedAmenities.includes(amenity.id)
+                              ? 'bg-gray-100 border-[#c9a24a]/50 text-[#0f2742]'
+                              : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }`}
                           >
                             <input
                               type="checkbox"
@@ -578,22 +577,7 @@ const RoomInventory = () => {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto"
-              >
-                {room ? 'Update Room' : 'Add Room'}
-              </button>
-            </div>
+
           </form>
         </div>
       </div>
@@ -606,24 +590,41 @@ const RoomInventory = () => {
     const modalContent = (
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+          <div className="p-4 sm:p-6 border-b border-[#c9a24a]/30 flex flex-col sm:flex-row items-center justify-between bg-[#0f2742] gap-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Bed className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Bed className="h-5 w-5 sm:h-6 sm:w-6 text-[#0f2742]" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{room.name}</h2>
-                <p className="text-sm text-gray-600">
-                  Room {room.roomNumber} • {getRoomTypeName(room.type)}
+                <h2 className="text-lg sm:text-xl font-semibold text-white truncate">{room.name}</h2>
+                <p className="text-sm text-slate-400">
+                  Room {room.roomNumber} â€¢ {getRoomTypeName(room.type)}
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onEdit(room)}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center space-x-2 transition-colors border border-white/10"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="text-sm">Edit</span>
+              </button>
+              <button
+                onClick={() => onDelete(room.id)}
+                className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg flex items-center space-x-2 transition-colors border border-red-500/30"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-sm">Delete</span>
+              </button>
+              <div className="w-px h-8 bg-white/10 mx-1" />
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-white/70" />
+              </button>
+            </div>
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
@@ -651,24 +652,24 @@ const RoomInventory = () => {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Home className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Floor:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Floor:</span>
                     <span className="text-sm sm:text-base font-medium">{room.floor}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Users className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Capacity:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Capacity:</span>
                     <span className="text-sm sm:text-base font-medium">
                       {room.capacity} guests (Max: {room.maxCapacity})
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Size:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Size:</span>
                     <span className="text-sm sm:text-base font-medium">{room.size} sq ft</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Bookings:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Bookings:</span>
                     <span className="text-sm sm:text-base font-medium">{room.bookingHistory || 0} total</span>
                   </div>
                 </div>
@@ -678,12 +679,12 @@ const RoomInventory = () => {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Base Price:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Base Price:</span>
                     <span className="text-sm sm:text-base font-medium">${room.basePrice}/night</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                    <span className="text-sm sm:text-base text-gray-600">Weekend Price:</span>
+                    <span className="text-sm sm:text-base text-slate-400">Weekend Price:</span>
                     <span className="text-sm sm:text-base font-medium">${room.weekendPrice}/night</span>
                   </div>
                 </div>
@@ -712,7 +713,7 @@ const RoomInventory = () => {
                         key={amenityId}
                         className="flex items-center space-x-2 p-2 sm:p-3 bg-gray-50 rounded-lg"
                       >
-                        <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-[#0f2742]" />
                         <span className="text-sm sm:text-base">{amenity.name}</span>
                       </div>
                     );
@@ -721,23 +722,7 @@ const RoomInventory = () => {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => onEdit(room)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 w-full sm:w-auto"
-              >
-                <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Edit Room</span>
-              </button>
-              <button
-                onClick={() => onDelete(room.id)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2 w-full sm:w-auto"
-              >
-                <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Delete Room</span>
-              </button>
-            </div>
+
           </div>
         </div>
       </div>
@@ -754,64 +739,86 @@ const RoomInventory = () => {
       .filter(Boolean);
 
     return (
-      <div className="border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow">
-        <div className="aspect-video bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-          {room.images && room.images.length > 0 ? (
-            <img
-              src={room.images[0]}
-              alt={room.name}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          ) : (
-            <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
-          )}
-        </div>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">{room.name}</h3>
-          {room.rating > 0 && (
-            <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
-              <span className="text-sm sm:text-base font-medium">{room.rating}</span>
+      <div className="bg-white border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4 flex flex-col h-full">
+          <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            {room.images && room.images.length > 0 ? (
+              <img
+                src={room.images[0]}
+                alt={room.name}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            ) : (
+              <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+            )}
+          </div>
+
+          <div className="mb-2 flex items-start justify-between">
+            <div className="flex flex-col">
+              <p className="text-xs font-semibold text-[#9a7624] uppercase tracking-wider mb-0.5">
+                {getRoomTypeName(room.type)}
+              </p>
+              <h3 className="font-semibold text-[#0f2742] text-base sm:text-lg truncate">{room.name}</h3>
             </div>
-          )}
-        </div>
-        <div className="text-sm sm:text-base text-gray-600 mb-1">
-          Room {room.roomNumber} • Floor {room.floor}
-        </div>
-        <div className="flex flex-wrap gap-2 text-sm sm:text-base text-gray-700 mb-1">
-          <span>{room.capacity} guests</span>
-          <span>Max {room.maxCapacity}</span>
-          <span>{room.size} sq ft</span>
-          <span className="font-semibold text-blue-600">${room.basePrice}/night</span>
-        </div>
-        <div className="text-sm sm:text-base text-gray-500 mb-2 truncate">
-          {firstAmenities.join(' • ')}
-          {amenitiesCount > 2 && (
-            <span className="ml-2 text-xs sm:text-sm text-gray-400">+{amenitiesCount - 2} more</span>
-          )}
-        </div>
-        <div className="flex justify-end items-center mt-2 space-x-2">
-          <button
-            onClick={() => onView(room)}
-            className="p-2 sm:p-3 text-gray-400 hover:text-blue-600"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
-          <button
-            onClick={() => onEdit(room)}
-            className="p-2 sm:p-3 text-gray-400 hover:text-blue-600"
-            title="Edit Room"
-          >
-            <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
-          <button
-            onClick={() => onDelete(room.id)}
-            className="p-2 sm:p-3 text-gray-400 hover:text-red-600"
-            title="Delete Room"
-          >
-            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
+            <div className="flex flex-col items-end text-right shrink-0">
+              <span className="font-bold text-[#0f2742] text-lg leading-none">${room.basePrice}</span>
+              <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">per night</span>
+              {room.rating > 0 && (
+                <div className="flex items-center space-x-1 mt-1 text-[#c9a24a]">
+                  <Star className="h-3 w-3 fill-current" />
+                  <span className="text-xs font-bold">{room.rating}</span>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          <div className="text-sm sm:text-base text-slate-400 mb-2">
+            Room {room.roomNumber} â€¢ Floor {room.floor}
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-sm sm:text-base text-slate-600 mb-3 py-2 border-y border-gray-50">
+            <span className="flex items-center space-x-1"><Users className="h-4 w-4 text-slate-400" /> <span>{room.capacity} guests</span></span>
+            <span className="text-slate-200">|</span>
+            <span className="flex items-center space-x-1"><Home className="h-4 w-4 text-slate-400" /> <span>{room.size} sq ft</span></span>
+          </div>
+
+          <div className="text-sm sm:text-base text-slate-500 mb-4 flex items-center justify-between gap-1">
+            <div className="flex flex-wrap gap-1">
+              {firstAmenities.map((a, i) => (
+                <span key={i} className="bg-gray-50 px-2 py-0.5 rounded text-xs border border-gray-100">{a}</span>
+              ))}
+              {amenitiesCount > 2 && (
+                <span className="text-xs text-slate-400 ml-1">+{amenitiesCount - 2}</span>
+              )}
+            </div>
+            <div className="flex space-x-1 shrink-0">
+              <button
+                onClick={() => onView(room)}
+                className="p-1.5 text-slate-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-colors"
+                title="View Details"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onEdit(room)}
+                className="p-1.5 text-slate-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-colors"
+                title="Edit Room"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onDelete(room.id)}
+                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Room"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+
         </div>
       </div>
     );
@@ -819,8 +826,8 @@ const RoomInventory = () => {
 
   const RoomListItem = ({ room, onView, onEdit, onDelete }) => {
     return (
-      <tr className="border-b border-gray-100 hover:bg-gray-50">
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+      <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <div className="flex items-center space-x-3">
             {room.images && room.images.length > 0 ? (
               <img
@@ -834,27 +841,27 @@ const RoomInventory = () => {
               </div>
             )}
             <div>
-              <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{room.name}</p>
-              <p className="text-xs sm:text-sm text-gray-600">Room {room.roomNumber}</p>
+              <p className="font-semibold text-[#0f2742] text-sm sm:text-base truncate">{room.name}</p>
+              <p className="text-xs sm:text-sm text-slate-400">Room {room.roomNumber}</p>
             </div>
           </div>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <span className="text-sm sm:text-base text-gray-900">{getRoomTypeName(room.type)}</span>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <span className="text-sm sm:text-base text-gray-900">{room.capacity}/{room.maxCapacity}</span>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <span className="text-sm sm:text-base text-gray-900">${room.basePrice}</span>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <span className="text-sm sm:text-base text-gray-900">Floor {room.floor}</span>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <span className="text-sm sm:text-base text-gray-900">{room.size} sq ft</span>
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           {room.rating > 0 && (
             <div className="flex items-center space-x-1">
               <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
@@ -862,18 +869,18 @@ const RoomInventory = () => {
             </div>
           )}
         </td>
-        <td className="py-3 sm:py-4 px-3 sm:px-4">
+        <td className="px-4 py-4 text-slate-400 font-medium">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onView(room)}
-              className="p-2 sm:p-3 text-blue-600 hover:bg-blue-50 rounded"
+              className="p-2 sm:p-3 text-[#0f2742] hover:bg-blue-50 rounded"
               title="View Details"
             >
               <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               onClick={() => onEdit(room)}
-              className="p-2 sm:p-3 text-gray-600 hover:bg-gray-50 rounded"
+              className="p-2 sm:p-3 text-slate-400 hover:bg-gray-50 rounded"
               title="Edit"
             >
               <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -892,10 +899,10 @@ const RoomInventory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="space-y-0">
       {/* Filters and Controls */}
-      <div className="px-4 sm:px-6 py-4">
-        <div className="hotel-panel p-4 flex flex-col items-start justify-between space-y-4">
+      <div className="pb-2">
+        <div className="bg-white border border-[#c9a24a]/30 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
@@ -904,15 +911,14 @@ const RoomInventory = () => {
                 placeholder="Search rooms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="hotel-input w-full pl-10 pr-4 py-2 text-sm sm:text-base"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-transparent focus:ring-1 focus:ring-blue-500 transition-all"
               />
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto">
-              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="hotel-input w-full sm:w-auto px-3 py-2 text-sm sm:text-base"
+                className="w-full sm:w-auto px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-transparent focus:ring-1 focus:ring-blue-500 transition-all"
               >
                 <option value="all">All Types</option>
                 {roomTypes.map((type) => (
@@ -924,23 +930,23 @@ const RoomInventory = () => {
             </div>
             <button
               onClick={() => setShowRoomForm(true)}
-              className="hotel-button-primary px-4 py-2 flex items-center space-x-2 w-full sm:w-auto"
+              className="bg-gradient-to-r from-[#0f2742] to-[#153456] text-white px-6 py-2.5 rounded-lg font-semibold hover:shadow-md transition-all flex items-center justify-center space-x-2 w-full sm:w-auto border border-[#0f2742]"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-sm sm:text-base">Add New Room</span>
+              <span className="text-sm">Add New Room</span>
             </button>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-gray-600'}`}
+                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-slate-400'}`}
               >
                 <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-gray-600'}`}
+                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm text-[#0f2742]' : 'text-slate-400'}`}
               >
                 <List className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
@@ -950,7 +956,7 @@ const RoomInventory = () => {
                 queryClient.invalidateQueries({ queryKey: ['rooms'] });
                 queryClient.invalidateQueries({ queryKey: ['room-rates'] });
               }}
-              className="p-2 sm:p-3 text-gray-600 hover:text-gray-900 hover:bg-[#fffaf0] rounded-lg"
+              className="p-2 sm:p-3 text-slate-400 hover:text-gray-900 hover:bg-[#fffaf0] rounded-lg"
             >
               <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
@@ -959,10 +965,10 @@ const RoomInventory = () => {
       </div>
 
       {/* Room Display */}
-      <div className="p-4 sm:p-6">
-        <div className="hotel-card p-4 sm:p-6">
+      <div className="px-4 sm:px-6 py-2">
+        <div className="bg-white border border-[#c9a24a]/30 rounded-xl p-6 shadow-sm">
           {(isRoomsLoading || isRatesLoading) ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="h-48 rounded-xl bg-white border border-gray-200" />
               <div className="h-48 rounded-xl bg-white border border-gray-200" />
               <div className="h-48 rounded-xl bg-white border border-gray-200" />
@@ -971,7 +977,7 @@ const RoomInventory = () => {
             <div className="text-center py-8 sm:py-12">
               <Home className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-6">
+              <p className="text-sm sm:text-base text-slate-400 mb-6">
                 {searchQuery || filterType !== 'all'
                   ? 'No rooms match your current filters.'
                   : 'Get started by adding your first room.'}
@@ -985,7 +991,7 @@ const RoomInventory = () => {
               </button>
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredRooms.map((room) => (
                 <RoomCard
                   key={room.id}
@@ -1005,16 +1011,16 @@ const RoomInventory = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px]">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Room</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Type</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Capacity</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Price</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Floor</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Size</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Rating</th>
-                    <th className="text-left py-3 px-3 sm:px-4 font-medium text-gray-900 text-sm sm:text-base">Actions</th>
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Room</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Type</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Capacity</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Price</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Floor</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Size</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Rating</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-y border-gray-100">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1072,3 +1078,6 @@ const RoomInventory = () => {
 };
 
 export default RoomInventory;
+
+
+

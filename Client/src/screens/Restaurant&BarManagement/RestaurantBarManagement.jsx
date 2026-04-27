@@ -1,66 +1,11 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   UtensilsCrossed,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  Filter,
-  Upload,
-  Camera,
-  Users,
-  Wifi,
-  Tv,
-  Car,
-  Coffee,
-  Bath,
-  AirVent,
-  Phone,
   Utensils,
-  Star,
-  MapPin,
-  DollarSign,
-  Eye,
-  X,
-  Save,
-  RefreshCw,
-  Grid,
-  List,
-  ChevronDown,
-  Menu,
-  ImageIcon,
-  Calendar,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Shield,
-  Thermometer,
-  Volume2,
-  Baby,
-  Accessibility,
-  PawPrint,
-  Mountain,
-  Waves,
-  TreePine,
-  Sparkles,
-  Sofa,
-  Microwave,
-  Refrigerator,
-  WashingMachine,
-  Shirt,
-  Wind,
-  Sun,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  AlertTriangle,
-  Wrench,
-  Info,
-  Wine,
-  ChefHat,
   ClipboardList,
+  Wine,
   Monitor,
-  Receipt
+  Menu,
 } from 'lucide-react';
 import Sidebar from '../Sidebar';
 const MenuManagement = lazy(() => import('./MenuManagement'));
@@ -87,55 +32,45 @@ const RestaurantBarManagement = () => {
   }, []);
 
   const tabs = [
-    { 
-      id: 'menu', 
-      label: 'Menu Management', 
+    {
+      id: 'menu',
+      label: 'Menu Management',
       icon: Utensils,
       component: MenuManagement,
-      color: 'blue',
-      description: 'Manage dishes, beverages, pricing & categories'
+      description: 'Manage dishes, beverages, pricing & categories',
     },
-    { 
-      id: 'orders', 
-      label: 'Order Management', 
+    {
+      id: 'orders',
+      label: 'Order Management',
       icon: ClipboardList,
       component: OrderManagement,
-      color: 'green',
-      description: 'Handle dine-in, room service & takeaway orders'
+      description: 'Handle dine-in, room service & takeaway orders',
     },
-    { 
-      id: 'bar', 
-      label: 'Bar Operations', 
+    {
+      id: 'bar',
+      label: 'Bar Operations',
       icon: Wine,
       component: BarOperations,
-      color: 'purple',
-      description: 'Bar stock, cocktails & mini-bar management'
+      description: 'Bar stock, cocktails & mini-bar management',
     },
-    { 
-      id: 'kitchen', 
-      label: 'Kitchen Display (KDS)', 
+    {
+      id: 'kitchen',
+      label: 'Kitchen Display (KDS)',
       icon: Monitor,
       component: KitchenDisplay,
-      color: 'orange',
-      description: 'Kitchen order tickets & status tracking'
+      description: 'Kitchen order tickets & status tracking',
     },
   ];
 
-  const getTabStyles = (tab, isActive) => {
-    const colorMap = {
-      blue: isActive ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300',
-      green: isActive ? 'border-green-500 text-green-600 bg-green-50' : 'border-transparent text-gray-500 hover:text-green-600 hover:border-green-300',
-      yellow: isActive ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-gray-500 hover:text-yellow-600 hover:border-yellow-300',
-      purple: isActive ? 'border-purple-500 text-purple-600 bg-purple-50' : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-300',
-      orange: isActive ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-transparent text-gray-500 hover:text-orange-600 hover:border-orange-300',
-    };
-    return colorMap[tab.color];
-  };
+  const getTabStyles = (isActive) =>
+    isActive
+      ? 'bg-[#0f2742] text-white border-[#c9a24a] shadow-sm'
+      : 'bg-white text-slate-600 border-slate-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]';
 
   const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="hotel-page flex">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -144,34 +79,31 @@ const RestaurantBarManagement = () => {
       />
 
       <div className={`flex-1 ${mainMargin} transition-all duration-300 overflow-auto`}>
-        {/* Header with Restaurant/Bar Info */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between flex-wrap">
-              <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Unified sticky header + tabs */}
+        <div className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900"
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 sm:p-3 rounded-xl flex-shrink-0">
-                  <UtensilsCrossed className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <UtensilsCrossed className="h-7 w-7 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Restaurant & Bar Management</h1>
-                  <p className="text-sm sm:text-base text-gray-600">Complete F&B operations dashboard</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Food & Beverage</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Restaurant & Bar</h1>
+                  <p className="text-sm text-white/60">Complete F&amp;B operations dashboard.</p>
                 </div>
               </div>
-              
-             </div>
+            </div>
           </div>
-        </div>
 
-        {/* Enhanced Tabs */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="px-4 sm:px-6 overflow-x-auto">
-            <nav className="flex space-x-1 min-w-max" aria-label="Tabs">
+          <div className="px-4 sm:px-6 pb-4 pt-2 overflow-x-auto">
+            <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -179,18 +111,12 @@ const RestaurantBarManagement = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`${getTabStyles(tab, isActive)} 
-                      flex items-center space-x-2 px-3 sm:px-4 py-3 sm:py-4 border-b-2 font-medium text-sm 
-                      transition-all duration-200 rounded-t-lg group relative`}
+                    className={`${getTabStyles(isActive)} hotel-tab flex items-center space-x-2 px-4 py-2.5 border font-medium text-sm group relative`}
+                    title={tab.description}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{tab.label}</span>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
-                      {tab.description}
-                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
-                    </div>
+                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                   </button>
                 );
               })}
@@ -199,8 +125,16 @@ const RestaurantBarManagement = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 p-4 sm:p-6">
-          <Suspense fallback={<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /></div>}>
+        <div className="flex-1">
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
+                <div className="h-40 rounded-xl hotel-skeleton" />
+                <div className="h-40 rounded-xl hotel-skeleton" />
+                <div className="h-40 rounded-xl hotel-skeleton" />
+              </div>
+            }
+          >
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -212,12 +146,11 @@ const RestaurantBarManagement = () => {
           </Suspense>
         </div>
 
-        {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-[#0f2742]/45 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
-          ></div>
+          />
         )}
       </div>
     </div>

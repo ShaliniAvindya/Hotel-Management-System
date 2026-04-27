@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Search, Edit, Trash2, AlertCircle, X, Eye, Sparkles, CheckCircle, XCircle, Power, RefreshCw } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, AlertCircle, X, Eye, Sparkles, CheckCircle, XCircle, Power, RefreshCw, Calendar, Star } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
@@ -251,23 +251,35 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
   const ServiceModal = ({ service, onClose }) => {
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4">
-        <div className="bg-white rounded-lg w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30">
+          <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              <div className="p-2 bg-[#c9a24a]/20 rounded-lg">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-[#c9a24a]" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{service.serviceName}</h2>
-                <p className="text-sm text-gray-600">Service Details</p>
+                <h2 className="text-lg sm:text-xl font-semibold text-white truncate">{service.serviceName}</h2>
+                <p className="text-sm text-gray-300">Service Details</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 sm:p-3 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setShowServiceDetails(false);
+                  handleEditService(service);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#c9a24a] hover:bg-[#b8903e] text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 sm:p-3 hover:bg-white/10 rounded-lg transition-colors text-white" aria-label="Close"
+              >
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
@@ -281,7 +293,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Category</p>
-                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+                  <span className="inline-block px-3 py-1 bg-[#fffaf0] text-[#8a681b] text-sm font-semibold rounded-full border border-[#ead8a8]">
                     {service.category}
                   </span>
                 </div>
@@ -317,31 +329,13 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
                   <h3 className="text-base font-semibold text-gray-900 mb-3">Benefits</h3>
                   <div className="space-y-2 text-sm">
                     {service.benefits.map((benefit, idx) => (
-                      <p key={idx} className="text-gray-700">✓ {benefit}</p>
+                      <p key={idx} className="text-gray-700">âœ“ {benefit}</p>
                     ))}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setShowServiceDetails(false);
-                  handleEditService(service);
-                }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-              >
-                Edit Service
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium transition"
-              >
-                Close
-              </button>
-            </div>
           </div>
         </div>
       </div>,
@@ -351,59 +345,93 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
 
   const ServiceCard = ({ service }) => {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow border border-gray-100">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">{service.serviceName}</h3>
-          <span className="ml-2 px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full whitespace-nowrap">
-            {service.category}
-          </span>
-        </div>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{service.description}</p>
-        <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-gray-50 p-3 rounded-lg">
-          <div>
-            <p className="text-gray-600 text-xs mb-1">Duration</p>
-            <p className="font-semibold text-gray-900">{service.duration} min</p>
+      <div className="border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-md transition-all duration-300 bg-white group">
+        <div className="h-1 w-full bg-[#c9a24a]" />
+        <div className="p-4 flex flex-col h-full">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-[#0f2742] text-base sm:text-lg mb-1 truncate group-hover:text-[#c9a24a] transition-colors">
+                {service.serviceName}
+              </h3>
+              <p className="text-sm text-gray-600 font-medium">{service.category}</p>
+            </div>
+            <span className={`flex-shrink-0 inline-flex px-3 py-1 text-xs font-bold rounded-full border ${
+              service.isActive 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                : 'bg-gray-100 text-gray-700 border-gray-200'
+            }`}>
+              {service.isActive ? 'Active' : 'Inactive'}
+            </span>
           </div>
-          <div>
-            <p className="text-gray-600 text-xs mb-1">Price</p>
-            <p className="font-semibold text-green-600">${service.basePrice.toFixed(2)}</p>
+
+          {/* Data display - 2 wise layout */}
+          <div className="space-y-3 mb-5 text-sm text-gray-600 font-medium">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-start gap-2">
+                <Calendar size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="text-sm font-medium text-gray-900">{service.duration} min</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Star size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Max Guests</p>
+                  <p className="text-sm font-medium text-gray-900">{service.maxCapacity || 1}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-start gap-2">
+                <Sparkles size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Price</p>
+                  <p className="text-sm font-bold text-green-600">${service.basePrice.toFixed(2)}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Status</p>
+                  <p className="text-sm font-medium text-gray-900">{service.isActive ? 'Available' : 'Inactive'}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          <button
-            onClick={() => handleViewService(service)}
-            className="flex-1 min-w-[60px] px-3 py-2 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition flex items-center justify-center gap-1"
-          >
-            <Eye size={16} /> View
-          </button>
-          <button
-            onClick={() => handleEditService(service)}
-            className="flex-1 min-w-[60px] px-3 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-medium transition flex items-center justify-center gap-1"
-          >
-            <Edit size={16} /> Edit
-          </button>
-          
-          <button
-            onClick={() => handleToggleService(service._id, service.isActive)}
-            className={`flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              service.isActive ? 'bg-green-500' : 'bg-gray-300'
-            }`}
-            title={service.isActive ? 'Active' : 'Inactive'}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                service.isActive ? 'translate-x-5' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-          
-          <button
-            onClick={() => handleDeleteService(service._id)}
-            className="flex-shrink-0 px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition"
-            title="Delete Permanently"
-          >
-            <Trash2 size={18} />
-          </button>
+
+          {/* Action buttons at bottom */}
+          <div className="flex items-center justify-end gap-1 pt-4 mt-auto border-t border-gray-100">
+            <button
+              onClick={() => handleViewService(service)}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-all"
+              title="View Details"
+            >
+              <Eye size={18} />
+            </button>
+            <button
+              onClick={() => handleEditService(service)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            <button
+              onClick={() => handleToggleService(service._id, service.isActive)}
+              className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+              title={service.isActive ? 'Deactivate' : 'Activate'}
+            >
+              <Power size={18} />
+            </button>
+            <button
+              onClick={() => handleDeleteService(service._id)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -458,7 +486,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
       {notification && (
         <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
@@ -475,57 +503,56 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
       )}
 
       {/* Filters and Controls */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-left">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Service Catalog</h2>
-              <p className="text-sm text-gray-600">Manage spa and wellness services</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchServices}
-                className="flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition"
-                title="Refresh services"
-              >
-                <RefreshCw size={18} className="mr-2" /> Refresh
-              </button>
-              <button
-                onClick={() => {
-                  setEditingService(null);
-                  setShowServiceForm(true);
-                }}
-                className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition"
-              >
-                <Plus size={18} className="mr-2" /> Add Service
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+      <div className="px-4 sm:px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
               />
             </div>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+              >
+                <option value="all">All Categories</option>
+                <option value="massage">Massage</option>
+                <option value="facial">Facial</option>
+                <option value="body-treatment">Body Treatment</option>
+                <option value="therapy">Therapy</option>
+                <option value="wellness">Wellness</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <button
+              onClick={() => {
+                setEditingService(null);
+                setShowServiceForm(true);
+              }}
+              className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors text-sm w-full sm:w-auto ml-auto"
             >
-              <option value="all">All Categories</option>
-              <option value="massage">Massage</option>
-              <option value="facial">Facial</option>
-              <option value="body-treatment">Body Treatment</option>
-              <option value="therapy">Therapy</option>
-              <option value="wellness">Wellness</option>
-              <option value="other">Other</option>
-            </select>
+              <Plus size={18} className="mr-2" /> Add Service
+            </button>
+          </div>
+          <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {filteredServices.length} services
+            </div>
+            <button
+              onClick={fetchServices}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -547,7 +574,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
             <p className="text-gray-500 text-sm mt-1">Try adjusting your search filters</p>
           </div>
         ) : (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3 sm:gap-4`}>
             {filteredServices.map(service => (
               <ServiceCard key={service._id} service={service} />
             ))}
@@ -581,16 +608,14 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{editingService ? 'Edit Service' : 'Add Service'}</h2>
-                <button onClick={() => {
-                  setShowServiceForm(false);
-                  setEditingService(null);
-                }} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{editingService ? 'Edit Service' : 'Add Service'}</h2>
+              <button onClick={() => {
+                setShowServiceForm(false);
+                setEditingService(null);
+              }} className="p-2 hover:bg-white/10 rounded-lg text-white transition-colors">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <form onSubmit={handleSubmitService} className="p-4 sm:p-6 space-y-6">
@@ -712,7 +737,7 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
                             onClick={() => setServiceFormData({ ...serviceFormData, benefits: serviceFormData.benefits.filter((_, i) => i !== index) })}
                             className="text-purple-600 hover:text-purple-900 font-bold"
                           >
-                            ×
+                            Ã—
                           </button>
                         </div>
                       ))}
@@ -749,3 +774,4 @@ const ServiceCatalog = ({ sidebarOpen = false }) => {
 };
 
 export default ServiceCatalog;
+

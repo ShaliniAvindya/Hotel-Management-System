@@ -1,14 +1,12 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { 
-  Sparkles, 
-  Calendar, 
-  Users, 
-  Package, 
-  DollarSign, 
-  Settings, 
+﻿import React, { Suspense, lazy, useEffect, useState } from 'react';
+import {
+  Sparkles,
+  Calendar,
+  Users,
+  Package,
+  DollarSign,
+  Settings,
   Menu,
-  Briefcase,
-  Heart 
 } from 'lucide-react';
 import Sidebar from '../Sidebar';
 const AppointmentTracker = lazy(() => import('./AppointmentTracker'));
@@ -39,67 +37,53 @@ const SpaAndWellnessManagement = () => {
   }, []);
 
   const tabs = [
-    { 
-      id: 'appointments', 
-      label: 'Appointments', 
+    {
+      id: 'appointments',
+      label: 'Appointments',
       icon: Calendar,
       component: AppointmentTracker,
-      color: 'blue'
     },
-    { 
-      id: 'services', 
-      label: 'Service Catalog', 
+    {
+      id: 'services',
+      label: 'Service Catalog',
       icon: Sparkles,
       component: ServiceCatalog,
-      color: 'purple'
     },
-    { 
-      id: 'therapists', 
-      label: 'Therapists', 
+    {
+      id: 'therapists',
+      label: 'Therapists',
       icon: Users,
       component: TherapistScheduling,
-      color: 'pink'
     },
-    { 
-      id: 'rooms', 
-      label: 'Spa Rooms', 
+    {
+      id: 'rooms',
+      label: 'Spa Rooms',
       icon: Settings,
       component: SpaRoomBooking,
-      color: 'teal'
     },
-    { 
-      id: 'packages', 
-      label: 'Packages', 
+    {
+      id: 'packages',
+      label: 'Packages',
       icon: Package,
       component: PackageManagement,
-      color: 'orange'
     },
-    { 
-      id: 'billing', 
-      label: 'Billing', 
+    {
+      id: 'billing',
+      label: 'Billing',
       icon: DollarSign,
       component: PackageBilling,
-      color: 'green'
     },
   ];
 
-  const getTabStyles = (tab, isActive) => {
-    const colorMap = {
-      blue: isActive ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300',
-      purple: isActive ? 'border-purple-500 text-purple-600 bg-purple-50' : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-300',
-      pink: isActive ? 'border-pink-500 text-pink-600 bg-pink-50' : 'border-transparent text-gray-500 hover:text-pink-600 hover:border-pink-300',
-      teal: isActive ? 'border-teal-500 text-teal-600 bg-teal-50' : 'border-transparent text-gray-500 hover:text-teal-600 hover:border-teal-300',
-      orange: isActive ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-transparent text-gray-500 hover:text-orange-600 hover:border-orange-300',
-      green: isActive ? 'border-green-500 text-green-600 bg-green-50' : 'border-transparent text-gray-500 hover:text-green-600 hover:border-green-300',
-      indigo: isActive ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-gray-500 hover:text-indigo-600 hover:border-indigo-300',
-    };
-    return colorMap[tab.color];
-  };
+  const getTabStyles = (isActive) =>
+    isActive
+      ? 'bg-[#0f2742] text-white border-[#c9a24a] shadow-sm'
+      : 'bg-white text-slate-600 border-gray-200 hover:text-[#0f2742] hover:border-[#c9a24a] hover:bg-[#fffaf0]';
 
   const mainMargin = sidebarMinimized ? 'lg:ml-20' : 'lg:ml-72';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="hotel-page flex">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -108,32 +92,31 @@ const SpaAndWellnessManagement = () => {
       />
 
       <div className={`flex-1 ${mainMargin} transition-all duration-300`}>
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
+        {/* Unified sticky header + tabs */}
+        <div className="bg-[#0f2742] shadow-sm border-b border-[#c9a24a] sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden text-gray-600 hover:text-gray-900"
+                  className="lg:hidden text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-all"
                 >
                   <Menu size={24} />
                 </button>
-                <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-3 rounded-xl">
-                  <Sparkles className="h-8 w-8 text-white" />
+                <div className="bg-white/10 p-3 rounded-lg shadow-lg">
+                  <Sparkles className="h-7 w-7 text-[#c9a24a]" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Spa & Wellness Management</h1>
-                  <p className="text-gray-600">Comprehensive spa services and wellness management</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#c9a24a] font-medium">Wellness & Recreation</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Spa & Wellness</h1>
+                  <p className="text-sm text-white/60">Appointments, therapists, services, packages and billing.</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="px-6">
-            <nav className="flex space-x-1 overflow-x-auto" aria-label="Tabs">
+          <div className="px-4 sm:px-6 pb-4 pt-2 overflow-x-auto">
+            <nav className="flex gap-2 min-w-max" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -141,12 +124,10 @@ const SpaAndWellnessManagement = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`${getTabStyles(tab, isActive)} 
-                      flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm 
-                      transition-all duration-200 rounded-t-lg whitespace-nowrap`}
+                    className={`${getTabStyles(isActive)} hotel-tab flex items-center space-x-2 px-4 py-2.5 border font-medium text-sm`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
@@ -156,7 +137,15 @@ const SpaAndWellnessManagement = () => {
 
         {/* Tab Content */}
         <div className="flex-1">
-          <Suspense fallback={<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 px-6 py-6"><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /><div className="h-40 rounded-xl bg-white shadow-sm" /></div>}>
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
+                <div className="h-40 rounded-xl hotel-skeleton" />
+                <div className="h-40 rounded-xl hotel-skeleton" />
+                <div className="h-40 rounded-xl hotel-skeleton" />
+              </div>
+            }
+          >
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -170,9 +159,9 @@ const SpaAndWellnessManagement = () => {
 
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-[#0f2742]/45 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
-          ></div>
+          />
         )}
       </div>
     </div>
@@ -180,3 +169,4 @@ const SpaAndWellnessManagement = () => {
 };
 
 export default SpaAndWellnessManagement;
+

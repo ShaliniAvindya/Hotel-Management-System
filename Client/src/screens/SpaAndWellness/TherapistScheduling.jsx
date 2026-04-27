@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Search, Calendar, Star, AlertCircle, X, CheckCircle, XCircle, Trash2, Edit, RefreshCw } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, Star, AlertCircle, X, CheckCircle, XCircle, Trash2, Edit, RefreshCw, Power, Sparkles } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { readViewCache, writeViewCache } from '../../lib/viewCache';
 
@@ -319,7 +319,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 transition-all duration-300 ease-in-out">
       {notification && (
         <div className="fixed top-4 right-4 z-[9999]">
           <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${
@@ -335,54 +335,52 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
         </div>
       )}
 
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Therapist Management</h2>
-              <p className="text-sm text-gray-600">Manage your spa team and schedules</p>
+      <div className="px-4 sm:px-6 py-4 bg-white w-full border-b border-[#c9a24a]/30 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search therapists by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] transition-all text-[#0f2742]"
+              />
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchTherapists}
-                className="flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition"
-                title="Refresh therapists"
-              >
-                <RefreshCw size={18} className="mr-2" /> Refresh
-              </button>
-              <button 
-                onClick={() => {
-                  setEditingTherapist(null);
-                  setFormData({ name: '', email: '', phone: '', specializations: [], hourlyRate: 0, experience: 0, availability: [], bio: '', certifications: [] });
-                  setTempCertification({ name: '', issueDate: '', expiryDate: '', certificateNumber: '' });
-                  setTempCustomSpecialization('');
-                  setScheduleData({
-                    monday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
-                    tuesday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
-                    wednesday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
-                    thursday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
-                    friday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
-                    saturday: { startTime: '10:00', endTime: '16:00', isAvailable: false },
-                    sunday: { startTime: '10:00', endTime: '16:00', isAvailable: false },
-                  });
-                  setShowModal(true);
-                }}
-                className="flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition">
-                <Plus size={18} className="mr-2" /> Add Therapist
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setEditingTherapist(null);
+                setFormData({ name: '', email: '', phone: '', specializations: [], hourlyRate: 0, experience: 0, availability: [], bio: '', certifications: [] });
+                setTempCertification({ name: '', issueDate: '', expiryDate: '', certificateNumber: '' });
+                setTempCustomSpecialization('');
+                setScheduleData({
+                  monday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
+                  tuesday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
+                  wednesday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
+                  thursday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
+                  friday: { startTime: '09:00', endTime: '17:00', isAvailable: true },
+                  saturday: { startTime: '10:00', endTime: '16:00', isAvailable: false },
+                  sunday: { startTime: '10:00', endTime: '16:00', isAvailable: false },
+                });
+                setShowModal(true);
+              }}
+              className="flex items-center justify-center px-6 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors text-sm w-full sm:w-auto ml-auto"
+            >
+              <Plus size={18} className="mr-2" /> Add Therapist
+            </button>
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search therapists by name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm"
-            />
+          <div className="flex items-center space-x-3 border-l border-slate-100 pl-4">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {filteredTherapists.length} therapists
+            </div>
+            <button
+              onClick={fetchTherapists}
+              className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
+              title="Refresh"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -403,89 +401,91 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
             <p className="text-gray-600">No therapists found</p>
           </div>
         ) : (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${sidebarOpen ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3 sm:gap-4`}>
             {filteredTherapists.map(therapist => (
-              <div key={therapist._id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition">
-                {therapist.profileImage && (
-                  <img src={therapist.profileImage} alt={therapist.name} className="w-full h-40 object-cover" />
-                )}
-                <div className="p-4 sm:p-6">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">{therapist.name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{therapist.email}</p>
-                  
-                  {therapist.bio && (
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{therapist.bio}</p>
-                  )}
+              <div key={therapist._id} className="border border-[#c9a24a]/30 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white flex flex-col h-full group">
+                <div className="h-1 w-full bg-[#c9a24a]" />
+                <div className="p-4 flex flex-col h-full">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-[#0f2742] text-base sm:text-lg mb-1 truncate group-hover:text-[#c9a24a] transition-colors">
+                        {therapist.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 font-medium truncate">{therapist.email}</p>
+                    </div>
+                    <span className={`flex-shrink-0 inline-flex px-3 py-1 text-xs font-bold rounded-full border ${
+                      therapist.isActive 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                    }`}>
+                      {therapist.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
 
-                  <div className="grid grid-cols-3 gap-2 mb-4 text-sm bg-gray-50 p-3 rounded-lg">
-                    <div>
-                      <p className="text-gray-600 text-xs mb-1">Experience</p>
-                      <p className="font-semibold text-gray-900">{therapist.experience || 0} yrs</p>
+                  {/* Data display - 2 wise layout */}
+                  <div className="space-y-3 mb-5 text-sm text-gray-600 font-medium">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start gap-2">
+                        <Star size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Experience</p>
+                          <p className="text-sm font-medium text-gray-900">{therapist.experience || 0} yrs</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <AlertCircle size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Rate</p>
+                          <p className="text-sm font-bold text-green-600">Rs. {therapist.hourlyRate}/hr</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-600 text-xs mb-1">Hourly Rate</p>
-                      <p className="font-semibold text-green-600">Rs. {therapist.hourlyRate}/hr</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-xs mb-1">Appointments</p>
-                      <p className="font-semibold text-gray-900">{therapist.totalAppointments || 0}</p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-start gap-2">
+                        <Calendar size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Appointments</p>
+                          <p className="text-sm font-medium text-gray-900">{therapist.totalAppointments || 0}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Sparkles size={16} className="text-[#c9a24a] flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-500">Phone</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{therapist.phone}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-600 mb-2">Specializations</p>
-                    <div className="flex flex-wrap gap-1 items-center">
-                      {therapist.specializations && therapist.specializations.length > 0 ? (
-                        <>
-                          {therapist.specializations.slice(0, 3).map((spec, idx) => (
-                            <span key={idx} className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                              {spec}
-                            </span>
-                          ))}
-                          {therapist.specializations.length > 3 && (
-                            <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                              +{therapist.specializations.length - 3}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-500">No specializations</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <button 
+                  {/* Action buttons at bottom */}
+                  <div className="flex items-center justify-end gap-1 pt-4 mt-auto border-t border-gray-100">
+                    <button
                       onClick={() => handleViewSchedule(therapist)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-orange-600 hover:bg-orange-50 rounded text-sm font-medium transition flex items-center justify-center gap-1"
+                      className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-gray-50 rounded-lg transition-all"
+                      title="View Schedule"
                     >
-                      <Calendar size={16} /> View
+                      <Calendar size={18} />
                     </button>
                     <button
                       onClick={() => handleEditTherapist(therapist)}
-                      className="flex-1 min-w-[60px] px-3 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-medium transition flex items-center justify-center gap-1"
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit"
                     >
-                      <Edit size={16} /> Edit
+                      <Edit size={18} />
                     </button>
-                    
                     <button
                       onClick={() => handleToggleTherapist(therapist._id, therapist.isActive)}
-                      className={`flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        therapist.isActive ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
-                      title={therapist.isActive ? 'Active' : 'Inactive'}
+                      className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                      title={therapist.isActive ? 'Deactivate' : 'Activate'}
                     >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                          therapist.isActive ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
+                      <Power size={18} />
                     </button>
-                    
-                    <button 
+                    <button
                       onClick={() => handleDeleteTherapist(therapist._id)}
-                      className="flex-shrink-0 px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition"
-                      title="Delete Permanently"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -504,17 +504,15 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  {editingTherapist ? 'Edit Therapist' : 'Add Therapist'}
-                </h2>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                {editingTherapist ? 'Edit Therapist' : 'Add Therapist'}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white" aria-label="Close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <form onSubmit={handleAddTherapist} className="p-4 sm:p-6 space-y-6">
@@ -589,7 +587,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
                                 setFormData({ ...formData, specializations: formData.specializations.filter(s => s !== spec) });
                               }
                             }}
-                            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
+                            className="w-4 h-4 text-[#c9a24a] border-gray-300 rounded focus:ring-2 focus:ring-[#c9a24a]"
                           />
                           <label htmlFor={`spec-${spec}`} className="ml-3 text-sm text-gray-700 cursor-pointer capitalize">
                             {spec.replace('-', ' ')}
@@ -726,7 +724,7 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
                         showNotification('Please fill in certification name and number', 'error');
                       }
                     }}
-                    className="w-full px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm"
+                          className="w-full px-3 py-2 bg-[#0f2742] text-white rounded-lg hover:bg-[#153456] transition-colors font-medium text-sm"
                   >
                     <Plus size={14} className="inline mr-2" /> Add Certification
                   </button>
@@ -797,17 +795,15 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl w-full max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-[#c9a24a]/30"
           >
-            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  Schedule - {selectedTherapist.name}
-                </h2>
-                <button onClick={() => setShowScheduleModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="p-4 sm:p-6 border-b border-white/10 sticky top-0 bg-[#0f2742] z-10 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                Schedule - {selectedTherapist.name}
+              </h2>
+              <button onClick={() => setShowScheduleModal(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white" aria-label="Close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <div className="p-4 sm:p-6 space-y-4">
@@ -988,3 +984,4 @@ const TherapistScheduling = ({ sidebarOpen = false }) => {
 };
 
 export default TherapistScheduling;
+
