@@ -5,7 +5,6 @@ const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
 require('dotenv').config();
-const { cacheGetJson } = require('./utils/httpCache');
 
 
 // --- IMPORT ROUTES ---
@@ -78,8 +77,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
-app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
-
+app.use('/api/dashboard', dashboardRoutes);
 
 // --- MONGODB CONNECTION (serverless optimized) ---
 let isConnected = false;
