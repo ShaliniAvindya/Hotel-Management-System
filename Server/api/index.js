@@ -10,29 +10,29 @@ require('dotenv').config();
 const { cacheGetJson } = require('../utils/httpCache');
 
 // --- ROUTES ---
-const roomRoutes = require('./routes/RoomManagement/roomRoutes');
-const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
-const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
-const roomAvailabilityRoutes = require('./routes/RoomManaagemnt/roomAvailabilityRoutes');
-const staffMember = require('./routes/RoomManaagemnt/staffMemberRoutess');
-const conciergeRoutes = require('./routes/RoomManaagemnt/conciergeRoutes');
+const roomRoutes = require('../routes/RoomManagement/roomRoutes');
+const roomRateRoutes = require('../routes/RoomManaagemnt/roomRateRoutes');
+const maintenanceRoutes = require('../routes/RoomManaagemnt/maintenanceRoutes');
+const roomAvailabilityRoutes = require('../routes/RoomManaagemnt/roomAvailabilityRoutes');
+const staffMember = require('../routes/RoomManaagemnt/staffMemberRoutess');
+const conciergeRoutes = require('../routes/RoomManaagemnt/conciergeRoutes');
 
-const bookingRoutes = require('./routes/ReservationManagement/bookingRoutes');
-const guestRoutes = require('./routes/ReservationManagement/guestRoutes');
-const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoutes');
-const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
-const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
+const bookingRoutes = require('../routes/ReservationManagement/bookingRoutes');
+const guestRoutes = require('../routes/ReservationManagement/guestRoutes');
+const checkInOutRoutes = require('../routes/ReservationManagement/checkInOutRoutes');
+const Cancellation = require('../routes/ReservationManagement/cancelRoutes');
+const specialRequestRoutes = require('../routes/ReservationManagement/specialRequestRoutes');
 
-const billingRoutes = require('./routes/billingRoutes');
-const menuRoutes = require('./routes/Restaurant&BarManagement/menuRoutes');
-const orderRoutes = require('./routes/Restaurant&BarManagement/orderRoutes');
+const billingRoutes = require('../routes/billingRoutes');
+const menuRoutes = require('../routes/Restaurant&BarManagement/menuRoutes');
+const orderRoutes = require('../routes/Restaurant&BarManagement/orderRoutes');
 
-const exportRoutes = require('./routes/exports');
-const settingsRoutes = require('./routes/settings');
-const authRoutes = require('./routes/auth');
-const usersRoutes = require('./routes/users');
-const spaRoutes = require('./routes/SpaAndWellness');
-const dashboardRoutes = require('./routes/dashboard');
+const exportRoutes = require('../routes/exports');
+const settingsRoutes = require('../routes/settings');
+const authRoutes = require('../routes/auth');
+const usersRoutes = require('../routes/users');
+const spaRoutes = require('../routes/SpaAndWellness');
+const dashboardRoutes = require('../routes/dashboard');
 
 // --- APP ---
 const app = express();
