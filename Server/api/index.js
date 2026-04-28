@@ -2,31 +2,41 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
+const helmet = require('helmet');
 require('dotenv').config();
+const { cacheGetJson } = require('./utils/httpCache');
+
 
 // --- IMPORT ROUTES ---
-const roomRoutes = require('../routes/RoomManaagemnt/roomRoutes');
-const roomRateRoutes = require('../routes/RoomManaagemnt/roomRateRoutes');
-const maintenanceRoutes = require('../routes/RoomManaagemnt/maintenanceRoutes');
-const roomAvailabilityRoutes = require('../routes/RoomManaagemnt/roomAvailabilityRoutes');
-const staffMember = require('../routes/RoomManaagemnt/staffMemberRoutess');
-const bookingRoutes = require('../routes/ReservationManagement/bookingRoutes');
-const guestRoutes = require('../routes/ReservationManagement/guestRoutes');
-const checkInOutRoutes = require('../routes/ReservationManagement/checkInOutRoutes');
-const Cancellation = require('../routes/ReservationManagement/cancelRoutes');
-const specialRequestRoutes = require('../routes/ReservationManagement/specialRequestRoutes');
-const billingRoutes = require('../routes/billingRoutes');
-const menuRoutes = require('../routes/Restaurant&BarManagement/menuRoutes');
-const orderRoutes = require('../routes/Restaurant&BarManagement/orderRoutes');
-const exportRoutes = require('../routes/exports');
-const settingsRoutes = require('../routes/settings');
-const authRoutes = require('../routes/auth');
-const usersRoutes = require('../routes/users');
+const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes'); 
+const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
+const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
+const roomAvailabilityRoutes = require('./routes/RoomManaagemnt/roomAvailabilityRoutes');
+const staffMember = require('./routes/RoomManaagemnt/staffMemberRoutess');
+const conciergeRoutes = require('./routes/RoomManaagemnt/conciergeRoutes');
+const bookingRoutes = require('./routes/ReservationManagement/bookingRoutes');
+const guestRoutes = require('./routes/ReservationManagement/guestRoutes');
+const checkInOutRoutes = require('./routes/ReservationManagement/checkInOutRoutes');
+const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
+const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
+const billingRoutes = require('./routes/billingRoutes');
+const menuRoutes = require('./routes/Restaurant&BarManagement/menuRoutes');
+const orderRoutes = require('./routes/Restaurant&BarManagement/orderRoutes');
+const exportRoutes = require('./routes/exports');
+const settingsRoutes = require('./routes/settings');
+const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users');
+const spaRoutes = require('./routes/SpaAndWellness');
+const dashboardRoutes = require('./routes/dashboard');
 
 // --- INITIALIZE APP ---
 const app = express();
 
 // --- MIDDLEWARE ---
+app.set('etag', false);
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(compression());
 app.use(
   cors({
     origin: [
@@ -48,23 +58,28 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 
 // --- ROUTES ---
-app.use('/api/rooms', roomRoutes);
+app.use('/api/rooms', roomRoutes); 
 app.use('/api/room-rates', roomRateRoutes);
 app.use('/api/roomMaintenance', maintenanceRoutes);
 app.use('/api/roomAvailability', roomAvailabilityRoutes);
 app.use('/api/staffMembers', staffMember);
+app.use('/api/concierge', conciergeRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/guests', guestRoutes);
 app.use('/api/checkinout', checkInOutRoutes);
 app.use('/api/cancellations', Cancellation);
 app.use('/api/specialrequests', specialRequestRoutes);
 app.use('/api/billing', billingRoutes);
+
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/exports', exportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/spa', spaRoutes);
+app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
+
 
 // --- MONGODB CONNECTION (serverless optimized) ---
 let isConnected = false;
@@ -75,6 +90,8 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
       dbName: 'hotel-management',
+      maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE) || 20,
+      minPoolSize: Number(process.env.MONGO_MIN_POOL_SIZE) || 2,
       bufferCommands: false, // Disable Mongoose buffering in serverless environments
     });
 
