@@ -1,10 +1,13 @@
+// --- IMPORTS ---
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
 require('dotenv').config();
-const { cacheGetJson } = require('./utils/httpCache');
+
+// ✅ FIXED PATH (IMPORTANT)
+const { cacheGetJson } = require('../utils/httpCache');
 
 // --- ROUTES ---
 const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes');
@@ -79,9 +82,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
 
+// dashboard cache (fixed)
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
 
-// --- SIMPLE + STABLE MONGODB CONNECTION ---
+// --- SAFE MONGODB CONNECTION ---
 let isConnected = false;
 
 const connectDB = async () => {
@@ -126,10 +130,13 @@ app.get(['/', '/api/health'], async (req, res) => {
 // --- ERROR HANDLER ---
 app.use((err, req, res, next) => {
   console.error('🔥 Error:', err);
-  res.status(500).json({ message: err.message });
+  res.status(500).json({
+    message: 'Internal Server Error',
+    error: err.message,
+  });
 });
 
-// --- VERCEL EXPORT (KEEP SIMPLE) ---
+// --- VERCEL EXPORT ---
 module.exports = async (req, res) => {
   try {
     await connectDB();
