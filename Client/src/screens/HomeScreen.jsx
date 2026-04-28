@@ -544,7 +544,7 @@ const Homescreen = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard title="Room Occupancy" value={`${occupiedRooms}/${totalRooms || 0}`} subtitle={`${totalRooms ? Math.round((occupiedRooms / totalRooms) * 100) : 0}% occupied`} tone="navy" icon={Bed} />
             <StatCard title="Today's Bookings" value={todaysBookings} subtitle={`${dashboardSummary?.totalBookings ?? bookingsData.length} total bookings`} tone="navy" icon={CalendarIcon} />
-            <StatCard title="Revenue Collected" value={`$${revenueCollected.toLocaleString()}`} subtitle={`Payments $${revenueFromPayments.toLocaleString()}`} tone="navy" icon={DollarSign} />
+            <StatCard title="Revenue Collected" value={`$${revenueCollected.toFixed(2)}`} subtitle={`Payments $${revenueFromPayments.toFixed(2)}`} tone="navy" icon={DollarSign} />
             <StatCard title="Active Orders" value={activeOrders} subtitle={`${dashboardSummary?.totalOrders ?? ordersData.length} total orders`} tone="navy" icon={Utensils} />
           </div>
 
@@ -717,7 +717,7 @@ const Homescreen = () => {
                       <p className="text-xs text-gray-500 font-medium">F&B Total</p>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-emerald-700 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toLocaleString()}</div>
+                  <div className="text-sm font-bold text-emerald-700 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toFixed(2)}</div>
                 </div>
 
                 {/* Completed Orders */}
@@ -781,7 +781,7 @@ const Homescreen = () => {
                       <p className="text-[11px] text-gray-500 font-medium">Room charges</p>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromPayments.toLocaleString()}</div>
+                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromPayments.toFixed(2)}</div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors duration-200 rounded-xl border border-slate-100">
@@ -794,7 +794,7 @@ const Homescreen = () => {
                       <p className="text-[11px] text-gray-500 font-medium">Restaurant</p>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toLocaleString()}</div>
+                  <div className="text-sm font-bold text-[#0f2742] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">${revenueFromOrders.toFixed(2)}</div>
                 </div>
               </div>
             </div>
