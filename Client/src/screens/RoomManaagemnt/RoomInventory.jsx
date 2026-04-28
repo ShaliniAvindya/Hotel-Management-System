@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,16 +51,13 @@ import {
   Sun,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
-import { readViewCache, writeViewCache } from '../../lib/viewCache';
+import { writeViewCache } from '../../lib/viewCache';
 
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 
 const RoomInventory = () => {
   const queryClient = useQueryClient();
-  const cachedInventory = readViewCache('room-inventory-page', {
-    fallback: { rooms: [], rates: [] },
-  });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
@@ -112,7 +109,7 @@ const RoomInventory = () => {
 
   const { data: roomsData = [], isLoading: isRoomsLoading } = useQuery({
     queryKey: ['rooms'],
-    initialData: cachedInventory.rooms,
+    staleTime: 0,
     queryFn: async () => {
       const data = (await axios.get(ROOMS_API_BASE_URL)).data;
       if (Array.isArray(data)) return data;
@@ -123,7 +120,7 @@ const RoomInventory = () => {
 
   const { data: ratesData = [], isLoading: isRatesLoading } = useQuery({
     queryKey: ['room-rates'],
-    initialData: cachedInventory.rates,
+    staleTime: 0,
     queryFn: async () => {
       const data = (await axios.get(RATES_API_BASE_URL)).data;
       if (Array.isArray(data)) return data;
