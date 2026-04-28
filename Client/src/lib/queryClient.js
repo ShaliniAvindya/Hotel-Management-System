@@ -2,9 +2,9 @@ import { QueryClient } from '@tanstack/react-query';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
-const PERSISTED_QUERY_CACHE_KEY = 'hotel-management-query-cache-v3';
-const LEGACY_PERSISTED_QUERY_CACHE_KEYS = ['hotel-management-query-cache-v2'];
-const SAFE_PERSISTED_QUERY_KEYS = new Set(['dashboard-summary', 'rooms', 'room-rates']);
+const PERSISTED_QUERY_CACHE_KEY = 'hotel-management-query-cache-v4';
+const LEGACY_PERSISTED_QUERY_CACHE_KEYS = ['hotel-management-query-cache-v2', 'hotel-management-query-cache-v3'];
+const SAFE_PERSISTED_QUERY_KEYS = new Set(['dashboard-summary']);
 
 export const queryClient = new QueryClient({
   defaultOptions: {
