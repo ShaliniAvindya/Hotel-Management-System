@@ -10,7 +10,7 @@ require('dotenv').config();
 const { cacheGetJson } = require('../utils/httpCache');
 
 // --- ROUTES ---
-const roomRoutes = require('../routes/RoomManagement/roomRoutes');
+const roomRoutes = require('../routes/RoomManaagemnt/roomRoutes');
 const roomRateRoutes = require('../routes/RoomManaagemnt/roomRateRoutes');
 const maintenanceRoutes = require('../routes/RoomManaagemnt/maintenanceRoutes');
 const roomAvailabilityRoutes = require('../routes/RoomManaagemnt/roomAvailabilityRoutes');
