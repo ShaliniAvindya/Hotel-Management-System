@@ -1,4 +1,3 @@
-// --- IMPORTS ---
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,7 +6,7 @@ const helmet = require('helmet');
 require('dotenv').config();
 const { cacheGetJson } = require('./utils/httpCache');
 
-// --- IMPORT ROUTES ---
+// --- ROUTES ---
 const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes');
 const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
 const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
@@ -22,7 +21,6 @@ const Cancellation = require('./routes/ReservationManagement/cancelRoutes');
 const specialRequestRoutes = require('./routes/ReservationManagement/specialRequestRoutes');
 
 const billingRoutes = require('./routes/billingRoutes');
-
 const menuRoutes = require('./routes/Restaurant&BarManagement/menuRoutes');
 const orderRoutes = require('./routes/Restaurant&BarManagement/orderRoutes');
 
@@ -47,17 +45,11 @@ app.use(
     origin: [
       'http://localhost:5173',
       'https://hotel-management-system-seven-woad.vercel.app',
+      'https://lushhotelcloud.com'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'pragma',
-      'cache-control',
-      'expires',
-      'x-auth-token',
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
@@ -78,7 +70,6 @@ app.use('/api/cancellations', Cancellation);
 app.use('/api/specialrequests', specialRequestRoutes);
 
 app.use('/api/billing', billingRoutes);
-
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 
@@ -88,44 +79,41 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
 
-// cache example (good optimization)
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
 
-// --- SAFE MONGODB CONNECTION (CRITICAL FIX) ---
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+// --- SIMPLE + STABLE MONGODB CONNECTION ---
+let isConnected = false;
 
 const connectDB = async () => {
-  if (cached.conn) return cached.conn;
+  if (isConnected) return;
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGO_URI, {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
       dbName: 'hotel-management',
       maxPoolSize: 20,
       minPoolSize: 2,
       bufferCommands: false,
     });
-  }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+    isConnected = conn.connection.readyState === 1;
+    console.log('✅ MongoDB connected');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    throw err;
+  }
 };
 
 // --- HEALTH CHECK ---
 app.get(['/', '/api/health'], async (req, res) => {
-  const mongoStates = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];
+  const states = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];
 
   try {
     await connectDB();
 
     res.status(200).json({
       status: 'OK',
-      mongoDB: mongoStates[mongoose.connection.readyState],
-      environment: process.env.NODE_ENV || 'development',
-      timestamp: new Date().toISOString(),
+      mongoDB: states[mongoose.connection.readyState],
+      time: new Date().toISOString(),
     });
   } catch (err) {
     res.status(500).json({
@@ -135,22 +123,19 @@ app.get(['/', '/api/health'], async (req, res) => {
   }
 });
 
-// --- GLOBAL ERROR HANDLER ---
+// --- ERROR HANDLER ---
 app.use((err, req, res, next) => {
-  console.error('🔥 Server Error:', err);
-  res.status(500).json({
-    message: 'Internal Server Error',
-    error: err.message,
-  });
+  console.error('🔥 Error:', err);
+  res.status(500).json({ message: err.message });
 });
 
-// --- VERCEL EXPORT (FIXED) ---
+// --- VERCEL EXPORT (KEEP SIMPLE) ---
 module.exports = async (req, res) => {
   try {
     await connectDB();
     return app(req, res);
   } catch (err) {
-    console.error('❌ Vercel Function Error:', err);
+    console.error('❌ Vercel Crash:', err);
     res.status(500).json({
       error: 'Server crashed',
       message: err.message,
