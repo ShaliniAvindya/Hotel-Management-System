@@ -7,7 +7,7 @@ const helmet = require('helmet');
 require('dotenv').config();
 const { cacheGetJson } = require('./utils/httpCache');
 
-// --- IMPORT ROUTES ---
+// --- ROUTES ---
 const roomRoutes = require('./routes/RoomManaagemnt/roomRoutes');
 const roomRateRoutes = require('./routes/RoomManaagemnt/roomRateRoutes');
 const maintenanceRoutes = require('./routes/RoomManaagemnt/maintenanceRoutes');
@@ -42,24 +42,16 @@ app.set('etag', false);
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(compression());
 
-app.use(
-  cors({
-    origin: [
-      'http://localhost:5173',
-      'https://hotel-management-system-seven-woad.vercel.app',
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'pragma',
-      'cache-control',
-      'expires',
-      'x-auth-token',
-    ],
-  })
-);
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://hotel-management-system-seven-woad.vercel.app',
+    'https://lushhotelcloud.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -88,10 +80,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
 
-// cache example (good optimization)
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
 
-// --- SAFE MONGODB CONNECTION (CRITICAL FIX) ---
+// =====================================================
+// 🚨 SAFE MONGODB CONNECTION (CRITICAL FOR VERCEL)
+// =====================================================
 let cached = global.mongoose;
 
 if (!cached) {
@@ -114,16 +107,16 @@ const connectDB = async () => {
   return cached.conn;
 };
 
-// --- HEALTH CHECK ---
+// =====================================================
+// HEALTH CHECK
+// =====================================================
 app.get(['/', '/api/health'], async (req, res) => {
-  const mongoStates = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];
-
   try {
     await connectDB();
 
     res.status(200).json({
       status: 'OK',
-      mongoDB: mongoStates[mongoose.connection.readyState],
+      mongoDB: mongoose.connection.readyState === 1 ? 'Connected' : 'Not Connected',
       environment: process.env.NODE_ENV || 'development',
       timestamp: new Date().toISOString(),
     });
@@ -135,7 +128,9 @@ app.get(['/', '/api/health'], async (req, res) => {
   }
 });
 
-// --- GLOBAL ERROR HANDLER ---
+// =====================================================
+// GLOBAL ERROR HANDLER
+// =====================================================
 app.use((err, req, res, next) => {
   console.error('🔥 Server Error:', err);
   res.status(500).json({
@@ -144,13 +139,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// --- VERCEL EXPORT (FIXED) ---
+// =====================================================
+// 🚀 VERCEL SERVERLESS EXPORT (FINAL FIX)
+// =====================================================
 module.exports = async (req, res) => {
   try {
     await connectDB();
+
     return app(req, res);
   } catch (err) {
-    console.error('❌ Vercel Function Error:', err);
+    console.error('❌ Vercel Crash:', err);
+
     res.status(500).json({
       error: 'Server crashed',
       message: err.message,
