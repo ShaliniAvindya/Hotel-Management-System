@@ -6,7 +6,7 @@ const compression = require('compression');
 const helmet = require('helmet');
 require('dotenv').config();
 
-// ✅ FIXED PATH (IMPORTANT)
+// ✅ MUST BE THIS PATH (IMPORTANT)
 const { cacheGetJson } = require('../utils/httpCache');
 
 // --- ROUTES ---
@@ -38,8 +38,6 @@ const dashboardRoutes = require('./routes/dashboard');
 const app = express();
 
 // --- MIDDLEWARE ---
-app.set('etag', false);
-
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(compression());
 
@@ -48,7 +46,7 @@ app.use(
     origin: [
       'http://localhost:5173',
       'https://hotel-management-system-seven-woad.vercel.app',
-      'https://lushhotelcloud.com'
+      'https://lushhotelcloud.com',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -82,10 +80,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
 
-// dashboard cache (fixed)
+// dashboard with cache
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
 
-// --- SAFE MONGODB CONNECTION ---
+// --- DB CONNECTION ---
 let isConnected = false;
 
 const connectDB = async () => {
@@ -100,52 +98,32 @@ const connectDB = async () => {
     });
 
     isConnected = conn.connection.readyState === 1;
-    console.log('✅ MongoDB connected');
+    console.log('MongoDB connected');
   } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('MongoDB error:', err);
     throw err;
   }
 };
 
-// --- HEALTH CHECK ---
+// --- HEALTH ---
 app.get(['/', '/api/health'], async (req, res) => {
-  const states = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];
+  await connectDB();
 
-  try {
-    await connectDB();
-
-    res.status(200).json({
-      status: 'OK',
-      mongoDB: states[mongoose.connection.readyState],
-      time: new Date().toISOString(),
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'ERROR',
-      message: err.message,
-    });
-  }
+  res.json({
+    status: 'OK',
+    mongo: mongoose.connection.readyState,
+    time: new Date().toISOString(),
+  });
 });
 
 // --- ERROR HANDLER ---
 app.use((err, req, res, next) => {
-  console.error('🔥 Error:', err);
-  res.status(500).json({
-    message: 'Internal Server Error',
-    error: err.message,
-  });
+  console.error(err);
+  res.status(500).json({ message: err.message });
 });
 
 // --- VERCEL EXPORT ---
 module.exports = async (req, res) => {
-  try {
-    await connectDB();
-    return app(req, res);
-  } catch (err) {
-    console.error('❌ Vercel Crash:', err);
-    res.status(500).json({
-      error: 'Server crashed',
-      message: err.message,
-    });
-  }
+  await connectDB();
+  return app(req, res);
 };
