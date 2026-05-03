@@ -3,6 +3,7 @@ const Booking = require('../../models/ReservationManagement/Booking');
 const Room = require('../../models/RoomManaagemnt/Room');
 const Guest = require('../../models/ReservationManagement/Guest');
 const RoomAvailability = require('../../models/RoomManaagemnt/RoomAvailability');
+const { syncBookingCreated } = require('../../services/apaleoSyncService');
 
 const router = express.Router();
 
@@ -148,7 +149,7 @@ router.post('/', async (req, res) => {
     const booking = new Booking(bookingData);
     await booking.save();
     console.log('Booking created:', booking.id, 'with guestId:', guest.id);
-      try {
+      /* try {
         const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
         await updateRestaurantAnalytics({
           amount: bookingData.totalAmount,
@@ -158,9 +159,12 @@ router.post('/', async (req, res) => {
         });
       } catch (err) {
         console.error('Analytics update failed:', err.message);
-      }
+      } */
 
     await updateRoomAvailabilityForBooking(booking);
+    
+    // Sync with Apaleo
+    syncBookingCreated(booking);
 
     res.status(201).json(booking);
   } catch (err) {

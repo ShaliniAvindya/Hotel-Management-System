@@ -734,7 +734,7 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
                 <Bed className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Room:</span>
                 <span className="text-sm font-medium">
-                  {booking.splitStays.length > 0 ? 'Multiple (Split Stay)' : room ? `${room.roomNumber} - ${room.name}` : 'Room not found'}
+                  {booking.splitStays?.length > 0 ? 'Multiple (Split Stay)' : room ? `${room.roomNumber} - ${room.name}` : 'Room not found'}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -766,7 +766,7 @@ const BookingDetails = ({ booking, rooms, onClose, onEdit }) => {
                 <span>Split Stay Information</span>
               </h3>
               <div className="space-y-2">
-                {booking.splitStays.map((stay, index) => {
+                {booking.splitStays?.map((stay, index) => {
                   const stayRoom = rooms.find(r => r.id === stay.roomId);
                   return (
                     <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg">
@@ -816,7 +816,7 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
       (booking.roomId === roomId &&
         booking.checkInDate <= dateStr &&
         booking.checkOutDate > dateStr) ||
-      booking.splitStays.some(stay =>
+      booking.splitStays?.some(stay =>
         stay.roomId === roomId &&
         stay.checkIn <= dateStr &&
         stay.checkOut > dateStr
@@ -844,11 +844,11 @@ const CalendarRow = React.memo(({ room, dates, bookings, bookingStatuses, onCell
         const booking = getBookingForRoomAndDate(room.id, date);
         const isFirstDay = booking && (
           booking.checkInDate === date.toISOString().split('T')[0] ||
-          booking.splitStays.some(stay => stay.checkIn === date.toISOString().split('T')[0])
+          booking.splitStays?.some(stay => stay.checkIn === date.toISOString().split('T')[0])
         );
         const isLastDay = booking && (
           booking.checkOutDate === date.toISOString().split('T')[0] ||
-          booking.splitStays.some(stay => stay.checkOut === date.toISOString().split('T')[0])
+          booking.splitStays?.some(stay => stay.checkOut === date.toISOString().split('T')[0])
         );
         const isSplitStay = booking?.splitStays?.some(
           stay => stay.roomId === room.id && stay.checkIn <= date.toISOString().split('T')[0] && stay.checkOut > date.toISOString().split('T')[0]

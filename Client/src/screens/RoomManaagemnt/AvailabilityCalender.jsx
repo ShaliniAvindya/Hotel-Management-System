@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { queryClient } from '../../lib/queryClient';
+import notify from '../../utils/notify';
 
 const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
   const cachedRooms = queryClient.getQueryData(['rooms']) || [];
@@ -136,6 +137,7 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
       queryClient.setQueryData(['room-maintenance'], nextMaintenance);
     } catch (error) {
       console.error('Error fetching data:', error);
+      notify.error('Failed to fetch data');
       setError('Failed to fetch data. Please try again.');
     } finally {
       if (!background) setLoading(false);
@@ -320,8 +322,11 @@ const AvailabilityCalendar = ({ sidebarOpen, sidebarMinimized }) => {
           setRooms(rooms.map((r) => (r.id === roomId ? updatedRoom : r)));
         }
       }
+      notify.success('Room status updated');
     } catch (err) {
       console.error('Error updating room status:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update room status';
+      notify.error(msg);
       setError('Failed to update room status. Please try again.');
     }
     setShowStatusForm(false);

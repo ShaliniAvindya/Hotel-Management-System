@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
     res.setHeader('Cache-Control', 'private, max-age=30');
     res.json(guests);
   } catch (err) {
-    try {
+    /* try {
       const updateRestaurantAnalytics = require('../../models/Restaurant&BarManagement/updateAnalytics');
       await updateRestaurantAnalytics({
         items: [],
@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
       });
     } catch (err) {
       console.error('Analytics update failed (guest):', err.message);
-    }
+    } */
     res.status(500).json({ message: err.message });
   }
 });

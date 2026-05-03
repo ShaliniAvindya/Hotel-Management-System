@@ -1,7 +1,8 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import notify from '../../utils/notify';
 import {
   Home,
   Plus,
@@ -197,8 +198,11 @@ const RoomInventory = () => {
         queryClient.invalidateQueries({ queryKey: ['rooms'] });
         queryClient.invalidateQueries({ queryKey: ['room-rates'] });
         setShowRoomForm(false);
+        notify.success(`Room "${newRoom.name}" created successfully`);
       }
     } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to create room';
+      notify.error(msg);
       console.error('Error adding room:', error);
     }
   };
@@ -240,8 +244,11 @@ const RoomInventory = () => {
         queryClient.invalidateQueries({ queryKey: ['room-rates'] });
         setEditingRoom(null);
         setShowRoomForm(false);
+        notify.success(`Room "${updatedRoom.name}" updated successfully`);
       }
     } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update room';
+      notify.error(msg);
       console.error('Error editing room:', error);
     }
   };
@@ -258,8 +265,15 @@ const RoomInventory = () => {
           }
           queryClient.invalidateQueries({ queryKey: ['rooms'] });
           queryClient.invalidateQueries({ queryKey: ['room-rates'] });
+          notify.deleted(`Room deleted successfully`);
+          if (showRoomDetails) {
+            setShowRoomDetails(false);
+            setSelectedRoom(null);
+          }
         }
       } catch (error) {
+        const msg = error?.response?.data?.message || error?.message || 'Failed to delete room';
+        notify.error(msg);
         console.error('Error deleting room:', error);
       }
     }
@@ -533,9 +547,9 @@ const RoomInventory = () => {
                         return (
                           <label
                             key={amenity.id}
-                            className={`flex items-center space-x-2 p-2 sm:p-3 rounded-lg border cursor-pointer transition-colors ${selectedAmenities.includes(amenity.id)
-                              ? 'bg-gray-100 border-[#c9a24a]/50 text-[#0f2742]'
-                              : 'bg-white border-gray-200 hover:bg-gray-50'
+                            className={`flex items-center space-x-2 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${selectedAmenities.includes(amenity.id)
+                              ? 'bg-[#0f2742] border-[#c9a24a] text-white shadow-md shadow-[#c9a24a]/20 ring-1 ring-[#c9a24a]/30'
+                              : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
                               }`}
                           >
                             <input
@@ -544,8 +558,13 @@ const RoomInventory = () => {
                               onChange={() => handleAmenityToggle(amenity.id)}
                               className="sr-only"
                             />
-                            <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                            <span className="text-sm sm:text-base">{amenity.name}</span>
+                            <div className={`flex items-center justify-center w-5 h-5 rounded border-2 flex-shrink-0 transition-all ${selectedAmenities.includes(amenity.id) ? 'bg-[#c9a24a] border-[#c9a24a]' : 'border-gray-300 bg-white'}`}>
+                              {selectedAmenities.includes(amenity.id) && (
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                              )}
+                            </div>
+                            <IconComponent className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${selectedAmenities.includes(amenity.id) ? 'text-[#c9a24a]' : 'text-gray-500'}`} />
+                            <span className="text-sm sm:text-base font-medium">{amenity.name}</span>
                           </label>
                         );
                       })}
@@ -574,6 +593,23 @@ const RoomInventory = () => {
               </div>
             </div>
 
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm flex items-center justify-center space-x-2"
+              >
+                <X className="h-4 w-4" />
+                <span>Cancel</span>
+              </button>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#0f2742] to-[#153456] text-white font-semibold hover:shadow-md transition-all text-sm flex items-center justify-center space-x-2 border border-[#0f2742]"
+              >
+                <Save className="h-4 w-4" />
+                <span>{room ? 'Update Room' : 'Save Room'}</span>
+              </button>
+            </div>
 
           </form>
         </div>
@@ -772,7 +808,7 @@ const RoomInventory = () => {
           </div>
 
           <div className="text-sm sm:text-base text-slate-400 mb-2">
-            Room {room.roomNumber} â€¢ Floor {room.floor}
+            Room {room.roomNumber} ※ Floor {room.floor}
           </div>
 
           <div className="flex flex-wrap gap-2 text-sm sm:text-base text-slate-600 mb-3 py-2 border-y border-gray-50">

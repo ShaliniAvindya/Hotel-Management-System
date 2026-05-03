@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../../apiconfig';
 import { queryClient } from '../../../lib/queryClient';
+import notify from '../../../utils/notify';
 
 const RequestHandling = () => {
   const cachedRequests = queryClient.getQueryData(['concierge-requests']) || [];
@@ -133,6 +134,7 @@ const RequestHandling = () => {
       queryClient.setQueryData(['staff-members'], nextStaffMembers);
     } catch (error) {
       console.error('Error refreshing concierge data:', error);
+      notify.error('Failed to fetch concierge data');
     } finally {
       if (!background) setLoading(false);
     }
@@ -153,6 +155,7 @@ const RequestHandling = () => {
       queryClient.setQueryData(['concierge-requests'], nextRequests);
     } catch (error) {
       console.error('Error fetching requests:', error);
+      notify.error('Failed to fetch requests');
     } finally {
       setLoading(false);
     }
@@ -172,6 +175,7 @@ const RequestHandling = () => {
       queryClient.setQueryData(['staff-members'], nextStaffMembers);
     } catch (error) {
       console.error('Error fetching staff members:', error);
+      notify.error('Failed to fetch staff members');
     }
   };
 
@@ -247,8 +251,11 @@ const RequestHandling = () => {
 
       await refreshData({ background: true });
       setShowModal(false);
+      notify.success(selectedRequest ? 'Request updated successfully' : 'Request created successfully');
     } catch (error) {
       console.error('Error saving request:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to save request';
+      notify.error(msg);
     }
   };
 
@@ -265,8 +272,11 @@ const RequestHandling = () => {
 
       if (!response.ok) throw new Error('Failed to delete request');
       await refreshData({ background: true });
+      notify.deleted('Request deleted successfully');
     } catch (error) {
       console.error('Error deleting request:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to delete request';
+      notify.error(msg);
     }
   };
 
@@ -304,9 +314,11 @@ const RequestHandling = () => {
       if (!response.ok) throw new Error('Failed to assign request');
       await refreshData({ background: true });
       setShowAssignModal(false);
+      notify.success('Staff assigned successfully');
     } catch (error) {
       console.error('Error assigning request:', error);
-      alert('Failed to assign request');
+      const msg = error?.response?.data?.message || error?.message || 'Failed to assign request';
+      notify.error(msg);
     }
   };
 
@@ -323,8 +335,11 @@ const RequestHandling = () => {
 
       if (!response.ok) throw new Error('Failed to update status');
       await refreshData({ background: true });
+      notify.success('Status updated successfully');
     } catch (error) {
       console.error('Error updating status:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update status';
+      notify.error(msg);
     }
   };
 

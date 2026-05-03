@@ -26,9 +26,10 @@ const bookingSchema = new mongoose.Schema({
   },
   bookingSource: {
     type: String,
-    enum: ['walk-in', 'phone', 'email', 'online'],
+    enum: ['walk-in', 'phone', 'email', 'online', 'OTA'],
     default: 'walk-in',
   },
+  apaleoReservationId: { type: String, unique: true, sparse: true },
   specialRequests: { type: String, default: '' },
   splitStays: { type: [splitStaySchema], default: [] },
   checkInTime: { type: String, default: '14:00' },

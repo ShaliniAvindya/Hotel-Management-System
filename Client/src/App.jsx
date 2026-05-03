@@ -15,6 +15,7 @@ import RoomManagement from './screens/RoomManaagemnt/RoomManagement';
 import RestaurantBarManagement from './screens/Restaurant&BarManagement/RestaurantBarManagement';
 import RestaurantAnalytics from './screens/RestaurantAnalytics';
 import SpaAndWellnessManagement from './screens/SpaAndWellness/SpaAndWellnessManagement';
+import ApaleoIntegration from './screens/ChannelManager/ApaleoIntegration';
 
 const HomeScreen = lazy(() => import('./screens/HomeScreen'));
 const Login = lazy(() => import('./screens/Login'));
@@ -75,7 +76,20 @@ const App = () => {
   return (
     <AuthProvider>
       <div className="App">
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3500,
+            style: {
+              fontFamily: 'Inter, system-ui, sans-serif',
+            },
+          }}
+          containerStyle={{
+            top: 20,
+            right: 20,
+          }}
+          gutter={10}
+        />
         <ScrollRestoration />
         <Suspense fallback={<AppShellFallback />}>
           <Routes>
@@ -91,6 +105,7 @@ const App = () => {
               <Route path="/restaurant-bar-management" element={<ProtectedRoute><RestaurantBarManagement /></ProtectedRoute>} />
               <Route path="/spa-wellness" element={<ProtectedRoute><SpaAndWellnessManagement /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><RestaurantAnalytics /></ProtectedRoute>} />
+              <Route path="/channel-manager" element={<ProtectedRoute><ApaleoIntegration /></ProtectedRoute>} />
             </Route>
           </Routes>
         </Suspense>

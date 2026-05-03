@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { queryClient } from '../../lib/queryClient';
+import notify from '../../utils/notify';
 
 const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
   const cachedRooms = queryClient.getQueryData(['rooms']) || [];
@@ -73,6 +74,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching rooms:', error);
+      notify.error('Failed to fetch rooms');
     }
   };
 
@@ -141,10 +143,13 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
       if (roomResponse.status === 200) {
         fetchRooms();
         addNotification(`Room ${roomId.slice(1)} checkout complete - Cleaning required`, 'warning');
+        notify.warning(`Room ${roomId.slice(1)} checkout complete - Cleaning required`);
         autoAssignHousekeeper(roomId);
       }
     } catch (error) {
       console.error('Error checking out room:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to checkout room';
+      notify.error(msg);
     }
   };
 
@@ -162,9 +167,11 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
         if (response.status === 200) {
           fetchRooms();
           addNotification(`${assignedHousekeeper} assigned to Room ${roomId.slice(1)}`, 'info');
+          notify.info(`${assignedHousekeeper} assigned to Room ${roomId.slice(1)}`);
         }
       } catch (error) {
         console.error('Error assigning housekeeper:', error);
+        notify.error('Failed to assign housekeeper');
       }
     }, 2000);
   };
@@ -209,9 +216,12 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
           maintenance: 'marked for maintenance',
         };
         addNotification(`Room ${roomId.slice(1)} ${statusMessages[newStatus]}`, 'success');
+        notify.success(`Room ${roomId.slice(1)} ${statusMessages[newStatus]}`);
       }
     } catch (error) {
       console.error('Error updating room status:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update room status';
+      notify.error(msg);
     }
   };
 
@@ -308,7 +318,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
                 <span className="text-white font-bold text-base sm:text-lg">{room.roomNumber}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-slate-400">{room.type} â€¢ Floor {room.floor}</p>
+                <p className="text-xs sm:text-sm text-slate-400">{room.type} • Floor {room.floor}</p>
                 {room.guestName && <p className="text-xs text-[#0f2742] truncate font-medium">{room.guestName}</p>}
               </div>
             </div>
@@ -405,7 +415,7 @@ const RoomStatus = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarM
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold text-white truncate">{selectedRoom.name}</h2>
                 <p className="text-xs sm:text-sm text-slate-300">
-                  Room {selectedRoom.roomNumber} â€¢ {selectedRoom.type}
+                  Room {selectedRoom.roomNumber} Χ {selectedRoom.type}
                 </p>
               </div>
             </div>

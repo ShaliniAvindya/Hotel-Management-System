@@ -11,7 +11,7 @@ const roomSchema = new mongoose.Schema({
   weekendPrice: { type: Number, required: true },
   floor: { type: Number, required: true },
   size: { type: Number, required: true },
-  description: { type: String, required: true },
+  description: { type: String, default: '' },
   amenities: { type: [String], default: [] },
   images: { type: [String], default: [] },
   lastCleaned: { type: Date, default: null },
@@ -36,6 +36,7 @@ const roomSchema = new mongoose.Schema({
   guestName: { type: String, default: null },
   checkInDate: { type: Date, default: null },
   expectedCheckOut: { type: Date, default: null },
+  apaleoUnitId: { type: String, default: null },
 }, { timestamps: true });
 
 roomSchema.index({ createdAt: -1 });

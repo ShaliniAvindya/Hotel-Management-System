@@ -61,6 +61,7 @@ const roomRatesSchema = new mongoose.Schema({
   contractStart: { type: Date },
   contractEnd: { type: Date },
   applicableRoomTypes: [{ type: String, enum: ['single', 'double', 'twin', 'triple', 'suite', 'presidential', 'villa', 'penthouse'] }],
+  apaleoRatePlanId: { type: String, default: '' },
 }, { timestamps: true });
 
 roomRatesSchema.index({ createdAt: -1 });

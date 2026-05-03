@@ -15,6 +15,7 @@ import {
   X,
   Sparkles,
   BedDouble,
+  Globe,
 } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
@@ -30,6 +31,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
     { id: 'spa-wellness', label: 'Spa & Wellness', icon: Sparkles, path: '/spa-wellness' },
     { id: 'billing', label: 'Billing & Invoice', icon: FileText, path: '/billing-invoice' },
     { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, path: '/analytics' },
+    { id: 'channel-manager', label: 'Channel Manager', icon: Globe, path: '/channel-manager' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
   if (user) {

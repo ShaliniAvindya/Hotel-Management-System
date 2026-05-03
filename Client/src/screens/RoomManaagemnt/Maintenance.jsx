@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import {
@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { queryClient } from '../../lib/queryClient';
+import notify from '../../utils/notify';
 
 const ROOMS_API_URL = `${API_BASE_URL}/rooms`;
 const TICKETS_API_URL = `${API_BASE_URL}/roomMaintenance`;
@@ -157,6 +158,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       setError(null);
     } catch (error) {
       console.error('Error fetching maintenance page data:', error);
+      notify.error('Failed to fetch maintenance data');
       setError('Failed to fetch maintenance data. Please try again.');
     } finally {
       if (!background) setLoading(false);
@@ -308,8 +310,11 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       }
 
       await refreshData({ background: true });
+      notify.success('Maintenance ticket created');
     } catch (error) {
       console.error('Error adding ticket:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to add ticket';
+      notify.error(msg);
       setError('Failed to add ticket. Please try again.');
     } finally {
       setLoading(false);
@@ -325,8 +330,11 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
       setShowTicketForm(false);
 
       await updateRoomMaintenanceStatus(ticketData.roomId);
+      notify.success('Maintenance ticket updated');
     } catch (error) {
       console.error('Error editing ticket:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to edit ticket';
+      notify.error(msg);
       setError('Failed to edit ticket. Please try again.');
     } finally {
       setLoading(false);
@@ -346,8 +354,11 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
         }
 
         await refreshData({ background: true });
+        notify.deleted('Maintenance ticket deleted');
       } catch (error) {
         console.error('Error deleting ticket:', error);
+        const msg = error?.response?.data?.message || error?.message || 'Failed to delete ticket';
+        notify.error(msg);
         setError('Failed to delete ticket. Please try again.');
       } finally {
         setLoading(false);
@@ -697,7 +708,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-white">{ticket.title}</h2>
                   <p className="text-xs sm:text-sm text-white/70">
-                    Ticket #{ticket.id} â€¢ Room {room?.roomNumber} â€¢ {category?.name}
+                    Ticket #{ticket.id} ※ Room {room?.roomNumber} ※ {category?.name}
                   </p>
                 </div>
               </div>
@@ -959,7 +970,7 @@ const Maintenance = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebar
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div>
               <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-1 truncate">{ticket.title}</h3>
-              <p className="text-xs text-gray-600">#{ticket.id} â€¢ Room {room?.roomNumber}</p>
+              <p className="text-xs text-gray-600">#{ticket.id} ※ Room {room?.roomNumber}</p>
             </div>
           </div>
         </div>

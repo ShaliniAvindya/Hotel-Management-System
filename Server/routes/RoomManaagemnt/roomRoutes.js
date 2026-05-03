@@ -1,5 +1,6 @@
 const express = require('express');
 const Room = require('../../models/RoomManaagemnt/Room');
+const { syncRoomAdded, syncRoomDeleted, syncRoomUpdated } = require('../../services/apaleoSyncService');
 
 const router = express.Router();
 
@@ -29,12 +30,22 @@ router.post('/', async (req, res) => {
   try {
     const roomData = req.body;
     if (!roomData.id) {
-      const lastRoom = await Room.findOne().sort({ createdAt: -1 }).select('id').lean();
-      const lastId = lastRoom ? parseInt(lastRoom.id.slice(1)) : 0;
-      roomData.id = `R${String(lastId + 1).padStart(3, '0')}`;
+      const allRooms = await Room.find().select('id').lean();
+      let maxId = 0;
+      for (const r of allRooms) {
+        if (r.id && r.id.startsWith('R')) {
+          const num = parseInt(r.id.slice(1), 10);
+          if (!isNaN(num) && num > maxId) {
+            maxId = num;
+          }
+        }
+      }
+      roomData.id = `R${String(maxId + 1).padStart(3, '0')}`;
     }
     const room = new Room(roomData);
     await room.save();
+    syncRoomAdded(room);
+    
     res.status(201).json(room);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -55,6 +66,10 @@ router.put('/:id', async (req, res) => {
   try {
     const room = await Room.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    
+    // Sync with Apaleo
+    syncRoomUpdated(room);
+    
     res.json(room);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -65,6 +80,10 @@ router.delete('/:id', async (req, res) => {
   try {
     const room = await Room.findOneAndDelete({ id: req.params.id });
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    
+    // Sync with Apaleo
+    syncRoomDeleted(room);
+    
     res.json({ message: 'Room deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });

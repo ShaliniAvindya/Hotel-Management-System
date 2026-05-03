@@ -26,6 +26,7 @@ const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const spaRoutes = require('./routes/SpaAndWellness');
 const dashboardRoutes = require('./routes/dashboard');
+const apaleoRoutes = require('./routes/apaleo/apaleoRoutes');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/spa', spaRoutes);
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
+app.use('/api/apaleo', apaleoRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

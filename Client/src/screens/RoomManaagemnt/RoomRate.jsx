@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import {
@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../apiconfig';
 import { queryClient } from '../../lib/queryClient';
+import notify from '../../utils/notify';
 
 const RATES_API_BASE_URL = `${API_BASE_URL}/room-Rates`;
 const ROOMS_API_BASE_URL = `${API_BASE_URL}/rooms`;
@@ -111,6 +112,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
       queryClient.setQueryData(['rooms'], nextRooms);
     } catch (error) {
       console.error('Error refreshing rate data:', error);
+      notify.error('Error refreshing rate data');
       if (!background) {
         setRates([]);
         setRooms([]);
@@ -198,15 +200,20 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
         queryClient.setQueryData(['rooms'], nextRooms);
       }
       setShowRateForm(false);
+      notify.success('Rate added successfully');
     } catch (error) {
       console.error('Error adding rate:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to add rate';
+      notify.error(msg);
     }
   };
 
   const handleEdit = async (data) => {
     try {
-      const response = await axios.put(`${RATES_API_BASE_URL}/${data.id}`, data);
-      const nextRates = rates.map(item => (item.id === data.id ? response.data : item));
+      const id = data._id || data.id;
+      if (!id) throw new Error('Rate ID is missing');
+      const response = await axios.put(`${RATES_API_BASE_URL}/${id}`, data);
+      const nextRates = rates.map(item => (item._id === id || item.id === id ? response.data : item));
       setRates(nextRates);
       queryClient.setQueryData(['room-rates'], nextRates);
       if (data.rateType === 'ratePlan' && data.roomId) {
@@ -224,8 +231,11 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
       }
       setEditingRate(null);
       setShowRateForm(false);
+      notify.success('Rate updated successfully');
     } catch (error) {
       console.error('Error updating rate:', error);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update rate';
+      notify.error(msg);
     }
   };
 
@@ -236,8 +246,11 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
         const nextRates = rates.filter(item => item._id !== id && item.id !== id);
         setRates(nextRates);
         queryClient.setQueryData(['room-rates'], nextRates);
+        notify.deleted('Rate deleted successfully');
       } catch (error) {
         console.error('Error deleting rate:', error);
+        const msg = error?.response?.data?.message || error?.message || 'Failed to delete rate';
+        notify.error(msg);
       }
     }
   };
@@ -245,6 +258,7 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
   const handleCopyCode = (code) => {
     if (code) {
       navigator.clipboard.writeText(code);
+      notify.success('Promo code copied to clipboard');
     }
   };
 
@@ -252,7 +266,34 @@ const RoomRate = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMin
     const [formData, setFormData] = useState(() => {
       const today = new Date().toISOString().split('T')[0];
       const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      return item || {
+      
+      if (item) {
+        const formatDate = (dateStr) => {
+          if (!dateStr) return '';
+          try {
+            return new Date(dateStr).toISOString().split('T')[0];
+          } catch (e) {
+            return '';
+          }
+        };
+
+        const sanitized = { ...item };
+        if (sanitized.dateRange) {
+          sanitized.dateRange = {
+            ...sanitized.dateRange,
+            start: formatDate(sanitized.dateRange.start),
+            end: formatDate(sanitized.dateRange.end)
+          };
+        }
+        if (sanitized.validFrom) sanitized.validFrom = formatDate(sanitized.validFrom);
+        if (sanitized.validTo) sanitized.validTo = formatDate(sanitized.validTo);
+        if (sanitized.contractStart) sanitized.contractStart = formatDate(sanitized.contractStart);
+        if (sanitized.contractEnd) sanitized.contractEnd = formatDate(sanitized.contractEnd);
+        
+        return sanitized;
+      }
+
+      return {
         rateType: activeTab,
         name: '',
         description: '',

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const RoomRates = require('../../models/RoomManaagemnt/roomRate');
 const mongoose = require('mongoose');
+const { syncRate } = require('../../services/apaleoSyncService');
 
 // Get all room rates
 router.get('/', async (req, res) => {
@@ -32,6 +33,10 @@ router.post('/', async (req, res) => {
   try {
     const rate = new RoomRates(req.body);
     await rate.save();
+    if (rate.rateType === 'ratePlan' && rate.apaleoRatePlanId) {
+      syncRate(rate.apaleoRatePlanId, [{ price: rate.basePrice, from: new Date().toISOString() }]);
+    }
+    
     res.status(201).json(rate);
   } catch (error) {
     console.error('Error creating room rate:', error);
@@ -57,6 +62,10 @@ router.put('/:id', async (req, res) => {
     if (!rate) {
       return res.status(404).json({ message: 'Rate not found' });
     }
+    if (rate.rateType === 'ratePlan' && rate.apaleoRatePlanId) {
+       syncRate(rate.apaleoRatePlanId, [{ price: rate.basePrice, from: new Date().toISOString() }]);
+    }
+    
     res.json(rate);
   } catch (error) {
     console.error('Error updating room rate:', error);
