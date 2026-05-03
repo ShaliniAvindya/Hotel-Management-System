@@ -423,12 +423,10 @@ const Homescreen = () => {
                   <Menu size={24} />
                 </button>
                 <div className="flex items-center space-x-4">
-                  <div className="bg-[#0f2742] p-3 rounded-xl shadow-lg">
-                    <ChefHat className="h-8 w-8 text-[#f4d891]" />
-                  </div>
+                    <img src="/assets/LushWare Logo.png" alt="LushWare" className="h-16 w-16 object-cover rounded-md" />
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-[#9a7624] font-bold">Operations Dashboard</p>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-[#172033] leading-tight">The Luxury</h1>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-[#9a7624] font-bold">Hotel Managemnt System</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-[#172033] leading-tight">Lush Hotel Cloud</h1>
                     <p className="text-sm text-gray-500 font-medium">
                       {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       {' · '}
