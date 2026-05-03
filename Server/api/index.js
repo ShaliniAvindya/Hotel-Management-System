@@ -33,6 +33,10 @@ const authRoutes = require('../routes/auth');
 const usersRoutes = require('../routes/users');
 const spaRoutes = require('../routes/SpaAndWellness');
 const dashboardRoutes = require('../routes/dashboard');
+const apaleoRoutes = require('./routes/apaleo/apaleoRoutes');
+const leadsRoutes = require('./routes/leadsRoutes');
+const webhookRoutes = require('./routes/webhooks');
+
 
 // --- APP ---
 const app = express();
@@ -82,6 +86,10 @@ app.use('/api/spa', spaRoutes);
 
 // dashboard with cache
 app.use('/api/dashboard', cacheGetJson({ ttlMs: 5000 }), dashboardRoutes);
+app.use('/api/apaleo', apaleoRoutes);
+app.use('/api/leads', leadsRoutes);
+app.use('/api/v1/webhooks', webhookRoutes);
+
 
 // --- DB CONNECTION ---
 let isConnected = false;
