@@ -28,7 +28,7 @@ import toast from 'react-hot-toast';
 
 const LeadsManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarMinimized, setSidebarMinimized] = useState(true);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [filters, setFilters] = useState({
     searchQuery: '',
     status: '',
