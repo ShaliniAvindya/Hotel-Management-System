@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { API_BASE_URL } from '../../apiconfig';
 import Sidebar from '../Sidebar';
 import Appbar from '../../Appbar';
@@ -624,8 +624,10 @@ const ReservationsTab = ({ config }) => {
 
   const PAGE_SIZE = 20;
 
-  const { data: reservationsData = {}, isLoading: loading } = useQuery({
+  const { data: reservationsData = {}, isLoading: loading, isFetching: isFetchingRes } = useQuery({
     queryKey: ['apaleo-reservations', config?.propertyId, filters, page],
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const params = new URLSearchParams({
         propertyId: config.propertyId,
@@ -728,7 +730,7 @@ const ReservationsTab = ({ config }) => {
               className="p-2 text-gray-400 hover:text-[#0f2742] hover:bg-slate-100 rounded-lg transition-all"
               title="Refresh"
             >
-              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-5 w-5 ${isFetchingRes ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -737,8 +739,31 @@ const ReservationsTab = ({ config }) => {
       {/* Main Content */}
       <div className="p-6">
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 size={28} className="animate-spin text-[#c9a24a]" />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#0f2742] text-white">
+                    {['ID','Guest Name','Arrival','Departure','Room Type','Channel','Status'].map(h => (
+                      <th key={h} className="text-left px-6 py-4 text-xs font-bold uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-3 w-20 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-3 w-32 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-3 w-20 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-3 w-20 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-3 w-24 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-3 w-20 bg-slate-200 rounded"/></td>
+                      <td className="px-6 py-4"><div className="h-5 w-20 bg-slate-200 rounded-full"/></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

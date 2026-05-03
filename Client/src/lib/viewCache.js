@@ -147,6 +147,34 @@ const sanitizeSpaBilling = (billing) =>
     'dueDate',
   ]);
 
+const sanitizeLead = (lead) =>
+  pick(lead, [
+    '_id',
+    'firstName',
+    'lastName',
+    'email',
+    'phone',
+    'city',
+    'country',
+    'status',
+    'source',
+    'platform',
+    'leadDate',
+    'checkInDate',
+    'checkOutDate',
+    'notes',
+    'interestedInDates',
+    'numberOfGuests',
+    'roomType',
+    'budget',
+    'facebookLeadId',
+    'assignedTo',
+    'followUpDate',
+    'isFollowedUp',
+    'createdAt',
+    'updatedAt',
+  ]);
+
 const sanitizeAnalyticsSnapshot = (snapshot) => ({
   bookings: Array.isArray(snapshot?.bookings)
     ? snapshot.bookings.map((booking) =>
@@ -172,6 +200,8 @@ const cacheSanitizers = {
     rooms: Array.isArray(snapshot?.rooms) ? snapshot.rooms.map(sanitizeRoom) : [],
     additionalServices: Array.isArray(snapshot?.additionalServices) ? snapshot.additionalServices : [],
   }),
+  'meta-leads': (leads) =>
+    Array.isArray(leads) ? leads.map(sanitizeLead) : [],
   'spa-appointments': (appointments) =>
     Array.isArray(appointments) ? appointments.map(sanitizeSpaAppointment) : [],
   'spa-billings': (billings) =>

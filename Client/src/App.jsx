@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast';
 import { preloadCriticalRoutes } from './lib/routePreloaders';
 import BillingInvoice from './screens/BillingInvoice';
 import Settings from './screens/Settings';
+import LeadsManagement from './screens/LeadsManagement';
 import ReservationManagement from './screens/ReservationManagement/ReservationManagement';
 import RoomManagement from './screens/RoomManaagemnt/RoomManagement';
 import RestaurantBarManagement from './screens/Restaurant&BarManagement/RestaurantBarManagement';
@@ -100,6 +101,7 @@ const App = () => {
               <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
               <Route path="/billing-invoice" element={<ProtectedRoute><BillingInvoice /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/leads-management" element={<ProtectedRoute><LeadsManagement /></ProtectedRoute>} />
               <Route path="/reservation-management" element={<ProtectedRoute><ReservationManagement /></ProtectedRoute>} />
               <Route path="/room-management" element={<ProtectedRoute><RoomManagement /></ProtectedRoute>} />
               <Route path="/restaurant-bar-management" element={<ProtectedRoute><RestaurantBarManagement /></ProtectedRoute>} />

@@ -16,6 +16,7 @@ import {
   Sparkles,
   BedDouble,
   Globe,
+  Users,
 } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMinimized }) => {
@@ -27,6 +28,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
     { id: 'room', label: 'Rooms', icon: BedDouble, path: '/room-management' },
     { id: 'reservations', label: 'Reservations', icon: Calendar, path: '/reservation-management' },
+    { id: 'leads', label: 'Leads Management', icon: Users, path: '/leads-management' },
     { id: 'restaurant-bar', label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar-management' },
     { id: 'spa-wellness', label: 'Spa & Wellness', icon: Sparkles, path: '/spa-wellness' },
     { id: 'billing', label: 'Billing & Invoice', icon: FileText, path: '/billing-invoice' },

@@ -75,6 +75,7 @@ export const warmOperationalCaches = async (token, { skipDashboard = false } = {
       staffMembers,
       conciergeRequests,
       specialRequests,
+      leads,
     ] = await Promise.all([
       fetchJson('/menu', token).catch(() => []),
       fetchJson('/orders', token).catch(() => []),
@@ -102,6 +103,7 @@ export const warmOperationalCaches = async (token, { skipDashboard = false } = {
       fetchJson('/staffMembers', token).catch(() => []),
       fetchJson('/concierge/requests', token).catch(() => []),
       fetchJson('/specialrequests', token).catch(() => []),
+      fetchJson('/leads?pageSize=10000', token).catch(() => []),
     ]);
 
     writeViewCache('restaurant-menu-items', normalize(menuItems));
@@ -130,6 +132,7 @@ export const warmOperationalCaches = async (token, { skipDashboard = false } = {
     const normalizedStaffMembers = normalize(staffMembers);
     const normalizedConciergeRequests = normalize(conciergeRequests);
     const normalizedSpecialRequests = normalize(specialRequests);
+    const normalizedLeads = leads?.leads ? normalize(leads.leads) : normalize(leads);
 
     queryClient.setQueryData(['rooms'], normalizedRooms);
     queryClient.setQueryData(['room-rates'], normalizedRoomRates);
@@ -141,6 +144,8 @@ export const warmOperationalCaches = async (token, { skipDashboard = false } = {
     queryClient.setQueryData(['staff-members'], normalizedStaffMembers);
     queryClient.setQueryData(['concierge-requests'], normalizedConciergeRequests);
     queryClient.setQueryData(['special-requests'], normalizedSpecialRequests);
+
+    writeViewCache('meta-leads', normalizedLeads);
 
     writeViewCache('room-inventory-page', {
       rooms: normalizedRooms,

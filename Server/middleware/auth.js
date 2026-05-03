@@ -34,6 +34,36 @@ const auth = (req, res, next) => {
   }
 };
 
+const optionalAuth = (req, res, next) => {
+  try {
+    let token;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.headers['x-auth-token']) {
+      token = req.headers['x-auth-token'];
+    }
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+      } catch (err) {
+        console.log('Optional auth: Invalid token, continuing without authentication');
+        req.user = null;
+      }
+    } else {
+      req.user = null;
+    }
+
+    next();
+  } catch (error) {
+    console.error('Optional auth middleware error:', error);
+    req.user = null;
+    next();
+  }
+};
+
 const adminAuth = (req, res, next) => {
   auth(req, res, () => {
     if (!req.user.isAdmin && req.user.role !== 'admin') {
@@ -46,4 +76,4 @@ const adminAuth = (req, res, next) => {
   });
 };
 
-module.exports = { auth, adminAuth };
+module.exports = { auth, optionalAuth, adminAuth };
