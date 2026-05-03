@@ -33,9 +33,9 @@ const authRoutes = require('../routes/auth');
 const usersRoutes = require('../routes/users');
 const spaRoutes = require('../routes/SpaAndWellness');
 const dashboardRoutes = require('../routes/dashboard');
-const apaleoRoutes = require('./routes/apaleo/apaleoRoutes');
-const leadsRoutes = require('./routes/leadsRoutes');
-const webhookRoutes = require('./routes/webhooks');
+const apaleoRoutes = require('../routes/apaleo/apaleoRoutes');
+const leadsRoutes = require('../routes/leadsRoutes');
+const webhookRoutes = require('../routes/webhooks');
 
 
 // --- APP ---
