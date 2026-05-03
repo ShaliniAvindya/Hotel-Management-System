@@ -44,9 +44,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f2742 0%, #1a3a52 100%)' }}>
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-2xl">
         <div className="flex items-center mb-6">
-          <div className="h-12 w-12 rounded-md flex items-center justify-center mr-3" style={{ backgroundColor: '#0f2742', border: '2px solid #c9a24a' }}>
-            <span className="text-white font-bold">HM</span>
-          </div>
+          <img src="/assets/LushWare Logo.png" alt="LushWare" className="h-20 w-20 mr-4 rounded-md object-cover" />
           <div>
             <h2 className="text-2xl font-bold" style={{ color: '#0f2742' }}>Sign in</h2>
             <p className="text-sm text-gray-500">Welcome back — please sign in to continue</p>
