@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../components/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { API_BASE_URL } from '../apiconfig';
+import { LogIn } from 'lucide-react';
 
 const Login = () => {
   const { api, login } = useContext(AuthContext);
@@ -40,38 +41,58 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f2742 0%, #1a3a52 100%)' }}>
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-2xl">
         <div className="flex items-center mb-6">
-          <div className="h-12 w-12 bg-blue-600 rounded-md flex items-center justify-center mr-3">
+          <div className="h-12 w-12 rounded-md flex items-center justify-center mr-3" style={{ backgroundColor: '#0f2742', border: '2px solid #c9a24a' }}>
             <span className="text-white font-bold">HM</span>
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Sign in</h2>
+            <h2 className="text-2xl font-bold" style={{ color: '#0f2742' }}>Sign in</h2>
             <p className="text-sm text-gray-500">Welcome back — please sign in to continue</p>
           </div>
         </div>
         {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium" style={{ color: '#0f2742' }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-200"
+              className="mt-1 block w-full border border-gray-300 rounded-md p-3"
+              style={{ 
+                focusColor: '#c9a24a',
+                outlineColor: '#c9a24a'
+              }}
               placeholder="you@company.com"
+              onFocus={(e) => {
+                e.target.style.borderColor = '#c9a24a';
+                e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 74, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.boxShadow = 'none';
+              }}
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium" style={{ color: '#0f2742' }}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-200"
+              className="mt-1 block w-full border border-gray-300 rounded-md p-3"
               placeholder="Your password"
+              onFocus={(e) => {
+                e.target.style.borderColor = '#c9a24a';
+                e.target.style.boxShadow = '0 0 0 3px rgba(201, 162, 74, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.boxShadow = 'none';
+              }}
               required
             />
           </div>
@@ -80,19 +101,27 @@ const Login = () => {
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="mr-2" />
               Remember me
             </label>
-            <a href="#" className="text-sm text-blue-600">Forgot?</a>
+            <a href="#" className="text-sm font-medium" style={{ color: '#c9a24a' }}>Forgot?</a>
           </div>
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-blue-600 disabled:bg-blue-400 text-white py-3 rounded-md shadow"
+            className="w-full py-3 rounded-md shadow font-medium transition-all flex items-center justify-center gap-2"
+            style={{ 
+              backgroundColor: submitting ? '#1a3a52' : '#0f2742',
+              color: 'white',
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
+            onMouseEnter={(e) => !submitting && (e.target.style.backgroundColor = '#1a3a52')}
+            onMouseLeave={(e) => !submitting && (e.target.style.backgroundColor = '#0f2742')}
           >
+            <LogIn size={18} />
             {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account? <Link to="/register" className="text-blue-600 font-medium">Register here</Link>
+          Don't have an account? <Link to="/register" className="font-medium" style={{ color: '#c9a24a' }}>Register here</Link>
         </div>
       </div>
     </div>
