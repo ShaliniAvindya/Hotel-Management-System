@@ -855,7 +855,7 @@ const ReservationsTab = ({ config }) => {
 const ApaleoIntegration = () => {
   const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarMinimized, setSidebarMinimized] = useState(true);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   const { data: config = { connected: false }, isLoading: configLoading } = useQuery({
