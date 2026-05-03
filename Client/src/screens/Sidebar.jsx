@@ -8,7 +8,6 @@ import {
   FileText,
   BarChart3,
   Settings,
-  ChefHat,
   LogOut,
   ChevronRight,
   ChevronLeft,
@@ -59,18 +58,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarMinimized, setSidebarMini
       <div className="relative flex items-center justify-between h-20 px-4 sm:px-5 border-b border-white/10 flex-shrink-0">
         {!sidebarMinimized && (
           <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 rounded-lg bg-[#c9a24a]/20 border border-[#c9a24a]/30 flex items-center justify-center flex-shrink-0">
-              <ChefHat className="h-5 w-5 text-[#f4d891]" />
-            </div>
+            <img src="/assets/LushWare Logo.png" alt="LushWare" className="h-9 w-9 rounded-lg object-cover flex-shrink-0" />
             <div>
-              <h1 className="text-base font-bold tracking-wide text-white leading-tight">The Luxury</h1>
-              <p className="text-[10px] text-white/50 uppercase tracking-[0.14em]">Resort Operations Suite</p>
+              <h1 className="text-base font-bold tracking-wide text-white leading-tight">Lush Hotel Cloud</h1>
+              <p className="text-[10px] text-white/50 uppercase tracking-[0.14em]">Hotel Managemnt System</p>
             </div>
           </div>
         )}
         {sidebarMinimized && (
-          <div className="flex-1 flex justify-center h-10 w-10 rounded-lg bg-[#c9a24a]/20 border border-[#c9a24a]/30 flex items-center justify-center">
-            <ChefHat className="h-5 w-5 text-[#f4d891] flex-shrink-0" />
+          <div className="flex-1 flex justify-center h-10 w-10 rounded-lg flex items-center justify-center">
+            <img src="/assets/LushWare Logo.png" alt="LushWare" className="h-10 w-10 rounded-lg object-cover flex-shrink-0" />
           </div>
         )}
         <div className="flex items-center space-x-1">
